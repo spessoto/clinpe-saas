@@ -69,24 +69,18 @@ export default async function DashboardPage() {
     <section>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-bold text-secondary">Dashboard</h2>
+          <h2 className="text-3xl font-bold">Dashboard</h2>
           <p className="mt-1 text-muted">Visao geral operacional da clinica.</p>
         </div>
 
-        <Link
-          href="/patients/new"
-          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
-        >
+        <Link href="/patients/new" className="btn-gradient">
           Novo paciente
         </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         {cards.map((card) => (
-          <article
-            key={card.title}
-            className="rounded-2xl border border-slate-200 bg-card p-5 shadow-sm"
-          >
+          <article key={card.title} className="soft-panel p-5">
             <p className="text-sm text-muted">{card.title}</p>
             <p
               className={`mt-3 inline-flex rounded-md px-3 py-1 text-2xl font-bold ${card.tone}`}
@@ -98,7 +92,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-8 grid gap-4 lg:grid-cols-3">
-        <article className="rounded-2xl border border-slate-200 bg-card p-5 shadow-sm">
+        <article className="surface-card p-5">
           <h3 className="text-lg font-semibold text-secondary">
             Google Calendar
           </h3>
@@ -112,7 +106,7 @@ export default async function DashboardPage() {
             Abrir configuracoes
           </Link>
         </article>
-        <article className="rounded-2xl border border-slate-200 bg-card p-5 shadow-sm">
+        <article className="surface-card p-5">
           <h3 className="text-lg font-semibold text-secondary">
             Autoagendamento
           </h3>
@@ -130,7 +124,7 @@ export default async function DashboardPage() {
             </Link>
           ) : null}
         </article>
-        <article className="rounded-2xl border border-slate-200 bg-card p-5 shadow-sm">
+        <article className="surface-card p-5">
           <h3 className="text-lg font-semibold text-secondary">POPs</h3>
           <p className="mt-2 text-sm text-muted">
             Visualize templates base com substituicao automatica de nome e

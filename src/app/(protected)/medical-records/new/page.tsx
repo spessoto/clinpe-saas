@@ -26,8 +26,8 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
     .order("name", { ascending: true });
 
   return (
-    <section className="max-w-3xl rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
-      <h2 className="text-2xl font-bold text-secondary">Novo prontuario</h2>
+    <section className="surface-card max-w-3xl p-6">
+      <h2 className="text-2xl font-bold">Novo prontuario</h2>
       <p className="mt-1 text-sm text-muted">
         Registre anamnese estruturada e envie imagens clinicas.
       </p>
@@ -142,15 +142,12 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
         </label>
 
         <div className="flex flex-wrap gap-2">
-          <button
-            type="submit"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
-          >
+          <button type="submit" className="btn-gradient">
             Salvar prontuario
           </button>
           <Link
             href={patientId ? `/patients/${patientId}` : "/patients"}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100"
+            className="btn-outline-modern"
           >
             Cancelar
           </Link>

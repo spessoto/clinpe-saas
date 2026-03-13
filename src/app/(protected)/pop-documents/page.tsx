@@ -18,7 +18,7 @@ export default async function PopDocumentsPage() {
     <section>
       <div className="mb-6 flex items-end justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-bold text-secondary">POPs</h2>
+          <h2 className="text-3xl font-bold">POPs</h2>
           <p className="mt-1 text-muted">
             Templates base e documentos padrao com substituicao automatica.
           </p>
@@ -27,10 +27,7 @@ export default async function PopDocumentsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {(documents ?? []).map((document) => (
-          <article
-            key={document.id}
-            className="rounded-2xl border border-slate-200 bg-card p-5 shadow-sm"
-          >
+          <article key={document.id} className="surface-card p-5">
             <span
               className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${document.is_template ? "bg-primary/10 text-primary" : "bg-secondary/10 text-secondary"}`}
             >

@@ -81,8 +81,8 @@ export default async function SettingsPage({ searchParams }: Props) {
 
   return (
     <section className="space-y-6">
-      <article className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
-        <h2 className="text-2xl font-bold text-secondary">Configuracoes</h2>
+      <article className="surface-card p-6">
+        <h2 className="text-2xl font-bold">Configuracoes</h2>
         <p className="mt-1 text-sm text-muted">
           Personalize seu perfil e o atendimento white-label de agendamento.
         </p>
@@ -100,7 +100,7 @@ export default async function SettingsPage({ searchParams }: Props) {
       </article>
 
       <form action={saveSettingsAction} className="space-y-6">
-        <article className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+        <article className="surface-card p-6">
           <h3 className="text-lg font-semibold text-secondary">Perfil</h3>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -165,7 +165,7 @@ export default async function SettingsPage({ searchParams }: Props) {
           </div>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+        <article className="surface-card p-6">
           <h3 className="text-lg font-semibold text-secondary">
             Agenda de atendimento
           </h3>
@@ -237,7 +237,7 @@ export default async function SettingsPage({ searchParams }: Props) {
               {weekDayOptions.map((day) => (
                 <label
                   key={day.value}
-                  className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm"
+                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm"
                 >
                   <input
                     type="checkbox"
@@ -252,7 +252,7 @@ export default async function SettingsPage({ searchParams }: Props) {
           </fieldset>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+        <article className="surface-card p-6">
           <h3 className="text-lg font-semibold text-secondary">
             Integracao Google
           </h3>
@@ -261,7 +261,7 @@ export default async function SettingsPage({ searchParams }: Props) {
             sincroniza com seu Google Calendar automaticamente.
           </p>
 
-          <div className="mt-4 rounded-md bg-slate-50 px-4 py-3 text-sm text-muted">
+          <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-muted">
             {integration ? (
               <>
                 <p className="font-semibold text-foreground">
@@ -280,32 +280,26 @@ export default async function SettingsPage({ searchParams }: Props) {
             )}
           </div>
 
-          <Link
-            href="/api/google/connect"
-            className="mt-4 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
-          >
+          <Link href="/api/google/connect" className="btn-gradient mt-4">
             {integration
               ? "Reconectar Google Calendar"
               : "Conectar Google Calendar"}
           </Link>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+        <article className="surface-card p-6">
           <h3 className="text-lg font-semibold text-secondary">
             Link publico de agendamento
           </h3>
           <p className="mt-2 text-sm text-muted">
             Compartilhe este link com seus pacientes.
           </p>
-          <p className="mt-3 rounded-md bg-slate-50 px-4 py-3 text-sm text-foreground">
+          <p className="mt-3 rounded-xl bg-slate-50 px-4 py-3 text-sm text-foreground">
             {publicBookingUrl}
           </p>
         </article>
 
-        <button
-          type="submit"
-          className="rounded-md bg-secondary px-5 py-2 text-sm font-semibold text-white hover:bg-secondary/90"
-        >
+        <button type="submit" className="btn-gradient px-5 py-2">
           Salvar configuracoes
         </button>
       </form>

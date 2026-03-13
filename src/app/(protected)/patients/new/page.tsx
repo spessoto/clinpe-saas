@@ -14,8 +14,8 @@ export default async function NewPatientPage({ searchParams }: Props) {
   const error = typeof params.error === "string" ? params.error : null;
 
   return (
-    <section className="max-w-xl rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
-      <h2 className="text-2xl font-bold text-secondary">Novo paciente</h2>
+    <section className="surface-card max-w-xl p-6">
+      <h2 className="text-2xl font-bold">Novo paciente</h2>
       <p className="mt-1 text-sm text-muted">
         Cadastre o paciente para iniciar o historico clinico.
       </p>
@@ -55,16 +55,10 @@ export default async function NewPatientPage({ searchParams }: Props) {
         </label>
 
         <div className="flex gap-2">
-          <button
-            type="submit"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
-          >
+          <button type="submit" className="btn-gradient">
             Salvar
           </button>
-          <Link
-            href="/patients"
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100"
-          >
+          <Link href="/patients" className="btn-outline-modern">
             Cancelar
           </Link>
         </div>

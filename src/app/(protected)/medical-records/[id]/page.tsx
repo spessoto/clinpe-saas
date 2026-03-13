@@ -38,38 +38,38 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
 
   return (
     <section className="space-y-6">
-      <article className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
-        <h2 className="text-2xl font-bold text-secondary">Prontuario</h2>
+      <article className="surface-card p-6">
+        <h2 className="text-2xl font-bold">Prontuario</h2>
         <p className="mt-1 text-sm text-muted">
           Criado em {new Date(record.created_at).toLocaleString("pt-BR")}
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-md bg-slate-50 p-4">
+          <div className="rounded-xl bg-slate-50 p-4">
             <h3 className="font-semibold text-foreground">Queixa principal</h3>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
               {anamnesis.chief_complaint || "-"}
             </p>
           </div>
-          <div className="rounded-md bg-slate-50 p-4">
+          <div className="rounded-xl bg-slate-50 p-4">
             <h3 className="font-semibold text-foreground">Avaliacao clinica</h3>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
               {anamnesis.clinical_assessment || "-"}
             </p>
           </div>
-          <div className="rounded-md bg-slate-50 p-4">
+          <div className="rounded-xl bg-slate-50 p-4">
             <h3 className="font-semibold text-foreground">Procedimento</h3>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
               {anamnesis.procedure_performed || "-"}
             </p>
           </div>
-          <div className="rounded-md bg-slate-50 p-4">
+          <div className="rounded-xl bg-slate-50 p-4">
             <h3 className="font-semibold text-foreground">Recomendacoes</h3>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
               {anamnesis.recommendations || "-"}
             </p>
           </div>
-          <div className="rounded-md bg-slate-50 p-4 md:col-span-2">
+          <div className="rounded-xl bg-slate-50 p-4 md:col-span-2">
             <h3 className="font-semibold text-foreground">Evolucao</h3>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
               {anamnesis.evolution_notes || "-"}
@@ -78,7 +78,7 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
         </div>
       </article>
 
-      <article className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+      <article className="surface-card p-6">
         <h3 className="text-lg font-semibold text-secondary">Imagens</h3>
         {photos.length === 0 ? (
           <p className="mt-2 text-sm text-muted">Nenhuma imagem anexada.</p>
@@ -109,7 +109,7 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
 
       <Link
         href={`/patients/${record.patient_id}`}
-        className="inline-flex rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100"
+        className="btn-outline-modern"
       >
         Voltar para paciente
       </Link>

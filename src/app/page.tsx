@@ -5,12 +5,15 @@ import { BrandLogo } from "@/components/brand-logo";
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center px-6 py-16 md:px-10">
-      <section className="rounded-3xl border border-slate-200 bg-surface p-8 shadow-sm md:p-12">
+      <section className="surface-card p-8 md:p-12">
+        <span className="status-chip bg-secondary/10 text-secondary">
+          Plataforma de gestao clinica
+        </span>
         <BrandLogo className="h-auto w-full max-w-xs" priority />
-        <span className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
+        <span className="mt-4 inline-flex rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
           Ambiente local configurado
         </span>
-        <h1 className="mt-6 text-4xl font-bold tracking-tight text-secondary md:text-5xl">
+        <h1 className="mt-6 text-4xl font-bold tracking-tight md:text-5xl">
           PodoClin SaaS de Podologia
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-muted md:text-lg">
@@ -19,23 +22,14 @@ export default function Home() {
           multi-tenant usando Supabase.
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          <Link
-            href="/sign-up"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
-          >
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link href="/sign-up" className="btn-gradient">
             Criar conta
           </Link>
-          <Link
-            href="/sign-in"
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-foreground hover:bg-slate-100"
-          >
+          <Link href="/sign-in" className="btn-outline-modern">
             Entrar
           </Link>
-          <Link
-            href="/dashboard"
-            className="rounded-md border border-secondary px-4 py-2 text-sm font-semibold text-secondary hover:bg-secondary/10"
-          >
+          <Link href="/dashboard" className="btn-outline-modern">
             Ir para dashboard
           </Link>
         </div>

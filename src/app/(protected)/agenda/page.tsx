@@ -113,10 +113,10 @@ export default async function AgendaPage({ searchParams }: Props) {
 
   return (
     <section className="space-y-6">
-      <article className="rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+      <article className="surface-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-secondary">Agenda</h2>
+            <h2 className="text-2xl font-bold">Agenda</h2>
             <p className="mt-1 text-sm text-muted">
               Calendario mensal com as consultas sincronizadas do Google
               Calendar.
@@ -126,13 +126,13 @@ export default async function AgendaPage({ searchParams }: Props) {
           <div className="flex items-center gap-2">
             <Link
               href={`/agenda?month=${toMonthKey(prevMonth)}`}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-foreground hover:bg-slate-100"
+              className="btn-outline-modern px-3 py-1.5 text-sm"
             >
               Mes anterior
             </Link>
             <Link
               href={`/agenda?month=${toMonthKey(nextMonth)}`}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-foreground hover:bg-slate-100"
+              className="btn-outline-modern px-3 py-1.5 text-sm"
             >
               Proximo mes
             </Link>

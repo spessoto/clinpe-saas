@@ -30,8 +30,8 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
   }
 
   return (
-    <section className="max-w-xl rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
-      <h2 className="text-2xl font-bold text-secondary">Editar paciente</h2>
+    <section className="surface-card max-w-xl p-6">
+      <h2 className="text-2xl font-bold">Editar paciente</h2>
 
       {error ? (
         <p className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -73,16 +73,10 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
         </label>
 
         <div className="flex gap-2">
-          <button
-            type="submit"
-            className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
-          >
+          <button type="submit" className="btn-gradient">
             Salvar alteracoes
           </button>
-          <Link
-            href={`/patients/${patient.id}`}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100"
-          >
+          <Link href={`/patients/${patient.id}`} className="btn-outline-modern">
             Cancelar
           </Link>
         </div>

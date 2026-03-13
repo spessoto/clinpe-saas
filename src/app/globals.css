@@ -2,20 +2,20 @@
 @import "tw-animate-css";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #334155;
+  --background: #f4f8fb;
+  --foreground: #1e293b;
   --surface: #ffffff;
   --card: #ffffff;
-  --primary: #0d9488;
-  --primary-hover: #0f766e;
-  --secondary: #1e3a8a;
-  --secondary-hover: #1e40af;
-  --text-primary: #334155;
-  --muted: #64748b;
-  --text-muted: #64748b;
+  --primary: #0f8f87;
+  --primary-hover: #0b766f;
+  --secondary: #2142a6;
+  --secondary-hover: #1a3485;
+  --text-primary: #1f2937;
+  --muted: #5f7086;
+  --text-muted: #5f7086;
   --destructive: #e11d48;
-  --warning: #f97316;
-  --success: #10b981;
+  --warning: #ea580c;
+  --success: #059669;
 }
 
 @theme inline {
@@ -34,7 +34,7 @@
   --color-warning: var(--warning);
   --color-success: var(--success);
   --font-sans: var(--font-podoclin-sans);
-  --font-mono: var(--font-podoclin-mono);
+  --font-mono: var(--font-podoclin-sans);
 }
 
 @layer base {
@@ -45,5 +45,76 @@
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
+    font-family:
+      var(--font-podoclin-sans), ui-sans-serif, system-ui, sans-serif;
+    background-image:
+      radial-gradient(
+        circle at 0% 0%,
+        rgba(34, 197, 190, 0.18),
+        transparent 35%
+      ),
+      radial-gradient(
+        circle at 100% 0%,
+        rgba(59, 130, 246, 0.16),
+        transparent 30%
+      ),
+      linear-gradient(180deg, #f4f8fb 0%, #ffffff 52%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-text-primary;
+    font-family: inherit;
+  }
+
+  a {
+    @apply transition-colors;
+  }
+
+  button,
+  [role="button"] {
+    @apply transition-all;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply rounded-xl border border-slate-200 bg-white px-3 py-2 text-foreground outline-none ring-primary/30 transition focus:border-primary/40 focus:ring-2;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    @apply text-slate-400;
+  }
+
+  ::selection {
+    background: rgba(15, 143, 135, 0.22);
+  }
+}
+
+@layer components {
+  .surface-card {
+    @apply rounded-3xl border border-slate-200/80 bg-white/95 shadow-[0_12px_40px_-24px_rgba(15,23,42,0.48)] backdrop-blur;
+  }
+
+  .soft-panel {
+    @apply rounded-2xl border border-white/60 bg-gradient-to-b from-white to-slate-50/80 shadow-[0_10px_30px_-22px_rgba(2,6,23,0.6)];
+  }
+
+  .btn-gradient {
+    @apply inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-primary to-secondary px-4 py-2 font-semibold text-white shadow-[0_14px_24px_-18px_rgba(33,66,166,0.9)] hover:from-primary-hover hover:to-secondary-hover;
+  }
+
+  .btn-outline-modern {
+    @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white/90 px-4 py-2 font-semibold text-foreground hover:border-primary/30 hover:bg-primary/5;
+  }
+
+  .status-chip {
+    @apply inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide;
   }
 }

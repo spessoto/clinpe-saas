@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { createPublicBookingAction } from "@/app/public-booking-actions";
 import {
   diagnosePublicProfessionalBooking,
@@ -22,7 +24,7 @@ function getProfessionalInitials(fullName: string) {
 function UnavailableBookingPage({ message }: { message: string }) {
   return (
     <main className="bg-[radial-gradient(circle_at_top,#dbeafe,transparent_45%),linear-gradient(180deg,#f8fafc,white)] px-6 py-12">
-      <section className="mx-auto max-w-4xl rounded-3xl border border-warning/40 bg-card p-8 shadow-sm">
+      <section className="surface-card mx-auto max-w-4xl border-warning/40 p-8">
         <h1 className="text-3xl font-bold text-secondary">
           Agendamento indisponivel
         </h1>
@@ -95,82 +97,40 @@ export default async function ProfessionalBookingPage({
     date: selectedDate,
   });
 
+  const selectedDateLabel = new Date(
+    `${selectedDate}T00:00:00`,
+  ).toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
-    <main className="bg-[radial-gradient(circle_at_top,#ccfbf1,transparent_35%),linear-gradient(180deg,#f8fafc,white)] px-6 py-12">
+    <main className="bg-[#f3f7f8] px-6 py-10">
       <section className="mx-auto max-w-6xl">
-        <article className="rounded-3xl border border-slate-200 bg-card p-8 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-xl font-bold text-white">
-                {initials}
-              </div>
-              <div>
-                <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-                  Agenda online PodoClin
-                </span>
-                <h1 className="mt-3 text-3xl font-bold text-secondary md:text-4xl">
-                  {context.professional.full_name}
-                </h1>
-                <p className="mt-2 text-sm text-muted">
-                  Registro profissional:{" "}
-                  {context.professional.professional_register ??
-                    "Nao informado"}
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  Clinica: {context.tenant.name}
-                </p>
-              </div>
-            </div>
+        <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+          <section className="space-y-6">
+            <header>
+              <h1 className="text-4xl font-bold">Agende sua consulta</h1>
+              <p className="mt-2 max-w-2xl text-sm text-muted">
+                Siga as etapas abaixo para reservar seu horario com nosso
+                especialista em podologia.
+              </p>
+            </header>
 
-            <form
-              action={`/${professional_slug}`}
-              method="get"
-              className="w-full max-w-xs rounded-xl border border-slate-200 bg-slate-50 p-3"
-            >
-              <label className="block text-sm">
-                <span className="mb-1 block text-foreground">
-                  Data da consulta
-                </span>
-                <input
-                  type="date"
-                  name="date"
-                  defaultValue={selectedDate}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-                />
-              </label>
-              <button
-                type="submit"
-                className="mt-3 w-full rounded-md border border-secondary px-4 py-2 text-sm font-semibold text-secondary hover:bg-secondary/10"
-              >
-                Atualizar horarios
-              </button>
-            </form>
-          </div>
+            {success ? (
+              <p className="rounded-xl bg-success/10 px-4 py-3 text-sm text-success">
+                {success}
+              </p>
+            ) : null}
+            {error ? (
+              <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
 
-          {success ? (
-            <p className="mt-6 rounded-md bg-success/10 px-4 py-3 text-sm text-success">
-              {success}
-            </p>
-          ) : null}
-          {error ? (
-            <p className="mt-6 rounded-md bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
-        </article>
-
-        <section className="mt-8">
-          <article className="rounded-3xl border border-slate-200 bg-card p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-secondary">
-              Solicitar agendamento
-            </h2>
-            <p className="mt-2 text-sm text-muted">
-              Preencha seus dados e selecione um horario disponivel para
-              concluir o agendamento. A consulta sera registrada no sistema e
-              sincronizada com a agenda do profissional.
-            </p>
-
-            <form action={createPublicBookingAction} className="mt-6 space-y-4">
+            <form action={createPublicBookingAction} className="space-y-6">
               <input
                 type="hidden"
                 name="tenant_slug"
@@ -187,76 +147,206 @@ export default async function ProfessionalBookingPage({
                 value={context.professional.id}
               />
 
-              <label className="block text-sm">
-                <span className="mb-1 block text-foreground">
-                  Nome completo
-                </span>
-                <input
-                  name="patient_name"
-                  required
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block text-foreground">E-mail</span>
-                <input
-                  type="email"
-                  name="patient_email"
-                  required
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="mb-1 block text-foreground">Celular</span>
-                <input
-                  name="patient_phone"
-                  required
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-                />
-              </label>
-
-              <fieldset>
-                <legend className="mb-2 text-sm font-semibold text-foreground">
-                  Horarios disponiveis
-                </legend>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {slots.map((slot) => (
-                    <label
-                      key={slot}
-                      className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm hover:border-primary/40 hover:bg-primary/5"
-                    >
-                      <input
-                        type="radio"
-                        name="scheduled_at"
-                        value={slot}
-                        required
-                      />
-                      <span>
-                        {new Date(slot).toLocaleString("pt-BR", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
-                      </span>
-                    </label>
-                  ))}
-                  {slots.length === 0 ? (
-                    <p className="text-sm text-muted">
-                      Nao ha horarios livres para esta data.
-                    </p>
-                  ) : null}
+              <article className="soft-panel p-5">
+                <p className="text-sm font-semibold text-secondary">
+                  1. Servico selecionado
+                </p>
+                <div className="mt-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
+                  <p className="font-semibold text-foreground">
+                    Consulta podologica
+                  </p>
+                  <p className="text-sm text-muted">
+                    Atendimento personalizado para saude dos pes.
+                  </p>
                 </div>
-              </fieldset>
+              </article>
 
-              <button
-                type="submit"
-                disabled={slots.length === 0}
-                className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Confirmar agendamento
-              </button>
+              <article className="soft-panel p-5">
+                <p className="text-sm font-semibold text-secondary">
+                  2. Especialista
+                </p>
+                <div className="mt-3 flex items-center gap-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
+                  {context.professional.profile_photo_url ? (
+                    <Image
+                      src={context.professional.profile_photo_url}
+                      alt={context.professional.full_name}
+                      width={52}
+                      height={52}
+                      className="h-13 w-13 rounded-full border border-slate-200 object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-13 w-13 items-center justify-center rounded-full bg-secondary text-sm font-bold text-white">
+                      {initials}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {context.professional.full_name}
+                    </p>
+                    <p className="text-sm text-muted">
+                      {context.professional.professional_register ??
+                        "Registro nao informado"}
+                    </p>
+                  </div>
+                </div>
+              </article>
+
+              <article className="soft-panel p-5">
+                <p className="text-sm font-semibold text-secondary">
+                  3. Data e horario
+                </p>
+
+                <div className="mt-3">
+                  <label className="text-sm">
+                    <span className="mb-1 block text-foreground">
+                      Data da consulta
+                    </span>
+                    <input
+                      type="date"
+                      name="date"
+                      defaultValue={selectedDate}
+                      formAction={`/${professional_slug}`}
+                      className="w-full max-w-xs rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    formAction={`/${professional_slug}`}
+                    formMethod="get"
+                    className="btn-outline-modern ml-3"
+                  >
+                    Atualizar horarios
+                  </button>
+                </div>
+
+                <fieldset className="mt-4">
+                  <legend className="mb-2 text-sm font-semibold text-foreground">
+                    Horarios disponiveis
+                  </legend>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {slots.map((slot) => (
+                      <label
+                        key={slot}
+                        className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm hover:border-primary/40 hover:bg-primary/5"
+                      >
+                        <input
+                          type="radio"
+                          name="scheduled_at"
+                          value={slot}
+                          required
+                        />
+                        <span>
+                          {new Date(slot).toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </label>
+                    ))}
+                    {slots.length === 0 ? (
+                      <p className="text-sm text-muted">
+                        Nao ha horarios livres para esta data.
+                      </p>
+                    ) : null}
+                  </div>
+                </fieldset>
+              </article>
+
+              <article className="soft-panel p-5">
+                <p className="text-sm font-semibold text-secondary">
+                  4. Dados pessoais
+                </p>
+
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-foreground">
+                      Nome completo
+                    </span>
+                    <input
+                      name="patient_name"
+                      required
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-foreground">Celular</span>
+                    <input
+                      name="patient_phone"
+                      required
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                    />
+                  </label>
+                  <label className="block text-sm md:col-span-2">
+                    <span className="mb-1 block text-foreground">E-mail</span>
+                    <input
+                      type="email"
+                      name="patient_email"
+                      required
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                    />
+                  </label>
+                  <label className="block text-sm md:col-span-2">
+                    <span className="mb-1 block text-foreground">
+                      Breve descricao do problema (opcional)
+                    </span>
+                    <textarea
+                      name="issue_description"
+                      rows={3}
+                      className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                    />
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={slots.length === 0}
+                  className="btn-gradient mt-4 w-full py-3 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Confirmar agendamento
+                </button>
+              </article>
             </form>
-          </article>
-        </section>
+          </section>
+
+          <aside className="lg:sticky lg:top-6 lg:h-fit">
+            <article className="surface-card p-5">
+              <h2 className="text-lg font-bold text-secondary">
+                Resumo do agendamento
+              </h2>
+              <dl className="mt-4 space-y-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted">Servico</dt>
+                  <dd className="font-semibold text-foreground">
+                    Consulta podologica
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted">Profissional</dt>
+                  <dd className="font-semibold text-foreground">
+                    {context.professional.full_name}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted">Clinica</dt>
+                  <dd className="font-semibold text-foreground">
+                    {context.tenant.name}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted">Data</dt>
+                  <dd className="font-semibold capitalize text-foreground">
+                    {selectedDateLabel}
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="mt-4 rounded-lg bg-primary/10 px-3 py-2 text-xs text-primary">
+                Sua confirmacao cria o horario no sistema e sincroniza na agenda
+                do profissional.
+              </div>
+            </article>
+          </aside>
+        </div>
       </section>
     </main>
   );

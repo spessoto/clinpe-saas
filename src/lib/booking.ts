@@ -17,6 +17,7 @@ type Professional = {
   id: string;
   full_name: string;
   professional_register: string | null;
+  profile_photo_url: string | null;
   booking_slug: string;
   tenant_id: string;
 };
@@ -178,7 +179,9 @@ export async function getPublicBookingContext(tenantSlug: string) {
 
   const { data: professionals } = await supabase
     .from("users")
-    .select("id, tenant_id, full_name, professional_register, booking_slug")
+    .select(
+      "id, tenant_id, full_name, professional_register, profile_photo_url, booking_slug",
+    )
     .eq("tenant_id", tenant.id)
     .order("full_name", { ascending: true });
 
@@ -197,7 +200,9 @@ export async function getPublicProfessionalBookingContext(
 
   const withColumnResult = await supabase
     .from("users")
-    .select("id, tenant_id, full_name, professional_register, booking_slug")
+    .select(
+      "id, tenant_id, full_name, professional_register, profile_photo_url, booking_slug",
+    )
     .eq("booking_slug", professionalSlug)
     .maybeSingle();
 
@@ -206,7 +211,9 @@ export async function getPublicProfessionalBookingContext(
   } else {
     const fallbackUsers = await supabase
       .from("users")
-      .select("id, tenant_id, full_name, professional_register");
+      .select(
+        "id, tenant_id, full_name, professional_register, profile_photo_url",
+      );
 
     const found = (fallbackUsers.data ?? []).find(
       (user) => slugifyName(user.full_name) === professionalSlug,
@@ -261,7 +268,9 @@ export async function diagnosePublicProfessionalBooking(
 
   const withColumnResult = await supabase
     .from("users")
-    .select("id, tenant_id, full_name, professional_register, booking_slug")
+    .select(
+      "id, tenant_id, full_name, professional_register, profile_photo_url, booking_slug",
+    )
     .eq("booking_slug", professionalSlug)
     .maybeSingle();
 
@@ -270,7 +279,9 @@ export async function diagnosePublicProfessionalBooking(
   } else {
     const fallbackUsers = await supabase
       .from("users")
-      .select("id, tenant_id, full_name, professional_register");
+      .select(
+        "id, tenant_id, full_name, professional_register, profile_photo_url",
+      );
 
     const found = (fallbackUsers.data ?? []).find(
       (user) => slugifyName(user.full_name) === professionalSlug,

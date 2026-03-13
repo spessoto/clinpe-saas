@@ -13,9 +13,9 @@ export default async function SignUpPage({ searchParams }: Props) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-14">
-      <section className="w-full rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+      <section className="surface-card w-full p-7">
         <BrandLogo className="mx-auto h-auto w-44" priority />
-        <h1 className="text-2xl font-bold text-secondary">Criar conta</h1>
+        <h1 className="mt-4 text-2xl font-bold">Criar conta</h1>
         <p className="mt-1 text-sm text-muted">
           Comece seu trial de 7 dias na PodoClin.
         </p>
@@ -76,10 +76,7 @@ export default async function SignUpPage({ searchParams }: Props) {
             />
           </label>
 
-          <button
-            type="submit"
-            className="w-full rounded-md bg-primary px-4 py-2 font-semibold text-white transition hover:bg-primary-hover"
-          >
+          <button type="submit" className="btn-gradient w-full py-2.5">
             Criar conta
           </button>
         </form>

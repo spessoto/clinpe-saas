@@ -31,16 +31,13 @@ export default async function PatientsPage({ searchParams }: Props) {
     <section>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-bold text-secondary">Pacientes</h2>
+          <h2 className="text-3xl font-bold">Pacientes</h2>
           <p className="mt-1 text-muted">
             CRUD com busca por nome ou telefone.
           </p>
         </div>
 
-        <Link
-          href="/patients/new"
-          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
-        >
+        <Link href="/patients/new" className="btn-gradient">
           Novo paciente
         </Link>
       </div>
@@ -53,10 +50,7 @@ export default async function PatientsPage({ searchParams }: Props) {
           placeholder="Buscar por nome ou telefone"
           className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
         />
-        <button
-          type="submit"
-          className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-100"
-        >
+        <button type="submit" className="btn-outline-modern">
           Buscar
         </button>
       </form>
@@ -67,7 +61,7 @@ export default async function PatientsPage({ searchParams }: Props) {
         </p>
       ) : null}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-card shadow-sm">
+      <div className="surface-card overflow-hidden">
         <table className="w-full text-left text-sm">
           <thead className="bg-secondary/10 text-secondary">
             <tr>

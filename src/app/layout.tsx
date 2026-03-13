@@ -1,14 +1,9 @@
 import type { Metadata } from "next";
-import { Nunito, Source_Code_Pro } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const nunito = Nunito({
+const inter = Inter({
   variable: "--font-podoclin-sans",
-  subsets: ["latin"],
-});
-
-const sourceCodePro = Source_Code_Pro({
-  variable: "--font-podoclin-mono",
   subsets: ["latin"],
 });
 
@@ -23,12 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body
-        className={`${nunito.variable} ${sourceCodePro.variable} antialiased`}
-      >
-        {children}
-      </body>
+    <html lang="pt-BR" className={inter.variable}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

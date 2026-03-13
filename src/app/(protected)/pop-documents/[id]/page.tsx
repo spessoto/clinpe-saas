@@ -58,7 +58,7 @@ export default async function PopDocumentDetailsPage({ params }: Props) {
         <PrintButton />
       </div>
 
-      <article className="rounded-2xl border border-slate-200 bg-card p-8 shadow-sm">
+      <article className="surface-card p-8">
         <pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-foreground">
           {renderedContent}
         </pre>

@@ -33,7 +33,7 @@ export default async function PublicBookingPage({
         : "Booking publico nao configurado";
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
-        <section className="w-full rounded-3xl border border-warning/30 bg-card p-8 shadow-sm">
+        <section className="surface-card w-full border-warning/30 p-8">
           <h1 className="text-3xl font-bold text-secondary">
             Autoagendamento indisponivel
           </h1>
@@ -63,7 +63,7 @@ export default async function PublicBookingPage({
   return (
     <main className="bg-[radial-gradient(circle_at_top,#ccfbf1,transparent_35%),linear-gradient(180deg,#f8fafc,white)] px-6 py-12">
       <section className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <article className="rounded-3xl border border-slate-200 bg-card p-8 shadow-sm">
+        <article className="surface-card p-8">
           <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
             Autoagendamento PodoClin
           </span>
@@ -115,16 +115,13 @@ export default async function PublicBookingPage({
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
               />
             </label>
-            <button
-              type="submit"
-              className="rounded-md border border-secondary px-4 py-2 text-sm font-semibold text-secondary hover:bg-secondary/10 md:col-span-2"
-            >
+            <button type="submit" className="btn-outline-modern md:col-span-2">
               Atualizar horarios
             </button>
           </form>
         </article>
 
-        <article className="rounded-3xl border border-slate-200 bg-card p-8 shadow-sm">
+        <article className="surface-card p-8">
           <h2 className="text-2xl font-bold text-secondary">
             Horarios disponiveis
           </h2>
@@ -179,7 +176,7 @@ export default async function PublicBookingPage({
                 {slots.map((slot) => (
                   <label
                     key={slot}
-                    className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm hover:border-primary/40 hover:bg-primary/5"
+                    className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm hover:border-primary/40 hover:bg-primary/5"
                   >
                     <input
                       type="radio"
@@ -206,7 +203,7 @@ export default async function PublicBookingPage({
             <button
               type="submit"
               disabled={!selectedProfessional || slots.length === 0}
-              className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-gradient w-full disabled:cursor-not-allowed disabled:opacity-50"
             >
               Confirmar agendamento
             </button>
