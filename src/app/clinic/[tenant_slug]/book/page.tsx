@@ -89,7 +89,7 @@ export default async function PublicBookingPage({
 
           <form
             className="mt-6 grid gap-4 md:grid-cols-2"
-            action={`/${tenant_slug}/book`}
+            action={`/clinic/${tenant_slug}/book`}
             method="get"
           >
             <label className="block text-sm">
@@ -136,6 +136,11 @@ export default async function PublicBookingPage({
             <input type="hidden" name="tenant_slug" value={tenant_slug} />
             <input
               type="hidden"
+              name="return_path"
+              value={`/clinic/${tenant_slug}/book`}
+            />
+            <input
+              type="hidden"
               name="professional_id"
               value={selectedProfessional?.id ?? ""}
             />
@@ -152,6 +157,15 @@ export default async function PublicBookingPage({
               <span className="mb-1 block text-foreground">Telefone</span>
               <input
                 name="patient_phone"
+                required
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">E-mail</span>
+              <input
+                type="email"
+                name="patient_email"
                 required
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
               />

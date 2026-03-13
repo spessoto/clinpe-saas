@@ -13,6 +13,15 @@ type BusyRange = {
   end?: string | null;
 };
 
+export type GoogleCalendarEvent = {
+  id: string;
+  summary: string;
+  start: string;
+  end: string;
+  description: string | null;
+  attendees: string[];
+};
+
 function getRedirectUri() {
   const env = getGoogleEnv();
   return `${env.NEXT_PUBLIC_APP_URL}/api/google/callback`;
@@ -94,6 +103,7 @@ export async function createGoogleCalendarEvent(
     description: string;
     start: string;
     end: string;
+    attendees?: string[];
   },
 ) {
   const client = await getAuthorizedClient(connection);
@@ -106,6 +116,49 @@ export async function createGoogleCalendarEvent(
       description: input.description,
       start: { dateTime: input.start },
       end: { dateTime: input.end },
+      attendees: (input.attendees ?? [])
+        .filter((email) => Boolean(email))
+        .map((email) => ({ email })),
     },
   });
+}
+
+export async function listGoogleCalendarEvents(
+  connection: GoogleConnection,
+  timeMin: string,
+  timeMax: string,
+) {
+  const client = await getAuthorizedClient(connection);
+  const calendar = google.calendar({ version: "v3", auth: client });
+
+  const { data } = await calendar.events.list({
+    calendarId: "primary",
+    singleEvents: true,
+    orderBy: "startTime",
+    timeMin,
+    timeMax,
+    maxResults: 250,
+  });
+
+  return (data.items ?? [])
+    .map((event) => {
+      const start = event.start?.dateTime ?? event.start?.date;
+      const end = event.end?.dateTime ?? event.end?.date;
+
+      if (!event.id || !start || !end) {
+        return null;
+      }
+
+      return {
+        id: event.id,
+        summary: event.summary ?? "Consulta",
+        start,
+        end,
+        description: event.description ?? null,
+        attendees: (event.attendees ?? [])
+          .map((attendee) => attendee.email ?? "")
+          .filter((email) => Boolean(email)),
+      } satisfies GoogleCalendarEvent;
+    })
+    .filter((event): event is GoogleCalendarEvent => Boolean(event));
 }

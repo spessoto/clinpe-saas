@@ -7,6 +7,7 @@ type AppUser = {
   tenant_id: string;
   full_name: string;
   professional_register: string | null;
+  booking_slug: string | null;
   email: string;
   role: "owner" | "staff";
 };
@@ -29,11 +30,38 @@ export async function requireAuthenticatedUser() {
     redirect("/sign-in");
   }
 
-  const { data: appUser } = await supabase
+  const withBookingSlugResult = await supabase
     .from("users")
-    .select("id, tenant_id, full_name, professional_register, email, role")
+    .select(
+      "id, tenant_id, full_name, professional_register, booking_slug, email, role",
+    )
     .eq("id", user.id)
     .single();
+
+  let appUser = withBookingSlugResult.data as AppUser | null;
+
+  if (!appUser && withBookingSlugResult.error) {
+    const shouldFallback =
+      withBookingSlugResult.error.code === "PGRST204" ||
+      withBookingSlugResult.error.message
+        .toLowerCase()
+        .includes("booking_slug");
+
+    if (shouldFallback) {
+      const fallbackResult = await supabase
+        .from("users")
+        .select("id, tenant_id, full_name, professional_register, email, role")
+        .eq("id", user.id)
+        .single();
+
+      if (fallbackResult.data) {
+        appUser = {
+          ...(fallbackResult.data as Omit<AppUser, "booking_slug">),
+          booking_slug: null,
+        };
+      }
+    }
+  }
 
   if (!appUser) {
     redirect(

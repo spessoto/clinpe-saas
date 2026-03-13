@@ -39,16 +39,22 @@ export default async function ProtectedLayout({
               Pacientes
             </Link>
             <Link
+              href="/agenda"
+              className="text-foreground hover:text-secondary"
+            >
+              Agenda
+            </Link>
+            <Link
               href="/medical-records/new"
               className="text-foreground hover:text-secondary"
             >
               Prontuarios
             </Link>
             <Link
-              href="/integrations/google"
+              href="/settings"
               className="text-foreground hover:text-secondary"
             >
-              Google
+              Configuracoes
             </Link>
             <Link
               href="/pop-documents"

@@ -49,6 +49,12 @@ export function getAdminEnv() {
     );
   }
 
+  if (parsed.data.SUPABASE_SERVICE_ROLE_KEY.includes("REPLACE_WITH")) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY esta com valor placeholder no .env.local. Configure a chave real para habilitar as rotas publicas de agendamento.",
+    );
+  }
+
   return parsed.data;
 }
 

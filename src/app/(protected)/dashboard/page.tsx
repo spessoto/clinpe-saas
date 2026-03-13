@@ -10,9 +10,19 @@ function monthBoundaries() {
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
+function slugifyProfessionalName(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default async function DashboardPage() {
-  const { appUser, tenant } = await requireActiveTenant();
-  const bookingPath = tenant.slug ? `/${tenant.slug}/book` : null;
+  const { appUser } = await requireActiveTenant();
+  const professionalSlug = slugifyProfessionalName(appUser.full_name);
+  const bookingPath = professionalSlug ? `/${professionalSlug}` : null;
   const supabase = await createClient();
   const { start, end } = monthBoundaries();
 
@@ -96,10 +106,10 @@ export default async function DashboardPage() {
             Conecte sua agenda para sincronizar disponibilidade e consultas.
           </p>
           <Link
-            href="/integrations/google"
+            href="/settings"
             className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
           >
-            Abrir integracao
+            Abrir configuracoes
           </Link>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-card p-5 shadow-sm">
