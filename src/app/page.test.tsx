@@ -8,7 +8,7 @@ describe("Home", () => {
     render(<Home />);
 
     expect(
-      screen.getByRole("heading", { name: /clinpe saas de podologia/i }),
+      screen.getByRole("heading", { name: /podoclin saas de podologia/i }),
     ).toBeInTheDocument();
   });
 });

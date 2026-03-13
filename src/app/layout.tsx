@@ -3,17 +3,17 @@ import { Nunito, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
 
 const nunito = Nunito({
-  variable: "--font-clinpe-sans",
+  variable: "--font-podoclin-sans",
   subsets: ["latin"],
 });
 
 const sourceCodePro = Source_Code_Pro({
-  variable: "--font-clinpe-mono",
+  variable: "--font-podoclin-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "ClinPe SaaS",
+  title: "PodoClin SaaS",
   description: "Plataforma SaaS para gestao de podologia",
 };
 

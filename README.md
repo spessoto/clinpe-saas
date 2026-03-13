@@ -1,4 +1,4 @@
-# ClinPe App
+# PodoClin App
 
 Base inicial do SaaS de podologia com Next.js, Tailwind CSS v4, shadcn/ui, Supabase e testes com Vitest.
 

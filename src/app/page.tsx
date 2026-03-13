@@ -1,14 +1,17 @@
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/brand-logo";
+
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center px-6 py-16 md:px-10">
       <section className="rounded-3xl border border-slate-200 bg-surface p-8 shadow-sm md:p-12">
+        <BrandLogo className="h-auto w-full max-w-xs" priority />
         <span className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
           Ambiente local configurado
         </span>
         <h1 className="mt-6 text-4xl font-bold tracking-tight text-secondary md:text-5xl">
-          ClinPe SaaS de Podologia
+          PodoClin SaaS de Podologia
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-muted md:text-lg">
           Base Next.js pronta para iniciar os epicos de onboarding, pacientes,

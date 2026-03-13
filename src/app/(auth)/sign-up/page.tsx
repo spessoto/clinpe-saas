@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { signUpAction } from "@/app/auth-actions";
+import { BrandLogo } from "@/components/brand-logo";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -13,9 +14,10 @@ export default async function SignUpPage({ searchParams }: Props) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-14">
       <section className="w-full rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+        <BrandLogo className="mx-auto h-auto w-44" priority />
         <h1 className="text-2xl font-bold text-secondary">Criar conta</h1>
         <p className="mt-1 text-sm text-muted">
-          Comece seu trial de 7 dias no ClinPe.
+          Comece seu trial de 7 dias na PodoClin.
         </p>
 
         {error ? (

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { signInAction } from "@/app/auth-actions";
+import { BrandLogo } from "@/components/brand-logo";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -14,8 +15,9 @@ export default async function SignInPage({ searchParams }: Props) {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-14">
       <section className="w-full rounded-2xl border border-slate-200 bg-card p-6 shadow-sm">
+        <BrandLogo className="mx-auto h-auto w-44" priority />
         <h1 className="text-2xl font-bold text-secondary">Entrar</h1>
-        <p className="mt-1 text-sm text-muted">Acesse sua conta do ClinPe.</p>
+        <p className="mt-1 text-sm text-muted">Acesse sua conta da PodoClin.</p>
 
         {message ? (
           <p className="mt-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">

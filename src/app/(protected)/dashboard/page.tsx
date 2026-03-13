@@ -11,7 +11,8 @@ function monthBoundaries() {
 }
 
 export default async function DashboardPage() {
-  const { appUser } = await requireActiveTenant();
+  const { appUser, tenant } = await requireActiveTenant();
+  const bookingPath = tenant.slug ? `/${tenant.slug}/book` : null;
   const supabase = await createClient();
   const { start, end } = monthBoundaries();
 
@@ -84,6 +85,54 @@ export default async function DashboardPage() {
             </p>
           </article>
         ))}
+      </div>
+
+      <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        <article className="rounded-2xl border border-slate-200 bg-card p-5 shadow-sm">
+          <h3 className="text-lg font-semibold text-secondary">
+            Google Calendar
+          </h3>
+          <p className="mt-2 text-sm text-muted">
+            Conecte sua agenda para sincronizar disponibilidade e consultas.
+          </p>
+          <Link
+            href="/integrations/google"
+            className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+          >
+            Abrir integracao
+          </Link>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-card p-5 shadow-sm">
+          <h3 className="text-lg font-semibold text-secondary">
+            Autoagendamento
+          </h3>
+          <p className="mt-2 text-sm text-muted">
+            {bookingPath
+              ? `Link publico da clinica: ${bookingPath}`
+              : "Slug do tenant ainda nao configurado. Execute a migration do Epico 4."}
+          </p>
+          {bookingPath ? (
+            <Link
+              href={bookingPath}
+              className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+            >
+              Abrir pagina publica
+            </Link>
+          ) : null}
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-card p-5 shadow-sm">
+          <h3 className="text-lg font-semibold text-secondary">POPs</h3>
+          <p className="mt-2 text-sm text-muted">
+            Visualize templates base com substituicao automatica de nome e
+            registro.
+          </p>
+          <Link
+            href="/pop-documents"
+            className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+          >
+            Abrir documentos
+          </Link>
+        </article>
       </div>
     </section>
   );

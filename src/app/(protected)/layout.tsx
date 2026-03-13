@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { signOutAction } from "@/app/auth-actions";
+import { BrandLogo } from "@/components/brand-logo";
 import { requireActiveTenant } from "@/lib/auth";
 
 export default async function ProtectedLayout({
@@ -12,11 +13,16 @@ export default async function ProtectedLayout({
     <div className="min-h-screen bg-background">
       <header className="border-b border-slate-200 bg-card">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-muted">ClinPe</p>
-            <h1 className="text-sm font-semibold text-secondary">
-              {tenant.name}
-            </h1>
+          <div className="flex items-center gap-3">
+            <BrandLogo className="h-auto w-32" />
+            <div>
+              <p className="text-xs uppercase tracking-wide text-muted">
+                PodoClin
+              </p>
+              <h1 className="text-sm font-semibold text-secondary">
+                {tenant.name}
+              </h1>
+            </div>
           </div>
 
           <nav className="flex items-center gap-4 text-sm">
@@ -37,6 +43,18 @@ export default async function ProtectedLayout({
               className="text-foreground hover:text-secondary"
             >
               Prontuarios
+            </Link>
+            <Link
+              href="/integrations/google"
+              className="text-foreground hover:text-secondary"
+            >
+              Google
+            </Link>
+            <Link
+              href="/pop-documents"
+              className="text-foreground hover:text-secondary"
+            >
+              POPs
             </Link>
             <form action={signOutAction}>
               <button
