@@ -62,13 +62,29 @@ export default async function PatientDetailsPage({ params }: Props) {
     ]),
   );
 
-  const lastAppointmentDate = appointments?.[0]?.scheduled_at
-    ? new Date(appointments[0].scheduled_at).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "2-digit",
-      })
-    : "--/--/--";
+  const lastAppointmentDate = (() => {
+    const lastAppointment = appointments?.[0]?.scheduled_at
+      ? new Date(appointments[0].scheduled_at)
+      : null;
+    const lastRecord = records?.[0]?.created_at
+      ? new Date(records[0].created_at)
+      : null;
+
+    const lastDate =
+      lastAppointment && lastRecord
+        ? lastAppointment > lastRecord
+          ? lastAppointment
+          : lastRecord
+        : lastAppointment || lastRecord;
+
+    return lastDate
+      ? lastDate.toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "2-digit",
+        })
+      : "--/--/--";
+  })();
   const completedAppointments =
     appointments?.filter((appointment) => appointment.status === "completed")
       .length ?? 0;
