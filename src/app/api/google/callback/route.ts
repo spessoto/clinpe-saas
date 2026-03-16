@@ -4,6 +4,18 @@ import { exchangeGoogleCode } from "@/lib/google-calendar";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
+function getPublicAppUrl() {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (envUrl) {
+    return envUrl;
+  }
+
+  return process.env.NODE_ENV === "production"
+    ? "https://pododesk.com.br"
+    : "http://localhost:3000";
+}
+
 function toErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
     return error.message;
@@ -59,11 +71,12 @@ function isMissingGoogleIntegrationsTable(error: unknown) {
 }
 
 export async function GET(request: NextRequest) {
+  const appUrl = getPublicAppUrl();
   const code = request.nextUrl.searchParams.get("code");
 
   if (!code) {
     return NextResponse.redirect(
-      new URL("/settings?error=Codigo do Google ausente", request.url),
+      new URL("/settings?error=Codigo do Google ausente", appUrl),
     );
   }
 
@@ -103,7 +116,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.redirect(
-      new URL("/settings?success=Google Calendar conectado", request.url),
+      new URL("/settings?success=Google Calendar conectado", appUrl),
     );
   } catch (error) {
     const message = isMissingGoogleIntegrationsTable(error)
@@ -111,7 +124,7 @@ export async function GET(request: NextRequest) {
       : toErrorMessage(error, "Falha ao concluir integração Google");
 
     return NextResponse.redirect(
-      new URL(`/settings?error=${encodeURIComponent(message)}`, request.url),
+      new URL(`/settings?error=${encodeURIComponent(message)}`, appUrl),
     );
   }
 }

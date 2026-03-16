@@ -56,7 +56,7 @@ SUPABASE_SERVICE_ROLE_KEY=xxxxxxxx
 
 GOOGLE_CLIENT_ID=xxxxxxxx
 GOOGLE_CLIENT_SECRET=xxxxxxxx
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=https://pododesk.com.br
 
 # E-mail SMTP (obrigatorio para confirmar/cancelar agendamentos)
 SMTP_HOST=smtp.hostinger.com
@@ -130,7 +130,7 @@ Observacoes:
 npm run dev
 ```
 
-Aplicacao em `http://localhost:3000`.
+Aplicacao em `http://localhost:3000` (desenvolvimento local) e em `https://pododesk.com.br` (producao).
 
 ## Qualidade
 

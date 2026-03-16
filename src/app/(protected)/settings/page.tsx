@@ -70,7 +70,12 @@ export default async function SettingsPage({ searchParams }: Props) {
   const workingDays = userSettings.working_days ?? [1, 2, 3, 4, 5];
   const professionalSlug =
     appUser.booking_slug ?? slugifyProfessionalName(appUser.full_name);
-  const publicBookingUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/${professionalSlug}`;
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.NODE_ENV === "production"
+      ? "https://pododesk.com.br"
+      : "http://localhost:3000");
+  const publicBookingUrl = `${appUrl}/${professionalSlug}`;
 
   const { data: integration } = await supabase
     .from("google_integrations")

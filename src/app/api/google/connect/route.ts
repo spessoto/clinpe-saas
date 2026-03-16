@@ -3,6 +3,18 @@ import { NextResponse } from "next/server";
 import { getGoogleAuthUrl } from "@/lib/google-calendar";
 import { requireActiveTenant } from "@/lib/auth";
 
+function getPublicAppUrl() {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (envUrl) {
+    return envUrl;
+  }
+
+  return process.env.NODE_ENV === "production"
+    ? "https://pododesk.com.br"
+    : "http://localhost:3000";
+}
+
 function toErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
     return error.message;
@@ -53,9 +65,10 @@ export async function GET(request: Request) {
     return NextResponse.redirect(getGoogleAuthUrl(state));
   } catch (error) {
     const message = toErrorMessage(error, "Falha ao iniciar integração Google");
+    const appUrl = getPublicAppUrl();
 
     return NextResponse.redirect(
-      new URL(`/settings?error=${encodeURIComponent(message)}`, request.url),
+      new URL(`/settings?error=${encodeURIComponent(message)}`, appUrl),
     );
   }
 }

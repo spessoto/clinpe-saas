@@ -57,18 +57,27 @@ export async function signInAction(formData: FormData) {
     redirect("/sign-in?error=Informe e-mail e senha");
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  let destination = "/dashboard";
 
-  if (error) {
-    redirect(`/sign-in?error=${encodeURIComponent(error.message)}`);
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      destination = `/sign-in?error=${encodeURIComponent(error.message)}`;
+    } else {
+      revalidatePath("/dashboard");
+    }
+  } catch (error) {
+    console.error("signInAction failed", error);
+    destination =
+      "/sign-in?error=Falha ao autenticar no servidor. Verifique as variáveis de ambiente do deploy.";
   }
 
-  revalidatePath("/dashboard");
-  redirect("/dashboard");
+  redirect(destination);
 }
 
 export async function signOutAction() {

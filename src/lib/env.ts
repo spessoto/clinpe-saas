@@ -12,7 +12,7 @@ const adminEnvSchema = z.object({
 const googleEnvSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
-  NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  NEXT_PUBLIC_APP_URL: z.string().url(),
 });
 
 const emailEnvSchema = z.object({
@@ -67,11 +67,15 @@ export function getAdminEnv() {
 }
 
 export function getGoogleEnv() {
+  const defaultAppUrl =
+    process.env.NODE_ENV === "production"
+      ? "https://pododesk.com.br"
+      : "http://localhost:3000";
+
   const parsed = googleEnvSchema.safeParse({
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-    NEXT_PUBLIC_APP_URL:
-      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || defaultAppUrl,
   });
 
   if (!parsed.success) {
