@@ -101,7 +101,7 @@ export async function createMedicalRecordAction(formData: FormData) {
 
   if (error || !created) {
     redirect(
-      `/medical-records/new?patient_id=${patientId}&error=${encodeURIComponent(error?.message ?? "Falha ao salvar prontuario")}`,
+      `/medical-records/new?patient_id=${patientId}&error=${encodeURIComponent(error?.message ?? "Falha ao salvar prontuário")}`,
     );
   }
 

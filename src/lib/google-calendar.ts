@@ -109,7 +109,7 @@ export async function createGoogleCalendarEvent(
   const client = await getAuthorizedClient(connection);
   const calendar = google.calendar({ version: "v3", auth: client });
 
-  await calendar.events.insert({
+  const response = await calendar.events.insert({
     calendarId: "primary",
     requestBody: {
       summary: input.summary,
@@ -120,6 +120,21 @@ export async function createGoogleCalendarEvent(
         .filter((email) => Boolean(email))
         .map((email) => ({ email })),
     },
+  });
+
+  return response.data.id ?? null;
+}
+
+export async function deleteGoogleCalendarEvent(
+  connection: GoogleConnection,
+  eventId: string,
+) {
+  const client = await getAuthorizedClient(connection);
+  const calendar = google.calendar({ version: "v3", auth: client });
+
+  await calendar.events.delete({
+    calendarId: "primary",
+    eventId,
   });
 }
 

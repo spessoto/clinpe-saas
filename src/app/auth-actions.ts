@@ -17,7 +17,7 @@ export async function signUpAction(formData: FormData) {
   const professionalRegister = getField(formData, "professional_register");
 
   if (!email || !password || !fullName || !clinicName) {
-    redirect("/sign-up?error=Preencha todos os campos obrigatorios");
+    redirect("/sign-up?error=Preencha todos os campos obrigatórios");
   }
 
   const supabase = await createClient();

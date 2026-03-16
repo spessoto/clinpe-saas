@@ -26,7 +26,7 @@ export async function createPublicBookingAction(formData: FormData) {
     !patientEmail ||
     !patientPhone
   ) {
-    redirect(`${basePath}?error=Preencha os dados e escolha um horario`);
+    redirect(`${basePath}?error=Preencha os dados e escolha um horário`);
   }
 
   try {
@@ -38,11 +38,11 @@ export async function createPublicBookingAction(formData: FormData) {
       patientEmail,
       patientPhone,
     });
-
-    redirect(`${basePath}?success=Consulta agendada com sucesso`);
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Falha ao agendar consulta";
     redirect(`${basePath}?error=${encodeURIComponent(message)}`);
   }
+
+  redirect(`${basePath}?success=Consulta agendada com sucesso`);
 }

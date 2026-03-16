@@ -39,7 +39,7 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
   return (
     <section className="space-y-6">
       <article className="surface-card p-6">
-        <h2 className="text-2xl font-bold">Prontuario</h2>
+        <h2 className="text-2xl font-bold">Prontuário</h2>
         <p className="mt-1 text-sm text-muted">
           Criado em {new Date(record.created_at).toLocaleString("pt-BR")}
         </p>
@@ -52,7 +52,7 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
             </p>
           </div>
           <div className="rounded-xl bg-slate-50 p-4">
-            <h3 className="font-semibold text-foreground">Avaliacao clinica</h3>
+            <h3 className="font-semibold text-foreground">Avaliação clínica</h3>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
               {anamnesis.clinical_assessment || "-"}
             </p>
@@ -64,13 +64,13 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
             </p>
           </div>
           <div className="rounded-xl bg-slate-50 p-4">
-            <h3 className="font-semibold text-foreground">Recomendacoes</h3>
+            <h3 className="font-semibold text-foreground">Recomendações</h3>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
               {anamnesis.recommendations || "-"}
             </p>
           </div>
           <div className="rounded-xl bg-slate-50 p-4 md:col-span-2">
-            <h3 className="font-semibold text-foreground">Evolucao</h3>
+            <h3 className="font-semibold text-foreground">Evolução</h3>
             <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
               {anamnesis.evolution_notes || "-"}
             </p>
@@ -95,7 +95,7 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
                 <div className="relative h-40 overflow-hidden rounded-md border border-slate-200 bg-slate-50">
                   <Image
                     src={url}
-                    alt="Foto clinica"
+                    alt="Foto clínica"
                     fill
                     className="object-cover transition group-hover:scale-[1.02]"
                     sizes="(max-width: 768px) 100vw, 33vw"

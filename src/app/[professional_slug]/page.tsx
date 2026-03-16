@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { createPublicBookingAction } from "@/app/public-booking-actions";
+import { DatePicker } from "./date-picker";
 import {
   diagnosePublicProfessionalBooking,
   getAvailableSlots,
@@ -26,12 +27,12 @@ function UnavailableBookingPage({ message }: { message: string }) {
     <main className="bg-[radial-gradient(circle_at_top,#dbeafe,transparent_45%),linear-gradient(180deg,#f8fafc,white)] px-6 py-12">
       <section className="surface-card mx-auto max-w-4xl border-warning/40 p-8">
         <h1 className="text-3xl font-bold text-secondary">
-          Agendamento indisponivel
+          Agendamento indisponível
         </h1>
         <p className="mt-3 text-muted">{message}</p>
         <p className="mt-4 text-sm text-muted">
-          Assim que a configuracao for concluida, esta pagina exibira os dados
-          do profissional, da clinica e os horarios de atendimento do formulario
+          Assim que a configuração for concluída, esta página exibirá os dados
+          do profissional, da clínica e os horários de atendimento do formulário
           white-label.
         </p>
       </section>
@@ -61,7 +62,7 @@ export default async function ProfessionalBookingPage({
     const message =
       bookingError instanceof Error
         ? bookingError.message
-        : "Pagina de agendamento indisponivel";
+        : "Página de agendamento indisponível";
 
     return <UnavailableBookingPage message={message} />;
   }
@@ -70,20 +71,20 @@ export default async function ProfessionalBookingPage({
     const diagnostic =
       await diagnosePublicProfessionalBooking(professional_slug);
     let message =
-      "Nao foi possivel localizar o profissional de agendamento para este link.";
+      "Não foi possível localizar o profissional de agendamento para este link.";
 
     if (diagnostic.status === "professional_not_found") {
       message =
-        "Nenhum profissional foi encontrado com este link. Verifique se o booking_slug do usuario esta preenchido no Supabase.";
+        "Nenhum profissional foi encontrado com este link. Verifique se o booking_slug do usuário está preenchido no Supabase.";
     }
 
     if (diagnostic.status === "tenant_not_found") {
       message =
-        "O profissional foi encontrado, mas a clinica vinculada nao foi localizada no banco.";
+        "O profissional foi encontrado, mas a clínica vinculada não foi localizada no banco.";
     }
 
     if (diagnostic.status === "booking_disabled") {
-      message = `O autoagendamento esta desativado para a clinica ${diagnostic.tenantName}. Ative booking_enabled na tabela tenants.`;
+      message = `O autoagendamento está desativado para a clínica ${diagnostic.tenantName}. Ative booking_enabled na tabela tenants.`;
     }
 
     return <UnavailableBookingPage message={message} />;
@@ -114,7 +115,7 @@ export default async function ProfessionalBookingPage({
             <header>
               <h1 className="text-4xl font-bold">Agende sua consulta</h1>
               <p className="mt-2 max-w-2xl text-sm text-muted">
-                Siga as etapas abaixo para reservar seu horario com nosso
+                Siga as etapas abaixo para reservar seu horário com nosso
                 especialista em podologia.
               </p>
             </header>
@@ -149,14 +150,14 @@ export default async function ProfessionalBookingPage({
 
               <article className="soft-panel p-5">
                 <p className="text-sm font-semibold text-secondary">
-                  1. Servico selecionado
+                  1. Serviço selecionado
                 </p>
                 <div className="mt-3 rounded-xl border border-primary/40 bg-primary/5 p-4">
                   <p className="font-semibold text-foreground">
-                    Consulta podologica
+                    Consulta podológica
                   </p>
                   <p className="text-sm text-muted">
-                    Atendimento personalizado para saude dos pes.
+                    Atendimento personalizado para saúde dos pés.
                   </p>
                 </div>
               </article>
@@ -185,7 +186,7 @@ export default async function ProfessionalBookingPage({
                     </p>
                     <p className="text-sm text-muted">
                       {context.professional.professional_register ??
-                        "Registro nao informado"}
+                        "Registro não informado"}
                     </p>
                   </div>
                 </div>
@@ -193,63 +194,49 @@ export default async function ProfessionalBookingPage({
 
               <article className="soft-panel p-5">
                 <p className="text-sm font-semibold text-secondary">
-                  3. Data e horario
+                  3. Data e horário
                 </p>
 
-                <div className="mt-3">
-                  <label className="text-sm">
-                    <span className="mb-1 block text-foreground">
-                      Data da consulta
-                    </span>
-                    <input
-                      type="date"
-                      name="date"
-                      defaultValue={selectedDate}
-                      formAction={`/${professional_slug}`}
-                      className="w-full max-w-xs rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    formAction={`/${professional_slug}`}
-                    formMethod="get"
-                    className="btn-outline-modern ml-3"
-                  >
-                    Atualizar horarios
-                  </button>
-                </div>
+                <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
+                  <DatePicker
+                    professionalSlug={professional_slug}
+                    selectedDate={selectedDate}
+                  />
 
-                <fieldset className="mt-4">
-                  <legend className="mb-2 text-sm font-semibold text-foreground">
-                    Horarios disponiveis
-                  </legend>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    {slots.map((slot) => (
-                      <label
-                        key={slot}
-                        className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm hover:border-primary/40 hover:bg-primary/5"
-                      >
-                        <input
-                          type="radio"
-                          name="scheduled_at"
-                          value={slot}
-                          required
-                        />
-                        <span>
-                          {new Date(slot).toLocaleTimeString("pt-BR", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </label>
-                    ))}
-                    {slots.length === 0 ? (
-                      <p className="text-sm text-muted">
-                        Nao ha horarios livres para esta data.
-                      </p>
-                    ) : null}
-                  </div>
-                </fieldset>
+                  <fieldset className="rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.5)] sm:p-5">
+                    <legend className="px-1 text-sm font-semibold text-foreground">
+                      Horários disponíveis
+                    </legend>
+                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-muted">
+                      {selectedDateLabel}
+                    </p>
+
+                    <div className="mt-4 flex max-h-[320px] flex-col gap-2 overflow-y-auto pr-1">
+                      {slots.map((slot) => (
+                        <label key={slot} className="block cursor-pointer">
+                          <input
+                            type="radio"
+                            name="scheduled_at"
+                            value={slot}
+                            required
+                            className="peer sr-only"
+                          />
+                          <span className="flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-foreground transition hover:border-primary/40 hover:bg-primary/5 peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
+                            {new Date(slot).toLocaleTimeString("pt-BR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </label>
+                      ))}
+                      {slots.length === 0 ? (
+                        <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-muted">
+                          Não há horários livres para esta data.
+                        </p>
+                      ) : null}
+                    </div>
+                  </fieldset>
+                </div>
               </article>
 
               <article className="soft-panel p-5">
@@ -287,7 +274,7 @@ export default async function ProfessionalBookingPage({
                   </label>
                   <label className="block text-sm md:col-span-2">
                     <span className="mb-1 block text-foreground">
-                      Breve descricao do problema (opcional)
+                      Breve descrição do problema (opcional)
                     </span>
                     <textarea
                       name="issue_description"
@@ -315,9 +302,9 @@ export default async function ProfessionalBookingPage({
               </h2>
               <dl className="mt-4 space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-muted">Servico</dt>
+                  <dt className="text-muted">Serviço</dt>
                   <dd className="font-semibold text-foreground">
-                    Consulta podologica
+                    Consulta podológica
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
@@ -327,7 +314,7 @@ export default async function ProfessionalBookingPage({
                   </dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-muted">Clinica</dt>
+                  <dt className="text-muted">Clínica</dt>
                   <dd className="font-semibold text-foreground">
                     {context.tenant.name}
                   </dd>
@@ -341,7 +328,7 @@ export default async function ProfessionalBookingPage({
               </dl>
 
               <div className="mt-4 rounded-lg bg-primary/10 px-3 py-2 text-xs text-primary">
-                Sua confirmacao cria o horario no sistema e sincroniza na agenda
+                Sua confirmação cria o horário no sistema e sincroniza na agenda
                 do profissional.
               </div>
             </article>

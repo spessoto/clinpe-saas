@@ -424,7 +424,7 @@ export async function createPublicBooking(input: {
   const context = await getPublicBookingContext(input.tenantSlug);
 
   if (!context) {
-    throw new Error("Clinica nao encontrada.");
+    throw new Error("Clínica não encontrada.");
   }
 
   const slots = await getAvailableSlots({
@@ -435,7 +435,7 @@ export async function createPublicBooking(input: {
 
   if (!slots.includes(input.scheduledAt)) {
     throw new Error(
-      "Horario indisponivel. Atualize a agenda e escolha outro horario.",
+      "Horário indisponível. Atualize a agenda e escolha outro horário.",
     );
   }
 
@@ -467,7 +467,7 @@ export async function createPublicBooking(input: {
 
     if (patientError || !insertedPatient) {
       throw new Error(
-        patientError?.message ?? "Nao foi possivel criar o paciente.",
+        patientError?.message ?? "Não foi possível criar o paciente.",
       );
     }
 
@@ -488,6 +488,7 @@ export async function createPublicBooking(input: {
       professional_id: input.professionalId,
       scheduled_at: input.scheduledAt,
       status: "scheduled",
+      confirmation_status: "pending",
     })
     .select("id")
     .single();
@@ -505,16 +506,27 @@ export async function createPublicBooking(input: {
 
   if (integration?.refresh_token || integration?.access_token) {
     try {
-      await createGoogleCalendarEvent(integration as GoogleIntegration, {
-        summary: `Consulta PodoClin - ${input.patientName}`,
-        description: `Agendamento publico da clinica ${context.tenant.name}. Telefone: ${input.patientPhone}. E-mail: ${input.patientEmail}`,
-        start: input.scheduledAt,
-        end: addMinutes(
-          new Date(input.scheduledAt),
-          schedule.appointment_duration_minutes,
-        ).toISOString(),
-        attendees: [input.patientEmail],
-      });
+      const googleEventId = await createGoogleCalendarEvent(
+        integration as GoogleIntegration,
+        {
+          summary: `Consulta PodoClin - ${input.patientName}`,
+          description: `Agendamento público da clínica ${context.tenant.name}. Telefone: ${input.patientPhone}. E-mail: ${input.patientEmail}`,
+          start: input.scheduledAt,
+          end: addMinutes(
+            new Date(input.scheduledAt),
+            schedule.appointment_duration_minutes,
+          ).toISOString(),
+          attendees: [input.patientEmail],
+        },
+      );
+
+      if (googleEventId) {
+        await supabase
+          .from("appointments")
+          .update({ google_event_id: googleEventId })
+          .eq("tenant_id", context.tenant.id)
+          .eq("id", appointment.id);
+      }
     } catch {
       // Appointment remains booked in the system even if Google sync fails.
     }

@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versao publicada: `v0.2.0`
+- Versao publicada: `v0.3.0`
 - Rebranding aplicado: `ClinPe` -> `PodoClin`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -22,7 +22,10 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - Epico 3: prontuarios com upload de imagens no Storage
 - Epico 4: integracao com Google Calendar + autoagendamento publico por profissional em `/{professional_slug}`
 - Epico 5: POPs com templates e substituicao dinamica de placeholders
-- Agenda: visualizacao em calendario mensal dos eventos sincronizados do Google, com pop-up de dados do paciente
+- Agenda: calendario mensal de consultas lido do banco de dados, com pop-up de dados do paciente e acoes de confirmacao/cancelamento
+- Confirmacao e cancelamento de agendamento: profissional pode confirmar ou cancelar cada consulta diretamente na agenda, acionando automaticamente um e-mail HTML ao paciente com o resultado
+- Notificacao por e-mail: envio SMTP com template HTML responsivo (nodemailer) informando data, clinica, profissional e proximo passo
+- Cancelamento remove automaticamente o evento do Google Calendar do profissional
 - Configuracoes white-label: perfil, nome da clinica, e-mail/nome do usuario, dias e horarios de atendimento, duracao da consulta e integracao Google
 
 ## Requisitos locais
@@ -54,25 +57,36 @@ SUPABASE_SERVICE_ROLE_KEY=xxxxxxxx
 GOOGLE_CLIENT_ID=xxxxxxxx
 GOOGLE_CLIENT_SECRET=xxxxxxxx
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# E-mail SMTP (obrigatorio para confirmar/cancelar agendamentos)
+SMTP_HOST=smtp.hostinger.com
+SMTP_PORT=465
+SMTP_USER=seu-email@seudominio.com
+SMTP_PASS=sua-senha-smtp
+SMTP_FROM="NomeClinica <seu-email@seudominio.com>"
 ```
 
 Observacoes:
 
 - `SUPABASE_SERVICE_ROLE_KEY` e obrigatoria para fluxos de booking publico.
 - `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` sao obrigatorias para conectar o Calendar.
+- `SMTP_*` sao obrigatorias para o envio de e-mail ao confirmar ou cancelar agendamentos. Funciona com Hostinger (porta 465), Gmail (porta 587 + senha de app) ou Resend.
 
 ## Banco de dados e migrations
 
 As migrations SQL estao em `supabase/migrations`:
 
-- `20260312_000001_epic1_onboarding_auth.sql`
-- `20260312_000002_epic2_dashboard_patients.sql`
-- `20260312_000003_epic3_storage_medical_records.sql`
-- `20260312_000004_epic4_epic5_booking_google_pops.sql`
-- `20260313_000005_professional_booking_widget.sql`
-- `20260313_000006_professional_settings_schedule.sql`
+- `20260312000001_epic1_onboarding_auth.sql`
+- `20260312000002_epic2_dashboard_patients.sql`
+- `20260312000003_epic3_storage_medical_records.sql`
+- `20260312000004_epic4_epic5_booking_google_pops.sql`
+- `20260313000005_professional_booking_widget.sql`
+- `20260313000006_professional_settings_schedule.sql`
+- `20260316000007_appointment_confirmation_email.sql` — adiciona `confirmation_status` (pending/confirmed/rejected) e `google_event_id` na tabela `appointments`
 
 Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e Google.
+
+> **Atencao:** O nome dos arquivos de migration usa o formato `YYYYMMDDNNNNNN` (14 digitos sem underscore entre data e sequencia). Arquivos com o formato antigo `YYYYMMDD_NNNNNN` causam conflito de versao na CLI do Supabase.
 
 ### Aplicacao automatizada de migrations
 
@@ -139,6 +153,7 @@ npm run test:watch
 - `src/app/[professional_slug]`: pagina publica white-label de autoagendamento
 - `src/lib/auth.ts`: guardas de autenticacao e tenant
 - `src/lib/booking.ts`: regras de slots e criacao de agendamento
-- `src/lib/google-calendar.ts`: OAuth e chamadas do Google Calendar
+- `src/lib/google-calendar.ts`: OAuth e chamadas do Google Calendar (create + delete eventos)
+- `src/lib/email.ts`: utilitario SMTP para envio de notificacoes ao paciente
 - `src/lib/supabase`: clients server/browser/admin
 - `src/components/brand-logo.tsx`: logotipo da PodoClin

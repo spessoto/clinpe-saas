@@ -10,7 +10,7 @@ function injectProfessionalData(
 ) {
   return content
     .replaceAll("{{NOME_PROFISSIONAL}}", input.fullName)
-    .replaceAll("{{REGISTRO}}", input.professionalRegister || "Nao informado");
+    .replaceAll("{{REGISTRO}}", input.professionalRegister || "Não informado");
 }
 
 type Props = {

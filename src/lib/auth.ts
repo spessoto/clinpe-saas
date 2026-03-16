@@ -103,7 +103,7 @@ export async function requireActiveTenant() {
 
   if (!tenant) {
     redirect(
-      "/sign-in?error=Tenant da conta nao encontrado. Verifique migrations do Supabase.",
+      "/sign-in?error=Tenant da conta não encontrado. Verifique migrations do Supabase.",
     );
   }
 

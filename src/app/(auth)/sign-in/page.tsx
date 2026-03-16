@@ -58,7 +58,7 @@ export default async function SignInPage({ searchParams }: Props) {
         </form>
 
         <p className="mt-4 text-sm text-muted">
-          Ainda nao tem conta?{" "}
+          Ainda não tem conta?{" "}
           <Link
             href="/sign-up"
             className="font-semibold text-secondary hover:underline"

@@ -39,13 +39,13 @@ export default async function ProtectedLayout({
             href="/medical-records/new"
             className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
           >
-            Prontuarios
+            Prontuários
           </Link>
           <Link
             href="/settings"
             className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
           >
-            Configuracoes
+            Configurações
           </Link>
           <Link
             href="/pop-documents"

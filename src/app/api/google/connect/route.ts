@@ -52,7 +52,7 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(getGoogleAuthUrl(state));
   } catch (error) {
-    const message = toErrorMessage(error, "Falha ao iniciar integracao Google");
+    const message = toErrorMessage(error, "Falha ao iniciar integração Google");
 
     return NextResponse.redirect(
       new URL(`/settings?error=${encodeURIComponent(message)}`, request.url),

@@ -20,7 +20,7 @@ export default async function PopDocumentsPage() {
         <div>
           <h2 className="text-3xl font-bold">POPs</h2>
           <p className="mt-1 text-muted">
-            Templates base e documentos padrao com substituicao automatica.
+            Templates base e documentos padrão com substituição automática.
           </p>
         </div>
       </div>

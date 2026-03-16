@@ -13,8 +13,8 @@ export default async function BillingPage() {
         </span>
         <h1 className="mt-4 text-2xl font-bold">Ative sua assinatura</h1>
         <p className="mt-2 max-w-2xl text-muted">
-          Seu periodo de teste terminou. Para continuar usando dashboard,
-          pacientes e prontuarios, conclua a ativacao da assinatura.
+          Seu período de teste terminou. Para continuar usando dashboard,
+          pacientes e prontuários, conclua a ativação da assinatura.
         </p>
         <Link href="/sign-in" className="btn-outline-modern mt-6">
           Voltar para login

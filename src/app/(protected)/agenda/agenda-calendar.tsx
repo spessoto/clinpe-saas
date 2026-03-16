@@ -2,6 +2,11 @@
 
 import { useMemo, useState } from "react";
 
+import {
+  cancelAppointmentAction,
+  confirmAppointmentAction,
+} from "@/app/(protected)/agenda/actions";
+
 export type AgendaCalendarEvent = {
   id: string;
   summary: string;
@@ -10,10 +15,13 @@ export type AgendaCalendarEvent = {
   patientName: string;
   patientEmail: string;
   patientPhone: string;
+  status: "scheduled" | "completed" | "canceled";
+  confirmationStatus: "pending" | "confirmed" | "rejected";
 };
 
 type Props = {
   monthDateIso: string;
+  monthKey: string;
   events: AgendaCalendarEvent[];
 };
 
@@ -70,6 +78,34 @@ function formatDateTime(value: string) {
   });
 }
 
+function getEventTone(event: AgendaCalendarEvent) {
+  if (event.status === "canceled" || event.confirmationStatus === "rejected") {
+    return "bg-destructive/10 text-destructive hover:bg-destructive/20";
+  }
+
+  if (event.confirmationStatus === "confirmed") {
+    return "bg-primary/10 text-primary hover:bg-primary/20";
+  }
+
+  return "bg-warning/10 text-warning hover:bg-warning/20";
+}
+
+function getStatusLabel(event: AgendaCalendarEvent) {
+  if (event.status === "canceled" || event.confirmationStatus === "rejected") {
+    return "Cancelado";
+  }
+
+  if (event.confirmationStatus === "confirmed") {
+    return "Confirmado";
+  }
+
+  if (event.status === "completed") {
+    return "Concluído";
+  }
+
+  return "Pendente";
+}
+
 function groupEventsByDay(events: AgendaCalendarEvent[]) {
   const map = new Map<string, AgendaCalendarEvent[]>();
 
@@ -83,7 +119,7 @@ function groupEventsByDay(events: AgendaCalendarEvent[]) {
   return map;
 }
 
-export function AgendaCalendar({ monthDateIso, events }: Props) {
+export function AgendaCalendar({ monthDateIso, monthKey, events }: Props) {
   const [selectedEvent, setSelectedEvent] =
     useState<AgendaCalendarEvent | null>(null);
 
@@ -137,13 +173,16 @@ export function AgendaCalendar({ monthDateIso, events }: Props) {
                       key={event.id}
                       type="button"
                       onClick={() => setSelectedEvent(event)}
-                      className="w-full rounded-xl bg-primary/10 px-2 py-1 text-left text-xs text-primary hover:bg-primary/20"
+                      className={`w-full rounded-xl px-2 py-1 text-left text-xs ${getEventTone(event)}`}
                       title={`${event.summary} - ${formatHourLabel(event.start)}`}
                     >
                       <p className="truncate font-semibold">{event.summary}</p>
-                      <p className="text-[11px]">
-                        {formatHourLabel(event.start)}
-                      </p>
+                      <div className="mt-1 flex items-center justify-between gap-2 text-[11px]">
+                        <p>{formatHourLabel(event.start)}</p>
+                        <span className="rounded-full bg-white/70 px-1.5 py-0.5 font-semibold">
+                          {getStatusLabel(event)}
+                        </span>
+                      </div>
                     </button>
                   ))}
                   {dayEvents.length > 3 ? (
@@ -182,6 +221,14 @@ export function AgendaCalendar({ monthDateIso, events }: Props) {
             <div className="mt-4 space-y-3 text-sm">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  Status
+                </p>
+                <p className="font-medium text-foreground">
+                  {getStatusLabel(selectedEvent)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                   Nome
                 </p>
                 <p className="font-medium text-foreground">
@@ -205,6 +252,56 @@ export function AgendaCalendar({ monthDateIso, events }: Props) {
                 </p>
               </div>
             </div>
+
+            <div className="mt-6 grid gap-2 sm:grid-cols-2">
+              <form action={confirmAppointmentAction}>
+                <input
+                  type="hidden"
+                  name="appointment_id"
+                  value={selectedEvent.id}
+                />
+                <input type="hidden" name="month" value={monthKey} />
+                <button
+                  type="submit"
+                  disabled={
+                    selectedEvent.status === "canceled" ||
+                    selectedEvent.status === "completed" ||
+                    selectedEvent.confirmationStatus === "confirmed" ||
+                    selectedEvent.patientEmail === "Não informado"
+                  }
+                  className="btn-gradient w-full disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Confirmar agendamento
+                </button>
+              </form>
+
+              <form action={cancelAppointmentAction}>
+                <input
+                  type="hidden"
+                  name="appointment_id"
+                  value={selectedEvent.id}
+                />
+                <input type="hidden" name="month" value={monthKey} />
+                <button
+                  type="submit"
+                  disabled={
+                    selectedEvent.status === "canceled" ||
+                    selectedEvent.status === "completed" ||
+                    selectedEvent.patientEmail === "Não informado"
+                  }
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-destructive/25 bg-destructive/10 px-4 py-2 font-semibold text-destructive transition hover:bg-destructive/15 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Cancelar agendamento
+                </button>
+              </form>
+            </div>
+
+            {selectedEvent.patientEmail === "Não informado" ? (
+              <p className="mt-3 text-xs text-warning">
+                Este paciente não possui e-mail cadastrado. Atualize o cadastro
+                antes de confirmar ou cancelar com notificação.
+              </p>
+            ) : null}
           </div>
         </div>
       ) : null}

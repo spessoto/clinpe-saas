@@ -49,7 +49,7 @@ export default async function DashboardPage() {
 
   const cards = [
     {
-      title: "Consultas do mes",
+      title: "Consultas do mês",
       value: appointmentsResult.count ?? 0,
       tone: "bg-primary/10 text-primary",
     },
@@ -70,7 +70,7 @@ export default async function DashboardPage() {
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-3xl font-bold">Dashboard</h2>
-          <p className="mt-1 text-muted">Visao geral operacional da clinica.</p>
+          <p className="mt-1 text-muted">Visão geral operacional da clínica.</p>
         </div>
 
         <Link href="/patients/new" className="btn-gradient">
@@ -103,7 +103,7 @@ export default async function DashboardPage() {
             href="/settings"
             className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
           >
-            Abrir configuracoes
+            Abrir configurações
           </Link>
         </article>
         <article className="surface-card p-5">
@@ -112,22 +112,22 @@ export default async function DashboardPage() {
           </h3>
           <p className="mt-2 text-sm text-muted">
             {bookingPath
-              ? `Link publico da clinica: ${bookingPath}`
-              : "Slug do tenant ainda nao configurado. Execute a migration do Epico 4."}
+              ? `Link público da clínica: ${bookingPath}`
+              : "Slug do tenant ainda não configurado. Execute a migration do Épico 4."}
           </p>
           {bookingPath ? (
             <Link
               href={bookingPath}
               className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
             >
-              Abrir pagina publica
+              Abrir página pública
             </Link>
           ) : null}
         </article>
         <article className="surface-card p-5">
           <h3 className="text-lg font-semibold text-secondary">POPs</h3>
           <p className="mt-2 text-sm text-muted">
-            Visualize templates base com substituicao automatica de nome e
+            Visualize templates base com substituição automática de nome e
             registro.
           </p>
           <Link

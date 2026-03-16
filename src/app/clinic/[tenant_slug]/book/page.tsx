@@ -30,12 +30,12 @@ export default async function PublicBookingPage({
     const message =
       bookingError instanceof Error
         ? bookingError.message
-        : "Booking publico nao configurado";
+        : "Booking público não configurado";
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-6 py-12">
         <section className="surface-card w-full border-warning/30 p-8">
           <h1 className="text-3xl font-bold text-secondary">
-            Autoagendamento indisponivel
+            Autoagendamento indisponível
           </h1>
           <p className="mt-3 text-muted">{message}</p>
         </section>
@@ -73,7 +73,7 @@ export default async function PublicBookingPage({
           </h1>
           <p className="mt-3 max-w-2xl text-base leading-7 text-muted">
             {context.tenant.booking_page_description ??
-              "Selecione um profissional e escolha um horario livre."}
+              "Selecione um profissional e escolha um horário livre."}
           </p>
 
           {success ? (
@@ -116,17 +116,17 @@ export default async function PublicBookingPage({
               />
             </label>
             <button type="submit" className="btn-outline-modern md:col-span-2">
-              Atualizar horarios
+              Atualizar horários
             </button>
           </form>
         </article>
 
         <article className="surface-card p-8">
           <h2 className="text-2xl font-bold text-secondary">
-            Horarios disponiveis
+            Horários disponíveis
           </h2>
           <p className="mt-2 text-sm text-muted">
-            Escolha um horario e preencha seus dados para confirmar a consulta.
+            Escolha um horário e preencha seus dados para confirmar a consulta.
           </p>
 
           <form action={createPublicBookingAction} className="mt-6 space-y-4">
@@ -170,7 +170,7 @@ export default async function PublicBookingPage({
 
             <fieldset>
               <legend className="mb-2 text-sm font-semibold text-foreground">
-                Horario
+                Horário
               </legend>
               <div className="grid gap-2 sm:grid-cols-2">
                 {slots.map((slot) => (
@@ -194,7 +194,7 @@ export default async function PublicBookingPage({
                 ))}
                 {slots.length === 0 ? (
                   <p className="text-sm text-muted">
-                    Nao ha horarios livres para esta data.
+                    Não há horários livres para esta data.
                   </p>
                 ) : null}
               </div>

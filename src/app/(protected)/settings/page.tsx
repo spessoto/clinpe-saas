@@ -33,11 +33,11 @@ function toTimeInput(value: string | null, fallback: string) {
 const weekDayOptions = [
   { value: 0, label: "Domingo" },
   { value: 1, label: "Segunda" },
-  { value: 2, label: "Terca" },
+  { value: 2, label: "Terça" },
   { value: 3, label: "Quarta" },
   { value: 4, label: "Quinta" },
   { value: 5, label: "Sexta" },
-  { value: 6, label: "Sabado" },
+  { value: 6, label: "Sábado" },
 ];
 
 const durationOptions = [30, 45, 60, 90, 120];
@@ -82,7 +82,7 @@ export default async function SettingsPage({ searchParams }: Props) {
   return (
     <section className="space-y-6">
       <article className="surface-card p-6">
-        <h2 className="text-2xl font-bold">Configuracoes</h2>
+        <h2 className="text-2xl font-bold">Configurações</h2>
         <p className="mt-1 text-sm text-muted">
           Personalize seu perfil e o atendimento white-label de agendamento.
         </p>
@@ -128,7 +128,7 @@ export default async function SettingsPage({ searchParams }: Props) {
 
             <label className="block text-sm">
               <span className="mb-1 block text-foreground">
-                Nome da clinica
+                Nome da clínica
               </span>
               <input
                 name="clinic_name"
@@ -140,7 +140,7 @@ export default async function SettingsPage({ searchParams }: Props) {
 
             <label className="block text-sm">
               <span className="mb-1 block text-foreground">
-                Nome do usuario
+                Nome do usuário
               </span>
               <input
                 name="full_name"
@@ -152,7 +152,7 @@ export default async function SettingsPage({ searchParams }: Props) {
 
             <label className="block text-sm md:col-span-2">
               <span className="mb-1 block text-foreground">
-                E-mail do usuario
+                E-mail do usuário
               </span>
               <input
                 type="email"
@@ -170,7 +170,7 @@ export default async function SettingsPage({ searchParams }: Props) {
             Agenda de atendimento
           </h3>
           <p className="mt-1 text-sm text-muted">
-            Defina dias, horario e tempo da consulta para gerar os horarios no
+            Defina dias, horário e tempo da consulta para gerar os horários no
             autoagendamento.
           </p>
 
@@ -254,10 +254,10 @@ export default async function SettingsPage({ searchParams }: Props) {
 
         <article className="surface-card p-6">
           <h3 className="text-lg font-semibold text-secondary">
-            Integracao Google
+            Integração Google
           </h3>
           <p className="mt-1 text-sm text-muted">
-            O formulario white-label desta aplicacao cria consultas no sistema e
+            O formulário white-label desta aplicação cria consultas no sistema e
             sincroniza com seu Google Calendar automaticamente.
           </p>
 
@@ -269,10 +269,10 @@ export default async function SettingsPage({ searchParams }: Props) {
                   {integration.google_email ?? "Google conectado"}
                 </p>
                 <p className="mt-1">
-                  Ultima atualizacao:{" "}
+                  Última atualização:{" "}
                   {integration.updated_at
                     ? new Date(integration.updated_at).toLocaleString("pt-BR")
-                    : "Nao informada"}
+                    : "Não informada"}
                 </p>
               </>
             ) : (
@@ -289,7 +289,7 @@ export default async function SettingsPage({ searchParams }: Props) {
 
         <article className="surface-card p-6">
           <h3 className="text-lg font-semibold text-secondary">
-            Link publico de agendamento
+            Link público de agendamento
           </h3>
           <p className="mt-2 text-sm text-muted">
             Compartilhe este link com seus pacientes.
@@ -300,7 +300,7 @@ export default async function SettingsPage({ searchParams }: Props) {
         </article>
 
         <button type="submit" className="btn-gradient px-5 py-2">
-          Salvar configuracoes
+          Salvar configurações
         </button>
       </form>
     </section>

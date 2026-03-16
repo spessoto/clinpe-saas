@@ -37,7 +37,7 @@ export default async function SignUpPage({ searchParams }: Props) {
           </label>
 
           <label className="block text-sm">
-            <span className="mb-1 block text-foreground">Nome da clinica</span>
+            <span className="mb-1 block text-foreground">Nome da clínica</span>
             <input
               name="clinic_name"
               required
@@ -82,7 +82,7 @@ export default async function SignUpPage({ searchParams }: Props) {
         </form>
 
         <p className="mt-4 text-sm text-muted">
-          Ja tem conta?{" "}
+          Já tem conta?{" "}
           <Link
             href="/sign-in"
             className="font-semibold text-secondary hover:underline"

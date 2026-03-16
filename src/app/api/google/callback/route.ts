@@ -107,8 +107,8 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     const message = isMissingGoogleIntegrationsTable(error)
-      ? "Tabela public.google_integrations nao encontrada no Supabase. Execute a migration 20260312_000004_epic4_epic5_booking_google_pops.sql e tente novamente."
-      : toErrorMessage(error, "Falha ao concluir integracao Google");
+      ? "Tabela public.google_integrations não encontrada no Supabase. Execute a migration 20260312_000004_epic4_epic5_booking_google_pops.sql e tente novamente."
+      : toErrorMessage(error, "Falha ao concluir integração Google");
 
     return NextResponse.redirect(
       new URL(`/settings?error=${encodeURIComponent(message)}`, request.url),

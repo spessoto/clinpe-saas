@@ -78,7 +78,7 @@ export default async function PatientDetailsPage({ params }: Props) {
 
   const appointmentStatusLabel: Record<string, string> = {
     scheduled: "Agendada",
-    completed: "Concluida",
+    completed: "Concluída",
     canceled: "Cancelada",
   };
 
@@ -91,7 +91,7 @@ export default async function PatientDetailsPage({ params }: Props) {
           Nascimento:{" "}
           {patient.birth_date
             ? new Date(patient.birth_date).toLocaleDateString("pt-BR")
-            : "Nao informado"}
+            : "Não informado"}
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -120,7 +120,7 @@ export default async function PatientDetailsPage({ params }: Props) {
 
         <section className="mt-6">
           <h3 className="text-lg font-semibold text-secondary">
-            Historico de prontuarios
+            Histórico de prontuários
           </h3>
           <ul className="mt-4 space-y-2 text-sm text-muted">
             {(records ?? []).map((record) => (
@@ -135,7 +135,7 @@ export default async function PatientDetailsPage({ params }: Props) {
               </li>
             ))}
             {records && records.length === 0 ? (
-              <li>Nenhum prontuario cadastrado.</li>
+              <li>Nenhum prontuário cadastrado.</li>
             ) : null}
           </ul>
         </section>
@@ -148,7 +148,7 @@ export default async function PatientDetailsPage({ params }: Props) {
           </h3>
           <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
             <div className="rounded-xl bg-slate-50 px-3 py-2">
-              <p className="text-xs text-muted">Ultima consulta</p>
+              <p className="text-xs text-muted">Última consulta</p>
               <p className="mt-1 text-sm font-bold leading-tight text-foreground">
                 {lastAppointmentDate}
               </p>
@@ -181,7 +181,7 @@ export default async function PatientDetailsPage({ params }: Props) {
                     appointment.status}
                   {" - "}
                   {professionalsMap.get(appointment.professional_id) ??
-                    "Profissional nao informado"}
+                    "Profissional não informado"}
                 </p>
               </li>
             ))}

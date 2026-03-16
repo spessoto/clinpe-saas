@@ -58,14 +58,14 @@ export async function saveSettingsAction(formData: FormData) {
   const email = getField(formData, "email");
 
   if (!clinicName || !fullName || !email) {
-    redirect("/settings?error=Preencha clinica, nome e e-mail.");
+    redirect("/settings?error=Preencha clínica, nome e e-mail.");
   }
 
   const duration = Number(getField(formData, "appointment_duration_minutes"));
   const appointmentDurationMinutes = Number.isFinite(duration) ? duration : 60;
 
   if (appointmentDurationMinutes < 15 || appointmentDurationMinutes > 240) {
-    redirect("/settings?error=Duracao de consulta invalida.");
+    redirect("/settings?error=Duração de consulta inválida.");
   }
 
   const workingStart = normalizeTimeInput(
@@ -78,7 +78,7 @@ export async function saveSettingsAction(formData: FormData) {
   );
 
   if (workingStart >= workingEnd) {
-    redirect("/settings?error=Horario inicial deve ser menor que o final.");
+    redirect("/settings?error=Horário inicial deve ser menor que o final.");
   }
 
   const workingDays = parseWorkingDays(formData);
@@ -158,7 +158,7 @@ export async function saveSettingsAction(formData: FormData) {
     }
   }
 
-  let successMessage = "Configuracoes atualizadas com sucesso.";
+  let successMessage = "Configurações atualizadas com sucesso.";
 
   if (email !== appUser.email) {
     const { error: authError } = await supabase.auth.updateUser({ email });
@@ -168,7 +168,7 @@ export async function saveSettingsAction(formData: FormData) {
     }
 
     successMessage =
-      "Configuracoes atualizadas. Confirme o novo e-mail na sua caixa de entrada.";
+      "Configurações atualizadas. Confirme o novo e-mail na sua caixa de entrada.";
   }
 
   revalidatePath("/settings");

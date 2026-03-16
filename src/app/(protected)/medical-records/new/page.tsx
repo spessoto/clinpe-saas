@@ -27,9 +27,9 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
 
   return (
     <section className="surface-card max-w-3xl p-6">
-      <h2 className="text-2xl font-bold">Novo prontuario</h2>
+      <h2 className="text-2xl font-bold">Novo prontuário</h2>
       <p className="mt-1 text-sm text-muted">
-        Registre anamnese estruturada e envie imagens clinicas.
+        Registre anamnese estruturada e envie imagens clínicas.
       </p>
 
       {error ? (
@@ -82,7 +82,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
 
           <label className="block text-sm md:col-span-2">
             <span className="mb-1 block text-foreground">
-              Avaliacao clinica *
+              Avaliação clínica *
             </span>
             <textarea
               name="clinical_assessment"
@@ -104,7 +104,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
           </label>
 
           <label className="block text-sm">
-            <span className="mb-1 block text-foreground">Recomendacoes</span>
+            <span className="mb-1 block text-foreground">Recomendações</span>
             <textarea
               name="recommendations"
               rows={3}
@@ -114,7 +114,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
 
           <label className="block text-sm md:col-span-2">
             <span className="mb-1 block text-foreground">
-              Evolucao/observacoes
+              Evolução/observações
             </span>
             <textarea
               name="evolution_notes"
@@ -136,14 +136,14 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
             className="w-full rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-sm"
           />
           <span className="mt-1 block text-xs text-muted">
-            As imagens serao enviadas para `medical-images/{appUser.tenant_id}
+            As imagens serão enviadas para `medical-images/{appUser.tenant_id}
             /...`.
           </span>
         </label>
 
         <div className="flex flex-wrap gap-2">
           <button type="submit" className="btn-gradient">
-            Salvar prontuario
+            Salvar prontuário
           </button>
           <Link
             href={patientId ? `/patients/${patientId}` : "/patients"}

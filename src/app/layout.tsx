@@ -9,7 +9,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "PodoClin SaaS",
-  description: "Plataforma SaaS para gestao de podologia",
+  description: "Plataforma SaaS para gestão de podologia",
 };
 
 export default function RootLayout({
