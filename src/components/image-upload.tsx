@@ -19,7 +19,9 @@ export function ImageUpload({
   className = "",
 }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null | undefined>(currentUrl);
+  const [imageUrl, setImageUrl] = useState<string | null | undefined>(
+    currentUrl,
+  );
   const [error, setError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
@@ -123,7 +125,9 @@ export function ImageUpload({
             />
             {uploading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
-                <div className="text-white text-sm font-semibold">Enviando...</div>
+                <div className="text-white text-sm font-semibold">
+                  Enviando...
+                </div>
               </div>
             )}
           </div>
@@ -156,14 +160,10 @@ export function ImageUpload({
         )}
       </div>
 
-      {error && (
-        <p className="mt-2 text-xs text-destructive">{error}</p>
-      )}
+      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
 
       {imageUrl && !uploading && (
-        <p className="mt-2 text-xs text-muted">
-          Clique ou arraste para trocar
-        </p>
+        <p className="mt-2 text-xs text-muted">Clique ou arraste para trocar</p>
       )}
     </div>
   );

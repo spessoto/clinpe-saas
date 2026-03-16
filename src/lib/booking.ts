@@ -215,9 +215,8 @@ export async function getPublicProfessionalBookingContext(
     };
   } else {
     const avatarColumnMissing =
-      withAvatarResult.error?.message
-        ?.toLowerCase()
-        .includes("avatar_url") ?? false;
+      withAvatarResult.error?.message?.toLowerCase().includes("avatar_url") ??
+      false;
 
     const fallbackUsers = await (avatarColumnMissing
       ? supabase
@@ -305,9 +304,8 @@ export async function diagnosePublicProfessionalBooking(
     };
   } else {
     const avatarColumnMissing =
-      withAvatarResult.error?.message
-        ?.toLowerCase()
-        .includes("avatar_url") ?? false;
+      withAvatarResult.error?.message?.toLowerCase().includes("avatar_url") ??
+      false;
 
     const fallbackUsers = await (avatarColumnMissing
       ? supabase

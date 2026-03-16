@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2026-03-16
+
+### Fixed
+
+- **Compatibilidade de schema no upload e leitura de avatar**
+  - Upload de avatar em `/settings` agora faz fallback para `profile_photo_url` quando `avatar_url` nao existe no schema remoto
+  - `requireAuthenticatedUserWithClient()` mapeia `profile_photo_url` para `avatar_url` nos fallbacks de schema legado
+  - Corrige erro: `Could not find the 'avatar_url' column of 'users' in the schema cache`
+
+- **Widget "Especialista" no agendamento publico exibe avatar corretamente**
+  - Contexto de booking passou a priorizar `avatar_url` e cair para `profile_photo_url` quando necessario
+  - Compatibilidade preservada para bancos antigos sem a coluna `avatar_url`
+
+### Infrastructure
+
+- Documentacao atualizada para sincronizacao com deploy automatico da Hostinger (branch `master`) e checklist de `db:push`.
+
 ## [0.5.1] - 2026-03-16
 
 ### Fixed
@@ -12,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hotfix: Backward Compatibility para Fallback de Colunas de Schema**
   - Adicionado mecanismo inteligente de 2 níveis em `requireAuthenticatedUserWithClient()`
     para lidar com ausência de colunas `avatar_url` e `bio` em bancos regressados
-  - Adicionado mecanismo inteligente de 2 níveis em `requireActiveTenant()` 
+  - Adicionado mecanismo inteligente de 2 níveis em `requireActiveTenant()`
     para lidar com ausência de colunas `billing_tier`, `max_patients_allowed`, `logo_url`
   - Quando colunas não encontradas em produção, sistema tenta query alternativa sem essas colunas
     e seta defaults: `billing_tier='free_trial'`, `max_patients_allowed=10`, `logo_url=null`, etc.
@@ -28,26 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Quando migration 20260316000008 for aplicada a produção, fallbacks continuam funcionando
 
 ## [0.5.0] - 2026-03-16
-
-### Added
-
-- **Épico 7: Configuração de Perfil e Upload de Avatares**
-  - Nova coluna `logo_url` em `tenants` (preparado em schema base)
-  - Componente `ImageUpload` client-side com drag-drop, preview e upload
-  - Funcionalidade `uploadProfileImageAction()` para upload de avatar/logo ao Supabase Storage
-  - Seção "Perfil" em `/settings` com upload de avatar do profissional (128x128)
-  - Seção "Clínica" em `/settings` com upload de logo da clínica (240x120)
-  - Campo "Resumo profissional" (bio) para descrição na página pública (até 200 caracteres)
-  - Upload automático para buckets `avatars` e `clinic-logos` com estrutura `{tenant_id}/{user_id}/{timestamp}.{ext}`
-  - Validação de tamanho (máx 5MB) e tipo de arquivo (imagem apenas)
-
-### Changed
-
-- Tipos atualizados em `auth.ts`:
-  - `AppUser` agora inclui `avatar_url` e `bio`
-  - `Tenant` agora inclui `logo_url`
-- Queries de `requireAuthenticatedUser()` e `requireActiveTenant()` carregam novos campos
-- `/settings/page.tsx` reorganizada com 2 seções (Perfil e Clínica) e componentes de upload
 
 ### Added
 
@@ -190,8 +187,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temas com Tailwind CSS
 - Testes com Vitest
 
-[0.3.1]: https://github.com/spessoto/clinpe-saas/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/spessoto/clinpe-saas/compare/v0.2.0...v0.3.0
+[0.5.2]: https://github.com/spessoto/clinpe-saas/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/spessoto/clinpe-saas/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/spessoto/clinpe-saas/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/spessoto/clinpe-saas/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/spessoto/clinpe-saas/compare/v0.3.0...v0.3.1

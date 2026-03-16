@@ -78,10 +78,7 @@ async function requireAuthenticatedUserWithClient(
 
       if (fallback2Result.data) {
         appUser = {
-          ...(fallback2Result.data as Omit<
-            AppUser,
-            "booking_slug" | "bio"
-          >),
+          ...(fallback2Result.data as Omit<AppUser, "booking_slug" | "bio">),
           booking_slug: null,
           bio: null,
         };

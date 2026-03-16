@@ -142,9 +142,7 @@ export default async function SettingsPage({ searchParams }: Props) {
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
                   rows={3}
                 />
-                <p className="mt-1 text-xs text-muted">
-                  Até 200 caracteres
-                </p>
+                <p className="mt-1 text-xs text-muted">Até 200 caracteres</p>
               </label>
             </div>
           </div>

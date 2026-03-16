@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versao publicada: `v0.3.0`
+- Versao publicada: `v0.5.2`
 - Rebranding aplicado: `ClinPe` -> `PodoClin`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -131,6 +131,42 @@ npm run dev
 ```
 
 Aplicacao em `http://localhost:3000` (desenvolvimento local) e em `https://pododesk.com.br` (producao).
+
+## Deploy e sincronizacao com Hostinger
+
+O ambiente de producao esta configurado para deploy automatico a partir da branch `master`.
+
+Fluxo recomendado para sincronizar codigo + banco:
+
+1. Validar localmente:
+
+```bash
+npm.cmd run lint
+npm.cmd run build
+```
+
+2. Commitar e enviar para `master`:
+
+```bash
+git add -A
+git commit -m "seu commit"
+git push origin master
+```
+
+3. Aplicar migrations pendentes no Supabase de producao:
+
+```bash
+npm.cmd run db:push
+```
+
+4. Confirmar no painel da Hostinger se o deploy terminou sem erro.
+
+Checklist rapido quando houver mudanca de schema:
+
+- Push do codigo no `master`
+- `db:push` aplicado no projeto remoto
+- Login e `/settings` validados em producao
+- Pagina publica de agendamento validada (`/{professional_slug}`)
 
 ## Qualidade
 
