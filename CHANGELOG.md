@@ -5,13 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-03-16
+
+### Added
+
+- **Épico 6: Motor de Precificação por Volume de Pacientes**
+  - Nova coluna `billing_tier` em `tenants` (free_trial, tier_1, tier_2, tier_3)
+  - Nova coluna `max_patients_allowed` em `tenants` com limite configurável
+  - Lógica de bloqueio ao atingir limite: redirecionamento para `/billing`
+  - UI de bloqueio na página `/patients/new` com modal de upgrade
+  - Widget de "Slots disponíveis" na página `/patients` mostrando `current/max`
+  - Alerta visual na listagem quando número de slots < 3
+  - Novo export `getPatientCountStatus()` para obter status de limite em qualquer context
+  - Endpoint webhook preparado para integração Stripe/Mercado Pago (`/api/payments/webhook`)
+
+- **Preparação para Épico 7 (Perfil): Novas colunas adicionadas**
+  - `users.avatar_url` (URL do avatar no Supabase Storage)
+  - `users.bio` (Resumo profissional para página pública)
+
+- **Preparação para Épico 9 (Retenção): Novas colunas adicionadas**
+  - `patients.health_alerts` (Array de strings para alertas clínicos: 'Diabético', 'Hemofílico', etc)
+  - `patients.referral_source` (Rastreamento de como paciente conheceu a clínica)
+
+### Changed
+
+- Tipo `Tenant` em `auth.ts` agora inclui `billing_tier` e `max_patients_allowed`
+- Query `requireActiveTenant()` carrega automaticamente info de billing
+- Função `createPatientAction()` valida limite antes de inserir
+
+### Technical Details
+
+- Nova migration: `20260316000008_add_billing_alerts_profile.sql`
+  - Adiciona 7 novas colunas em 3 tabelas (tenants, users, patients)
+  - Índices GIN para `health_alerts` (busca eficiente)
+  - Comentários SQL para documentação
+- Webhook endpoint com estrutura preparada para validação de assinatura future
+
 ## [0.3.1] - 2026-03-16
-
-### Fixed
-
-- Widget "Última consulta" em `/patients/[id]` agora considera `created_at` de prontuários (`medical_records`), não apenas agendamentos. A data exibida é a mais recente entre prontuários e agendamentos.
-
-## [0.3.0] - 2026-03-15
 
 ### Added
 
@@ -85,6 +115,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Temas com Tailwind CSS
 - Testes com Vitest
 
+[0.3.1]: https://github.com/spessoto/clinpe-saas/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/spessoto/clinpe-saas/compare/v0.2.0...v0.3.0
+[0.4.0]: https://github.com/spessoto/clinpe-saas/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/spessoto/clinpe-saas/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/spessoto/clinpe-saas/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/spessoto/clinpe-saas/compare/v0.1.0...v0.2.0
