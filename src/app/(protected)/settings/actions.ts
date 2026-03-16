@@ -89,7 +89,10 @@ export async function saveSettingsAction(formData: FormData) {
   const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
 
-  let profilePhotoUrl = getField(formData, "current_profile_photo_url") || null;
+  let profilePhotoUrl =
+    getField(formData, "current_profile_photo_url") ||
+    appUser.avatar_url ||
+    null;
 
   const profilePhoto = formData.get("profile_photo");
   if (isUploadedFile(profilePhoto) && profilePhoto.size > 0) {

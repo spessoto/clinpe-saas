@@ -89,9 +89,13 @@ export function ImageUpload({
 
   const isAvatar = type === "avatar";
   const sizeClass = isAvatar ? "w-32 h-32" : "w-48 h-32";
+  const hiddenFieldName =
+    type === "avatar" ? "current_profile_photo_url" : "current_logo_url";
 
   return (
     <div className={className}>
+      <input type="hidden" name={hiddenFieldName} value={imageUrl ?? ""} />
+
       <label className="block text-sm font-medium mb-2 text-foreground">
         {label}
       </label>
