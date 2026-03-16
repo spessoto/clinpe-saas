@@ -5,7 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-03-16
+
+### Fixed
+
+- **Hotfix: Backward Compatibility para Fallback de Colunas de Schema**
+  - Adicionado mecanismo inteligente de 2 níveis em `requireAuthenticatedUserWithClient()`
+    para lidar com ausência de colunas `avatar_url` e `bio` em bancos regressados
+  - Adicionado mecanismo inteligente de 2 níveis em `requireActiveTenant()` 
+    para lidar com ausência de colunas `billing_tier`, `max_patients_allowed`, `logo_url`
+  - Quando colunas não encontradas em produção, sistema tenta query alternativa sem essas colunas
+    e seta defaults: `billing_tier='free_trial'`, `max_patients_allowed=10`, `logo_url=null`, etc.
+  - Resolve erro "Tenant da conta não encontrado" em produção enquanto migration 20260316000008
+    aguarda aplicação ao Supabase remoto
+  - Mantém compatibilidade total com versões antigas do schema
+
+### Technical Details
+
+- Fallback estratégico permite operação com schema incompleto (v0.4.0 -> v0.5.0 -> v0.5.1)
+- Nenhuma mudança de API ou tipos de dado
+- Todos os defaults mantêm app funcional mesmo com colunas faltando
+- Quando migration 20260316000008 for aplicada a produção, fallbacks continuam funcionando
+
 ## [0.5.0] - 2026-03-16
+
+### Added
+
+- **Épico 7: Configuração de Perfil e Upload de Avatares**
+  - Nova coluna `logo_url` em `tenants` (preparado em schema base)
+  - Componente `ImageUpload` client-side com drag-drop, preview e upload
+  - Funcionalidade `uploadProfileImageAction()` para upload de avatar/logo ao Supabase Storage
+  - Seção "Perfil" em `/settings` com upload de avatar do profissional (128x128)
+  - Seção "Clínica" em `/settings` com upload de logo da clínica (240x120)
+  - Campo "Resumo profissional" (bio) para descrição na página pública (até 200 caracteres)
+  - Upload automático para buckets `avatars` e `clinic-logos` com estrutura `{tenant_id}/{user_id}/{timestamp}.{ext}`
+  - Validação de tamanho (máx 5MB) e tipo de arquivo (imagem apenas)
+
+### Changed
+
+- Tipos atualizados em `auth.ts`:
+  - `AppUser` agora inclui `avatar_url` e `bio`
+  - `Tenant` agora inclui `logo_url`
+- Queries de `requireAuthenticatedUser()` e `requireActiveTenant()` carregam novos campos
+- `/settings/page.tsx` reorganizada com 2 seções (Perfil e Clínica) e componentes de upload
 
 ### Added
 
