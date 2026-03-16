@@ -101,16 +101,21 @@ export default async function AgendaPage({ searchParams }: Props) {
   let loadError: string | null = null;
   let schemaWarning: string | null = null;
 
-  const { data: appointments, error: appointmentsError } = await supabase
+  let appointmentsQuery = supabase
     .from("appointments")
     .select(
       "id, scheduled_at, status, confirmation_status, patient:patients(name, email, phone)",
     )
     .eq("tenant_id", appUser.tenant_id)
-    .eq("professional_id", appUser.id)
     .gte("scheduled_at", monthStart.toISOString())
     .lt("scheduled_at", monthEnd.toISOString())
     .order("scheduled_at", { ascending: true });
+
+  if (appUser.role === "staff") {
+    appointmentsQuery = appointmentsQuery.eq("professional_id", appUser.id);
+  }
+
+  const { data: appointments, error: appointmentsError } = await appointmentsQuery;
 
   const mapEvents = (
     rows: Array<{
@@ -156,14 +161,19 @@ export default async function AgendaPage({ searchParams }: Props) {
   };
 
   if (appointmentsError && isMissingAgendaColumnsError(appointmentsError)) {
-    const { data: legacyAppointments, error: legacyError } = await supabase
+    let legacyQuery = supabase
       .from("appointments")
       .select("id, scheduled_at, status, patient:patients(name, email, phone)")
       .eq("tenant_id", appUser.tenant_id)
-      .eq("professional_id", appUser.id)
       .gte("scheduled_at", monthStart.toISOString())
       .lt("scheduled_at", monthEnd.toISOString())
       .order("scheduled_at", { ascending: true });
+
+    if (appUser.role === "staff") {
+      legacyQuery = legacyQuery.eq("professional_id", appUser.id);
+    }
+
+    const { data: legacyAppointments, error: legacyError } = await legacyQuery;
 
     if (legacyError) {
       loadError = "Não foi possível carregar os agendamentos do mês.";

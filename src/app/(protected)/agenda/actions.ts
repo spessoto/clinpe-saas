@@ -44,15 +44,19 @@ async function getManagedAppointment(appointmentId: string) {
   const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
 
-  const { data: appointment, error } = await supabase
+  let appointmentQuery = supabase
     .from("appointments")
     .select(
       "id, professional_id, scheduled_at, status, confirmation_status, google_event_id, patient:patients(name, email, phone)",
     )
     .eq("id", appointmentId)
-    .eq("tenant_id", appUser.tenant_id)
-    .eq("professional_id", appUser.id)
-    .single();
+    .eq("tenant_id", appUser.tenant_id);
+
+  if (appUser.role === "staff") {
+    appointmentQuery = appointmentQuery.eq("professional_id", appUser.id);
+  }
+
+  const { data: appointment, error } = await appointmentQuery.single();
 
   if (error || !appointment) {
     throw new Error("Agendamento não encontrado.");
@@ -127,11 +131,16 @@ export async function confirmAppointmentAction(formData: FormData) {
       warningMessage = "Não é possível confirmar um agendamento cancelado.";
     } else {
       if (appointment.confirmation_status !== "confirmed") {
-        const { error } = await supabase
+        let updateQuery = supabase
           .from("appointments")
           .update({ confirmation_status: "confirmed" })
-          .eq("id", appointment.id)
-          .eq("professional_id", appUser.id);
+          .eq("id", appointment.id);
+
+        if (appUser.role === "staff") {
+          updateQuery = updateQuery.eq("professional_id", appUser.id);
+        }
+
+        const { error } = await updateQuery;
 
         if (error) {
           throw error;
@@ -211,14 +220,19 @@ export async function cancelAppointmentAction(formData: FormData) {
         );
       }
 
-      const { error } = await supabase
+      let updateQuery = supabase
         .from("appointments")
         .update({
           status: "canceled",
           confirmation_status: "rejected",
         })
-        .eq("id", appointment.id)
-        .eq("professional_id", appUser.id);
+        .eq("id", appointment.id);
+
+      if (appUser.role === "staff") {
+        updateQuery = updateQuery.eq("professional_id", appUser.id);
+      }
+
+      const { error } = await updateQuery;
 
       if (error) {
         throw error;
