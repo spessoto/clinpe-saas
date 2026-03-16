@@ -17,6 +17,7 @@ export type AgendaCalendarEvent = {
   patientPhone: string;
   status: "scheduled" | "completed" | "canceled";
   confirmationStatus: "pending" | "confirmed" | "rejected";
+  isExternal?: boolean;
 };
 
 type Props = {
@@ -254,46 +255,55 @@ export function AgendaCalendar({ monthDateIso, monthKey, events }: Props) {
             </div>
 
             <div className="mt-6 grid gap-2 sm:grid-cols-2">
-              <form action={confirmAppointmentAction}>
-                <input
-                  type="hidden"
-                  name="appointment_id"
-                  value={selectedEvent.id}
-                />
-                <input type="hidden" name="month" value={monthKey} />
-                <button
-                  type="submit"
-                  disabled={
-                    selectedEvent.status === "canceled" ||
-                    selectedEvent.status === "completed" ||
-                    selectedEvent.confirmationStatus === "confirmed" ||
-                    selectedEvent.patientEmail === "Não informado"
-                  }
-                  className="btn-gradient w-full disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Confirmar agendamento
-                </button>
-              </form>
+              {selectedEvent.isExternal ? (
+                <p className="sm:col-span-2 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
+                  Evento vindo do Google Calendar. Para confirmar/cancelar com
+                  e-mail, crie o agendamento pelo fluxo do PodoClin.
+                </p>
+              ) : (
+                <>
+                  <form action={confirmAppointmentAction}>
+                    <input
+                      type="hidden"
+                      name="appointment_id"
+                      value={selectedEvent.id}
+                    />
+                    <input type="hidden" name="month" value={monthKey} />
+                    <button
+                      type="submit"
+                      disabled={
+                        selectedEvent.status === "canceled" ||
+                        selectedEvent.status === "completed" ||
+                        selectedEvent.confirmationStatus === "confirmed" ||
+                        selectedEvent.patientEmail === "Não informado"
+                      }
+                      className="btn-gradient w-full disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Confirmar agendamento
+                    </button>
+                  </form>
 
-              <form action={cancelAppointmentAction}>
-                <input
-                  type="hidden"
-                  name="appointment_id"
-                  value={selectedEvent.id}
-                />
-                <input type="hidden" name="month" value={monthKey} />
-                <button
-                  type="submit"
-                  disabled={
-                    selectedEvent.status === "canceled" ||
-                    selectedEvent.status === "completed" ||
-                    selectedEvent.patientEmail === "Não informado"
-                  }
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-destructive/25 bg-destructive/10 px-4 py-2 font-semibold text-destructive transition hover:bg-destructive/15 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Cancelar agendamento
-                </button>
-              </form>
+                  <form action={cancelAppointmentAction}>
+                    <input
+                      type="hidden"
+                      name="appointment_id"
+                      value={selectedEvent.id}
+                    />
+                    <input type="hidden" name="month" value={monthKey} />
+                    <button
+                      type="submit"
+                      disabled={
+                        selectedEvent.status === "canceled" ||
+                        selectedEvent.status === "completed" ||
+                        selectedEvent.patientEmail === "Não informado"
+                      }
+                      className="inline-flex w-full items-center justify-center rounded-xl border border-destructive/25 bg-destructive/10 px-4 py-2 font-semibold text-destructive transition hover:bg-destructive/15 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Cancelar agendamento
+                    </button>
+                  </form>
+                </>
+              )}
             </div>
 
             {selectedEvent.patientEmail === "Não informado" ? (

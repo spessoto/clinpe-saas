@@ -5,6 +5,7 @@ import {
   type AgendaCalendarEvent,
 } from "@/app/(protected)/agenda/agenda-calendar";
 import { requireActiveTenant } from "@/lib/auth";
+import { listGoogleCalendarEvents } from "@/lib/google-calendar";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = {
@@ -68,7 +69,8 @@ export default async function AgendaPage({ searchParams }: Props) {
   const supabase = await createClient();
   const success = typeof params.success === "string" ? params.success : null;
   const error = typeof params.error === "string" ? params.error : null;
-  const warning = typeof params.warning === "string" ? params.warning : null;
+  let warningBanner =
+    typeof params.warning === "string" ? params.warning : null;
 
   const selectedMonth =
     typeof params.month === "string" ? params.month : undefined;
@@ -90,7 +92,7 @@ export default async function AgendaPage({ searchParams }: Props) {
 
   const { data: integration } = await supabase
     .from("google_integrations")
-    .select("google_email")
+    .select("google_email, access_token, refresh_token, expires_at")
     .eq("tenant_id", appUser.tenant_id)
     .eq("user_id", appUser.id)
     .maybeSingle();
@@ -197,6 +199,44 @@ export default async function AgendaPage({ searchParams }: Props) {
     );
   }
 
+  if (
+    events.length === 0 &&
+    !loadError &&
+    (integration?.refresh_token || integration?.access_token)
+  ) {
+    try {
+      const googleEvents = await listGoogleCalendarEvents(
+        {
+          access_token: integration?.access_token ?? null,
+          refresh_token: integration?.refresh_token ?? null,
+          expires_at: integration?.expires_at ?? null,
+        },
+        monthStart.toISOString(),
+        monthEnd.toISOString(),
+      );
+
+      events = googleEvents.map((event) => ({
+        id: `google:${event.id}`,
+        summary: event.summary || "Evento do Google",
+        start: event.start,
+        end: event.end,
+        patientName: event.summary || "Evento do Google",
+        patientEmail: event.attendees[0] ?? "Não informado",
+        patientPhone: "Não informado",
+        status: "scheduled",
+        confirmationStatus: "pending",
+        isExternal: true,
+      }));
+
+      if (events.length > 0) {
+        warningBanner ??=
+          "Mostrando eventos do Google Calendar. Para confirmar/cancelar com e-mail, o agendamento precisa existir no PodoClin.";
+      }
+    } catch {
+      // If Google API fails, we keep the database result (possibly empty).
+    }
+  }
+
   return (
     <section className="space-y-6">
       <article className="surface-card p-6">
@@ -234,9 +274,9 @@ export default async function AgendaPage({ searchParams }: Props) {
             {success}
           </p>
         ) : null}
-        {warning ? (
+        {warningBanner ? (
           <p className="mt-3 rounded-md bg-warning/10 px-3 py-2 text-sm text-warning">
-            {warning}
+            {warningBanner}
           </p>
         ) : null}
         {schemaWarning ? (
