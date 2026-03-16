@@ -17,6 +17,7 @@ type Professional = {
   id: string;
   full_name: string;
   professional_register: string | null;
+  avatar_url: string | null;
   profile_photo_url: string | null;
   booking_slug: string;
   tenant_id: string;
@@ -198,30 +199,52 @@ export async function getPublicProfessionalBookingContext(
 
   let professional: Professional | null = null;
 
-  const withColumnResult = await supabase
+  const withAvatarResult = await supabase
     .from("users")
     .select(
-      "id, tenant_id, full_name, professional_register, profile_photo_url, booking_slug",
+      "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url, booking_slug",
     )
     .eq("booking_slug", professionalSlug)
     .maybeSingle();
 
-  if (withColumnResult.data) {
-    professional = withColumnResult.data as Professional;
+  if (withAvatarResult.data) {
+    const row = withAvatarResult.data as Professional;
+    professional = {
+      ...row,
+      profile_photo_url: row.avatar_url ?? row.profile_photo_url,
+    };
   } else {
-    const fallbackUsers = await supabase
-      .from("users")
-      .select(
-        "id, tenant_id, full_name, professional_register, profile_photo_url",
-      );
+    const avatarColumnMissing =
+      withAvatarResult.error?.message
+        ?.toLowerCase()
+        .includes("avatar_url") ?? false;
+
+    const fallbackUsers = await (avatarColumnMissing
+      ? supabase
+          .from("users")
+          .select(
+            "id, tenant_id, full_name, professional_register, profile_photo_url",
+          )
+      : supabase
+          .from("users")
+          .select(
+            "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url",
+          ));
 
     const found = (fallbackUsers.data ?? []).find(
       (user) => slugifyName(user.full_name) === professionalSlug,
     );
 
     if (found) {
+      const avatarUrl =
+        "avatar_url" in found ? (found.avatar_url as string | null) : null;
+      const profilePhotoUrl =
+        (found.profile_photo_url as string | null) ?? avatarUrl;
+
       professional = {
-        ...(found as Omit<Professional, "booking_slug">),
+        ...(found as Omit<Professional, "booking_slug" | "avatar_url">),
+        avatar_url: avatarUrl,
+        profile_photo_url: avatarUrl ?? profilePhotoUrl,
         booking_slug: professionalSlug,
       };
     }
@@ -266,30 +289,52 @@ export async function diagnosePublicProfessionalBooking(
 
   let professional: Professional | null = null;
 
-  const withColumnResult = await supabase
+  const withAvatarResult = await supabase
     .from("users")
     .select(
-      "id, tenant_id, full_name, professional_register, profile_photo_url, booking_slug",
+      "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url, booking_slug",
     )
     .eq("booking_slug", professionalSlug)
     .maybeSingle();
 
-  if (withColumnResult.data) {
-    professional = withColumnResult.data as Professional;
+  if (withAvatarResult.data) {
+    const row = withAvatarResult.data as Professional;
+    professional = {
+      ...row,
+      profile_photo_url: row.avatar_url ?? row.profile_photo_url,
+    };
   } else {
-    const fallbackUsers = await supabase
-      .from("users")
-      .select(
-        "id, tenant_id, full_name, professional_register, profile_photo_url",
-      );
+    const avatarColumnMissing =
+      withAvatarResult.error?.message
+        ?.toLowerCase()
+        .includes("avatar_url") ?? false;
+
+    const fallbackUsers = await (avatarColumnMissing
+      ? supabase
+          .from("users")
+          .select(
+            "id, tenant_id, full_name, professional_register, profile_photo_url",
+          )
+      : supabase
+          .from("users")
+          .select(
+            "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url",
+          ));
 
     const found = (fallbackUsers.data ?? []).find(
       (user) => slugifyName(user.full_name) === professionalSlug,
     );
 
     if (found) {
+      const avatarUrl =
+        "avatar_url" in found ? (found.avatar_url as string | null) : null;
+      const profilePhotoUrl =
+        (found.profile_photo_url as string | null) ?? avatarUrl;
+
       professional = {
-        ...(found as Omit<Professional, "booking_slug">),
+        ...(found as Omit<Professional, "booking_slug" | "avatar_url">),
+        avatar_url: avatarUrl,
+        profile_photo_url: avatarUrl ?? profilePhotoUrl,
         booking_slug: professionalSlug,
       };
     }
