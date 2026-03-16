@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-03-16
+
+### Added
+
+- **Épico 7: Configuração de Perfil e Upload de Avatares**
+  - Nova coluna `logo_url` em `tenants` (preparado em schema base)
+  - Componente `ImageUpload` client-side com drag-drop, preview e upload
+  - Funcionalidade `uploadProfileImageAction()` para upload de avatar/logo ao Supabase Storage
+  - Seção "Perfil" em `/settings` com upload de avatar do profissional (128x128)
+  - Seção "Clínica" em `/settings` com upload de logo da clínica (240x120)
+  - Campo "Resumo profissional" (bio) para descrição na página pública (até 200 caracteres)
+  - Upload automático para buckets `avatars` e `clinic-logos` com estrutura `{tenant_id}/{user_id}/{timestamp}.{ext}`
+  - Validação de tamanho (máx 5MB) e tipo de arquivo (imagem apenas)
+
+### Changed
+
+- Tipos atualizados em `auth.ts`:
+  - `AppUser` agora inclui `avatar_url` e `bio`
+  - `Tenant` agora inclui `logo_url`
+- Queries de `requireAuthenticatedUser()` e `requireActiveTenant()` carregam novos campos
+- `/settings/page.tsx` reorganizada com 2 seções (Perfil e Clínica) e componentes de upload
+
+### Technical Details
+
+- Componente `ImageUpload` (client): suporta drag-drop, click, preview de imagem, feedback visual durante upload
+- Server action `uploadProfileImageAction()` com tratamento de erro e revalidação automática
+- Suporte a buckets já existentes no Supabase (nenhuma migration necessária para schema)
+- Política de nomeação de arquivo: `{bucket}/{tenant_id}/{file_owner_id}/{timestamp}.{ext}`
+
+### Breaking Changes
+
+- Nenhuma
+
 ## [0.4.0] - 2026-03-16
 
 ### Added
@@ -117,6 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [0.3.1]: https://github.com/spessoto/clinpe-saas/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/spessoto/clinpe-saas/compare/v0.2.0...v0.3.0
+[0.5.0]: https://github.com/spessoto/clinpe-saas/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/spessoto/clinpe-saas/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/spessoto/clinpe-saas/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/spessoto/clinpe-saas/compare/v0.2.0...v0.3.0
