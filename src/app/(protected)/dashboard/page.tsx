@@ -26,22 +26,23 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const { start, end } = monthBoundaries();
 
-  const appointmentsResult = await supabase
-    .from("appointments")
-    .select("id", { count: "exact", head: true })
-    .eq("tenant_id", appUser.tenant_id)
-    .gte("scheduled_at", start)
-    .lt("scheduled_at", end);
-
-  const patientsResult = await supabase
-    .from("patients")
-    .select("id", { count: "exact", head: true })
-    .eq("tenant_id", appUser.tenant_id);
-
-  const materialsResult = await supabase
-    .from("materials")
-    .select("id, quantity, minimum_stock")
-    .eq("tenant_id", appUser.tenant_id);
+  const [appointmentsResult, patientsResult, materialsResult] =
+    await Promise.all([
+      supabase
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", appUser.tenant_id)
+        .gte("scheduled_at", start)
+        .lt("scheduled_at", end),
+      supabase
+        .from("patients")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", appUser.tenant_id),
+      supabase
+        .from("materials")
+        .select("id, quantity, minimum_stock")
+        .eq("tenant_id", appUser.tenant_id),
+    ]);
 
   const lowStockCount =
     materialsResult.data?.filter((m) => m.quantity <= m.minimum_stock).length ??

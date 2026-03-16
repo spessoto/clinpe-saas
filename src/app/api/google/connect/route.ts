@@ -54,7 +54,7 @@ function toErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   const { appUser } = await requireActiveTenant();
 
   try {

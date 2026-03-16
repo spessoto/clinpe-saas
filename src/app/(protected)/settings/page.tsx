@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { saveSettingsAction } from "@/app/(protected)/settings/actions";
@@ -112,9 +113,11 @@ export default async function SettingsPage({ searchParams }: Props) {
             <label className="block text-sm md:col-span-2">
               <span className="mb-1 block text-foreground">Foto de perfil</span>
               {userSettings.profile_photo_url ? (
-                <img
+                <Image
                   src={userSettings.profile_photo_url}
                   alt="Foto de perfil"
+                  width={80}
+                  height={80}
                   className="mb-3 h-20 w-20 rounded-full border border-slate-200 object-cover"
                 />
               ) : null}

@@ -22,6 +22,12 @@ type Tenant = {
 
 export async function requireAuthenticatedUser() {
   const supabase = await createClient();
+  return requireAuthenticatedUserWithClient(supabase);
+}
+
+async function requireAuthenticatedUserWithClient(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -74,7 +80,7 @@ export async function requireAuthenticatedUser() {
 
 export async function requireActiveTenant() {
   const supabase = await createClient();
-  const appUser = await requireAuthenticatedUser();
+  const appUser = await requireAuthenticatedUserWithClient(supabase);
 
   const withSlugResult = await supabase
     .from("tenants")
