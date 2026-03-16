@@ -178,3 +178,88 @@ export async function saveSettingsAction(formData: FormData) {
 
   redirect(`/settings?success=${encodeURIComponent(successMessage)}`);
 }
+
+/**
+ * Upload de arquivo para Supabase Storage (avatar ou logo)
+ * Espera um FormData com as seguintes propriedades:
+ * - file: File
+ * - type: "avatar" | "logo"
+ */
+export async function uploadProfileImageAction(formData: FormData) {
+  const { appUser, tenant } = await requireActiveTenant();
+  const supabase = await createClient();
+
+  const file = formData.get("file") as File;
+  const type = getField(formData, "type");
+
+  if (!file || !type) {
+    return { error: "Arquivo e tipo são obrigatórios" };
+  }
+
+  if (!["avatar", "logo"].includes(type)) {
+    return { error: "Tipo inválido" };
+  }
+
+  try {
+    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "png";
+    const bucket = type === "avatar" ? "avatars" : "clinic-logos";
+    const fileName = `${tenant.id}/${appUser.id}/${Date.now()}.${fileExtension}`;
+
+    // Converter file para Uint8Array
+    const fileBytes = new Uint8Array(await file.arrayBuffer());
+
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, fileBytes, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || "application/octet-stream",
+      });
+
+    if (error) {
+      console.error(`Erro ao upload de ${type}:`, error);
+      return { error: error.message };
+    }
+
+    // Gerar URL pública
+    const { data: publicUrlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(data.path);
+
+    if (!publicUrlData?.publicUrl) {
+      return { error: "Falha ao gerar URL pública" };
+    }
+
+    // Atualizar campo correspondente no banco de dados
+    if (type === "avatar") {
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ avatar_url: publicUrlData.publicUrl })
+        .eq("id", appUser.id)
+        .eq("tenant_id", appUser.tenant_id);
+
+      if (updateError) {
+        return { error: updateError.message };
+      }
+    } else if (type === "logo") {
+      const { error: updateError } = await supabase
+        .from("tenants")
+        .update({ logo_url: publicUrlData.publicUrl })
+        .eq("id", tenant.id);
+
+      if (updateError) {
+        return { error: updateError.message };
+      }
+    }
+
+    revalidatePath("/settings");
+
+    return {
+      url: publicUrlData.publicUrl,
+      type,
+    };
+  } catch (error) {
+    console.error("Erro ao fazer upload:", error);
+    return { error: "Erro ao fazer upload do arquivo" };
+  }
+}

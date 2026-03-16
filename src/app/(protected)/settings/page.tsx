@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { saveSettingsAction } from "@/app/(protected)/settings/actions";
+import { ImageUpload } from "@/components/image-upload";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -109,67 +109,84 @@ export default async function SettingsPage({ searchParams }: Props) {
         <article className="surface-card p-6">
           <h3 className="text-lg font-semibold text-secondary">Perfil</h3>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="block text-sm md:col-span-2">
-              <span className="mb-1 block text-foreground">Foto de perfil</span>
-              {userSettings.profile_photo_url ? (
-                <Image
-                  src={userSettings.profile_photo_url}
-                  alt="Foto de perfil"
-                  width={80}
-                  height={80}
-                  className="mb-3 h-20 w-20 rounded-full border border-slate-200 object-cover"
+          <div className="mt-4 grid gap-6 md:grid-cols-2">
+            <ImageUpload
+              type="avatar"
+              currentUrl={appUser.avatar_url}
+              label="Avatar do Profissional"
+              className="md:col-span-1"
+            />
+
+            <div className="space-y-4">
+              <label className="block text-sm">
+                <span className="mb-1 block text-foreground">
+                  Nome do usuário
+                </span>
+                <input
+                  name="full_name"
+                  required
+                  defaultValue={appUser.full_name}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
                 />
-              ) : null}
-              <input
-                type="file"
-                name="profile_photo"
-                accept="image/*"
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
-              />
-              <input
-                type="hidden"
-                name="current_profile_photo_url"
-                value={userSettings.profile_photo_url ?? ""}
-              />
-            </label>
+              </label>
 
-            <label className="block text-sm">
-              <span className="mb-1 block text-foreground">
-                Nome da clínica
-              </span>
-              <input
-                name="clinic_name"
-                required
-                defaultValue={tenant.name}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-              />
-            </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-foreground">
+                  Resumo profissional
+                </span>
+                <textarea
+                  name="bio"
+                  maxLength={200}
+                  defaultValue={appUser.bio || ""}
+                  placeholder="Breve descrição para a página pública de agendamento"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
+                  rows={3}
+                />
+                <p className="mt-1 text-xs text-muted">
+                  Até 200 caracteres
+                </p>
+              </label>
+            </div>
+          </div>
+        </article>
 
-            <label className="block text-sm">
-              <span className="mb-1 block text-foreground">
-                Nome do usuário
-              </span>
-              <input
-                name="full_name"
-                required
-                defaultValue={appUser.full_name}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-              />
-            </label>
+        <article className="surface-card p-6">
+          <h3 className="text-lg font-semibold text-secondary">Clínica</h3>
 
-            <label className="block text-sm md:col-span-2">
-              <span className="mb-1 block text-foreground">
-                E-mail do usuário
-              </span>
-              <input
-                type="email"
-                name="email"
-                required
-                defaultValue={appUser.email}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-              />
-            </label>
+          <div className="mt-4 grid gap-6 md:grid-cols-2">
+            <ImageUpload
+              type="logo"
+              currentUrl={tenant.logo_url}
+              label="Logo da Clínica"
+              className="md:col-span-1"
+            />
+
+            <div>
+              <label className="block text-sm">
+                <span className="mb-1 block text-foreground">
+                  Nome da clínica
+                </span>
+                <input
+                  name="clinic_name"
+                  required
+                  defaultValue={tenant.name}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+              </label>
+
+              <label className="block text-sm mt-4">
+                <span className="mb-1 block text-foreground">
+                  E-mail do usuário
+                </span>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  defaultValue={appUser.email}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+              </label>
+            </div>
           </div>
         </article>
 

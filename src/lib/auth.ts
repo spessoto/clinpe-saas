@@ -10,6 +10,8 @@ type AppUser = {
   booking_slug: string | null;
   email: string;
   role: "owner" | "staff";
+  avatar_url: string | null;
+  bio: string | null;
 };
 
 type Tenant = {
@@ -20,6 +22,7 @@ type Tenant = {
   subscription_status: "trialing" | "active" | "past_due";
   billing_tier: "free_trial" | "tier_1" | "tier_2" | "tier_3";
   max_patients_allowed: number;
+  logo_url: string | null;
 };
 
 export async function requireAuthenticatedUser() {
@@ -41,7 +44,7 @@ async function requireAuthenticatedUserWithClient(
   const withBookingSlugResult = await supabase
     .from("users")
     .select(
-      "id, tenant_id, full_name, professional_register, booking_slug, email, role",
+      "id, tenant_id, full_name, professional_register, booking_slug, email, role, avatar_url, bio",
     )
     .eq("id", user.id)
     .single();
@@ -58,7 +61,7 @@ async function requireAuthenticatedUserWithClient(
     if (shouldFallback) {
       const fallbackResult = await supabase
         .from("users")
-        .select("id, tenant_id, full_name, professional_register, email, role")
+        .select("id, tenant_id, full_name, professional_register, email, role, avatar_url, bio")
         .eq("id", user.id)
         .single();
 
@@ -86,7 +89,9 @@ export async function requireActiveTenant() {
 
   const withSlugResult = await supabase
     .from("tenants")
-    .select("id, name, slug, trial_ends_at, subscription_status, billing_tier, max_patients_allowed")
+    .select(
+      "id, name, slug, trial_ends_at, subscription_status, billing_tier, max_patients_allowed, logo_url",
+    )
     .eq("id", appUser.tenant_id)
     .single();
 
@@ -97,7 +102,9 @@ export async function requireActiveTenant() {
   if (!tenant && withSlugResult.error) {
     const fallbackResult = await supabase
       .from("tenants")
-      .select("id, name, trial_ends_at, subscription_status, billing_tier, max_patients_allowed")
+      .select(
+        "id, name, trial_ends_at, subscription_status, billing_tier, max_patients_allowed, logo_url",
+      )
       .eq("id", appUser.tenant_id)
       .single();
 

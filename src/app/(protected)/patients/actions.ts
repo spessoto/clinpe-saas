@@ -63,7 +63,7 @@ export async function createPatientAction(formData: FormData) {
   const limitStatus = await getPatientCountStatus();
   if (limitStatus.isLimitReached) {
     redirect(
-      `/patients/new?error=Limite de pacientes atingido (${limitStatus.current}/${limitStatus.max}). Faça upgrade para adicionar mais.&limitReached=true`
+      `/patients/new?error=Limite de pacientes atingido (${limitStatus.current}/${limitStatus.max}). Faça upgrade para adicionar mais.&limitReached=true`,
     );
   }
 

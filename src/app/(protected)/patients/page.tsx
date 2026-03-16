@@ -35,10 +35,10 @@ export default async function PatientsPage({ searchParams }: Props) {
         <div>
           <h2 className="text-3xl font-bold">Pacientes</h2>
           <p className="mt-1 text-muted">
-            {limitStatus.current}/{limitStatus.max} • {' '}
+            {limitStatus.current}/{limitStatus.max} •{" "}
             {limitStatus.remainingSlots > 0
-              ? `${limitStatus.remainingSlots} slot${limitStatus.remainingSlots !== 1 ? 's' : ''} disponível${limitStatus.remainingSlots !== 1 ? 's' : ''}`
-              : 'Limite atingido'}
+              ? `${limitStatus.remainingSlots} slot${limitStatus.remainingSlots !== 1 ? "s" : ""} disponível${limitStatus.remainingSlots !== 1 ? "s" : ""}`
+              : "Limite atingido"}
           </p>
         </div>
 
@@ -75,8 +75,10 @@ export default async function PatientsPage({ searchParams }: Props) {
       {limitStatus.remainingSlots <= 3 && !limitStatus.isLimitReached && (
         <div className="mb-4 rounded-md border border-warning/30 bg-warning/5 px-3 py-2">
           <p className="text-sm font-semibold text-warning">
-            ⚠️ Você tem apenas <strong>{limitStatus.remainingSlots}</strong> slot{limitStatus.remainingSlots !== 1 ? 's' : ''} restante{limitStatus.remainingSlots !== 1 ? 's' : ''} no seu plano {tenant.billing_tier}.
-            {' '}
+            ⚠️ Você tem apenas <strong>{limitStatus.remainingSlots}</strong>{" "}
+            slot{limitStatus.remainingSlots !== 1 ? "s" : ""} restante
+            {limitStatus.remainingSlots !== 1 ? "s" : ""} no seu plano{" "}
+            {tenant.billing_tier}.{" "}
             <Link href="/billing" className="font-bold hover:underline">
               Fazer upgrade →
             </Link>

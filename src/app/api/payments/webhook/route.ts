@@ -4,11 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 
 /**
  * Webhook para processar eventos de pagamento.
- * 
+ *
  * Suportará:
  * - Stripe: invoice.payment_succeeded, invoice.payment_failed, customer.subscription.updated
  * - Mercado Pago: payment.success, subscription.updated
- * 
+ *
  * Esperado no body:
  * {
  *   provider: "stripe" | "mercado_pago",
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     if (!provider || !event || !data) {
       return NextResponse.json(
         { error: "Campo(s) obrigatório(s) faltando" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         console.error("Erro ao atualizar tenant:", error);
         return NextResponse.json(
           { error: "Falha ao atualizar tenant no banco de dados" },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
@@ -67,20 +67,20 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { success: true, message: `Evento ${event} processado com sucesso` },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("[WEBHOOK] Erro ao processar webhook:", error);
     return NextResponse.json(
       { error: "Erro interno ao processar webhook" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 /**
  * Exemplo de request Stripe:
- * 
+ *
  * POST /api/payments/webhook
  * {
  *   "provider": "stripe",
@@ -91,9 +91,9 @@ export async function POST(request: NextRequest) {
  *     "max_patients_allowed": 50
  *   }
  * }
- * 
+ *
  * Exemplo de request Mercado Pago:
- * 
+ *
  * POST /api/payments/webhook
  * {
  *   "provider": "mercado_pago",
