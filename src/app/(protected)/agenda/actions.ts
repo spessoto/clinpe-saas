@@ -52,6 +52,44 @@ function appendWarning(current: string | null, incoming: string | null) {
   return `${current} ${incoming}`;
 }
 
+function getFriendlyActionError(
+  error: unknown,
+  fallbackMessage: string,
+): string {
+  if (!(error instanceof Error)) {
+    return fallbackMessage;
+  }
+
+  const message = error.message.trim();
+  const lower = message.toLowerCase();
+
+  if (lower.includes("agendamento não encontrado")) {
+    return "Agendamento não encontrado ou sem permissão para esta ação.";
+  }
+
+  if (
+    lower.includes("resource has been deleted") ||
+    lower.includes("calendar") ||
+    lower.includes("google")
+  ) {
+    return "Não foi possível sincronizar com o Google Calendar no momento. Tente novamente em instantes.";
+  }
+
+  if (
+    lower.includes("smtp") ||
+    lower.includes("nodemailer") ||
+    lower.includes("econn")
+  ) {
+    return "A ação foi registrada, mas houve instabilidade no envio de e-mail.";
+  }
+
+  return fallbackMessage;
+}
+
+function getFriendlyEmailWarning() {
+  return "A ação foi concluída, mas o e-mail de notificação não pôde ser enviado agora.";
+}
+
 async function getManagedAppointment(appointmentId: string) {
   const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
@@ -174,19 +212,16 @@ export async function confirmAppointmentAction(formData: FormData) {
             scheduledAt: appointment.scheduled_at,
             decision: "confirmed",
           });
-        } catch (mailError) {
-          warningMessage =
-            mailError instanceof Error
-              ? mailError.message
-              : "Agendamento confirmado, mas o e-mail não pôde ser enviado.";
+        } catch {
+          warningMessage = getFriendlyEmailWarning();
         }
       }
     }
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Falha ao confirmar agendamento.";
+    const message = getFriendlyActionError(
+      error,
+      "Falha ao confirmar agendamento.",
+    );
     redirect(buildAgendaPath({ month, error: message }));
   }
 
@@ -274,19 +309,19 @@ export async function cancelAppointmentAction(formData: FormData) {
             scheduledAt: appointment.scheduled_at,
             decision: "canceled",
           });
-        } catch (mailError) {
+        } catch {
           warningMessage = appendWarning(
             warningMessage,
-            mailError instanceof Error
-              ? mailError.message
-              : "Agendamento cancelado, mas o e-mail não pôde ser enviado.",
+            getFriendlyEmailWarning(),
           );
         }
       }
     }
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Falha ao cancelar agendamento.";
+    const message = getFriendlyActionError(
+      error,
+      "Falha ao cancelar agendamento.",
+    );
     redirect(buildAgendaPath({ month, error: message }));
   }
 
