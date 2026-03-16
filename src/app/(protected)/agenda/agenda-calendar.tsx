@@ -149,19 +149,58 @@ function groupEventsByDay(events: AgendaCalendarEvent[]) {
 }
 
 export function AgendaCalendar({ monthKey, events }: Props) {
-  const [selectedDay, setSelectedDay] = useState<{
-    date: Date;
-    events: AgendaCalendarEvent[];
-  } | null>(null);
+  const [pendingCancelIds, setPendingCancelIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] =
     useState<AgendaCalendarEvent | null>(null);
 
   const monthDate = useMemo(() => parseMonthKey(monthKey), [monthKey]);
   const today = useMemo(() => new Date(), []);
   const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+  const visibleEvents = useMemo(
+    () => events.filter((event) => !pendingCancelIds.has(event.id)),
+    [events, pendingCancelIds],
+  );
 
   const calendarDays = useMemo(() => buildCalendarDays(monthDate), [monthDate]);
-  const eventsMap = useMemo(() => groupEventsByDay(events), [events]);
+  const eventsMap = useMemo(
+    () => groupEventsByDay(visibleEvents),
+    [visibleEvents],
+  );
+  const selectedDayDate = useMemo(() => {
+    if (!selectedDayKey) {
+      return null;
+    }
+
+    const [yearRaw, monthRaw, dayRaw] = selectedDayKey.split("-");
+    const year = Number(yearRaw);
+    const month = Number(monthRaw);
+    const day = Number(dayRaw);
+
+    if (
+      !Number.isFinite(year) ||
+      !Number.isFinite(month) ||
+      !Number.isFinite(day)
+    ) {
+      return null;
+    }
+
+    return new Date(year, month - 1, day);
+  }, [selectedDayKey]);
+  const selectedDayEvents = selectedDayKey
+    ? eventsMap.get(selectedDayKey) ?? []
+    : [];
+
+  function handleCancelSubmit() {
+    if (!selectedEvent || selectedEvent.isExternal) {
+      return;
+    }
+
+    setPendingCancelIds((current) => new Set(current).add(selectedEvent.id));
+    setSelectedEvent(null);
+  }
 
   return (
     <>
@@ -186,7 +225,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
               <button
                 key={dayKey}
                 type="button"
-                onClick={() => setSelectedDay({ date: day, events: dayEvents })}
+                onClick={() => setSelectedDayKey(dayKey)}
                 className={`min-h-28 rounded-xl border p-2 text-left transition hover:border-primary/40 ${outOfMonth ? "border-slate-100 bg-slate-50" : "border-slate-200 bg-white"}`}
               >
                 <div className="mb-2 flex items-center justify-between">
@@ -229,7 +268,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
         </div>
       </article>
 
-      {selectedDay ? (
+      {selectedDayDate ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
           <div className="surface-card w-full max-w-xl p-6">
             <div className="flex items-start justify-between gap-3">
@@ -238,12 +277,12 @@ export function AgendaCalendar({ monthKey, events }: Props) {
                   Consultas do dia
                 </h3>
                 <p className="mt-1 text-sm capitalize text-muted">
-                  {formatDayLabel(selectedDay.date)}
+                  {formatDayLabel(selectedDayDate)}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedDay(null)}
+                onClick={() => setSelectedDayKey(null)}
                 className="btn-outline-modern px-2 py-1 text-xs"
               >
                 Fechar
@@ -251,18 +290,18 @@ export function AgendaCalendar({ monthKey, events }: Props) {
             </div>
 
             <div className="mt-4 max-h-[60vh] space-y-2 overflow-y-auto pr-1">
-              {selectedDay.events.length === 0 ? (
+              {selectedDayEvents.length === 0 ? (
                 <p className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-muted">
                   Nenhuma consulta cadastrada para este dia.
                 </p>
               ) : (
-                selectedDay.events.map((event) => (
+                selectedDayEvents.map((event) => (
                   <button
                     key={event.id}
                     type="button"
                     onClick={() => {
                       setSelectedEvent(event);
-                      setSelectedDay(null);
+                      setSelectedDayKey(null);
                     }}
                     className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-primary/40 hover:bg-primary/5"
                   >
@@ -379,6 +418,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
                     <input type="hidden" name="month" value={monthKey} />
                     <button
                       type="submit"
+                      onClick={handleCancelSubmit}
                       disabled={
                         selectedEvent.status === "canceled" ||
                         selectedEvent.status === "completed" ||

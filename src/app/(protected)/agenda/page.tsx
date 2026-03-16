@@ -8,6 +8,9 @@ import { requireActiveTenant } from "@/lib/auth";
 import { listGoogleCalendarEvents } from "@/lib/google-calendar";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
