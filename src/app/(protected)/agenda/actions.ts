@@ -40,6 +40,18 @@ function buildAgendaPath(input: {
   return query ? `/agenda?${query}` : "/agenda";
 }
 
+function appendWarning(current: string | null, incoming: string | null) {
+  if (!incoming) {
+    return current;
+  }
+
+  if (!current) {
+    return incoming;
+  }
+
+  return `${current} ${incoming}`;
+}
+
 async function getManagedAppointment(appointmentId: string) {
   const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
@@ -210,14 +222,21 @@ export async function cancelAppointmentAction(formData: FormData) {
         appointment.google_event_id &&
         (integration?.refresh_token || integration?.access_token)
       ) {
-        await deleteGoogleCalendarEvent(
-          integration as {
-            access_token: string | null;
-            refresh_token: string | null;
-            expires_at: string | null;
-          },
-          appointment.google_event_id,
-        );
+        try {
+          await deleteGoogleCalendarEvent(
+            integration as {
+              access_token: string | null;
+              refresh_token: string | null;
+              expires_at: string | null;
+            },
+            appointment.google_event_id,
+          );
+        } catch {
+          warningMessage = appendWarning(
+            warningMessage,
+            "Agendamento cancelado no sistema, mas não foi possível sincronizar a exclusão no Google Calendar.",
+          );
+        }
       }
 
       let updateQuery = supabase
@@ -241,8 +260,10 @@ export async function cancelAppointmentAction(formData: FormData) {
       revalidatePath("/agenda");
 
       if (!appointment.patient?.email) {
-        warningMessage =
-          "Agendamento cancelado, mas o paciente não possui e-mail cadastrado.";
+        warningMessage = appendWarning(
+          warningMessage,
+          "Agendamento cancelado, mas o paciente não possui e-mail cadastrado.",
+        );
       } else {
         try {
           await sendAppointmentDecisionEmail({
@@ -254,10 +275,12 @@ export async function cancelAppointmentAction(formData: FormData) {
             decision: "canceled",
           });
         } catch (mailError) {
-          warningMessage =
+          warningMessage = appendWarning(
+            warningMessage,
             mailError instanceof Error
               ? mailError.message
-              : "Agendamento cancelado, mas o e-mail não pôde ser enviado.";
+              : "Agendamento cancelado, mas o e-mail não pôde ser enviado.",
+          );
         }
       }
     }
