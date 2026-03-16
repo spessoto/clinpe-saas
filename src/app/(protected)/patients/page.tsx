@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getPatientCountStatus } from "@/app/(protected)/patients/actions";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -8,8 +9,9 @@ type Props = {
 };
 
 export default async function PatientsPage({ searchParams }: Props) {
-  const { appUser } = await requireActiveTenant();
+  const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
+  const limitStatus = await getPatientCountStatus();
 
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.trim() : "";
@@ -33,13 +35,22 @@ export default async function PatientsPage({ searchParams }: Props) {
         <div>
           <h2 className="text-3xl font-bold">Pacientes</h2>
           <p className="mt-1 text-muted">
-            CRUD com busca por nome ou telefone.
+            {limitStatus.current}/{limitStatus.max} • {' '}
+            {limitStatus.remainingSlots > 0
+              ? `${limitStatus.remainingSlots} slot${limitStatus.remainingSlots !== 1 ? 's' : ''} disponível${limitStatus.remainingSlots !== 1 ? 's' : ''}`
+              : 'Limite atingido'}
           </p>
         </div>
 
-        <Link href="/patients/new" className="btn-gradient">
-          Novo paciente
-        </Link>
+        {limitStatus.isLimitReached ? (
+          <Link href="/billing" className="btn-outline-modern">
+            Fazer Upgrade
+          </Link>
+        ) : (
+          <Link href="/patients/new" className="btn-gradient">
+            Novo paciente
+          </Link>
+        )}
       </div>
 
       <form className="mb-4 flex gap-2" action="/patients" method="get">
@@ -60,6 +71,18 @@ export default async function PatientsPage({ searchParams }: Props) {
           {error}
         </p>
       ) : null}
+
+      {limitStatus.remainingSlots <= 3 && !limitStatus.isLimitReached && (
+        <div className="mb-4 rounded-md border border-warning/30 bg-warning/5 px-3 py-2">
+          <p className="text-sm font-semibold text-warning">
+            ⚠️ Você tem apenas <strong>{limitStatus.remainingSlots}</strong> slot{limitStatus.remainingSlots !== 1 ? 's' : ''} restante{limitStatus.remainingSlots !== 1 ? 's' : ''} no seu plano {tenant.billing_tier}.
+            {' '}
+            <Link href="/billing" className="font-bold hover:underline">
+              Fazer upgrade →
+            </Link>
+          </p>
+        </div>
+      )}
 
       <div className="surface-card overflow-hidden">
         <table className="w-full text-left text-sm">

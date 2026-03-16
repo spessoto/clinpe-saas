@@ -8,11 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.1] - 2026-03-16
 
 ### Fixed
+
 - Widget "Última consulta" em `/patients/[id]` agora considera `created_at` de prontuários (`medical_records`), não apenas agendamentos. A data exibida é a mais recente entre prontuários e agendamentos.
 
 ## [0.3.0] - 2026-03-15
 
 ### Added
+
 - Confirmação/cancelamento de agendamentos com notificação por email aos pacientes
   - Nova coluna `confirmation_status` (enum: pending/confirmed/rejected) na tabela `appointments`
   - Nova coluna `google_event_id` para rastrear eventos do Google Calendar
@@ -23,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Suporte a eventos externos do Google Calendar (read-only) com aviso ao usuário
 
 ### Changed
+
 - Agenda carrega primeiro do banco de dados (`appointments` table com `confirmation_status`)
 - Se mês vazio no DB, fallback automático para `listGoogleCalendarEvents()`
 - Refatoração de performance:
@@ -33,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Substituição de `<img>` por Next `Image` component em `/settings` (LCP melhorado)
 
 ### Security
+
 - Adição de headers de segurança HTTP em `next.config.ts`:
   - `X-Content-Type-Options: nosniff`
   - `X-Frame-Options: DENY`
@@ -45,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Nenhum segredo hardcoded no código
 
 ### Fixed
+
 - Login em produção: adição de try/catch em `signInAction()` para tratamento robusto de exceções
 - Erro de mutação de cookies em Server Component: encapsulamento de `setAll()` em try/catch
 - Redirecionamentos para domínio correto em produção (https://pododesk.com.br):
@@ -56,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.0] - 2026-03-12
 
 ### Added
+
 - Integração com Google Calendar OAuth
 - Dashboard com KPIs de agendamentos
 - Página de pacientes com histórico de prontuários
@@ -63,11 +69,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integração com Google Calendar para visualização de eventos
 
 ### Fixed
+
 - Erro `NEXT_REDIRECT` em fluxo de booking público: movimentação de `redirect()` para fora de blocos try/catch
 
 ## [0.1.0] - 2026-03-10
 
 ### Added
+
 - Estrutura inicial Next.js com Supabase
 - Autenticação de usuários (sign-in, sign-up)
 - Layout protegido para profissionais

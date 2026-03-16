@@ -18,6 +18,8 @@ type Tenant = {
   slug: string;
   trial_ends_at: string;
   subscription_status: "trialing" | "active" | "past_due";
+  billing_tier: "free_trial" | "tier_1" | "tier_2" | "tier_3";
+  max_patients_allowed: number;
 };
 
 export async function requireAuthenticatedUser() {
@@ -84,7 +86,7 @@ export async function requireActiveTenant() {
 
   const withSlugResult = await supabase
     .from("tenants")
-    .select("id, name, slug, trial_ends_at, subscription_status")
+    .select("id, name, slug, trial_ends_at, subscription_status, billing_tier, max_patients_allowed")
     .eq("id", appUser.tenant_id)
     .single();
 
@@ -95,7 +97,7 @@ export async function requireActiveTenant() {
   if (!tenant && withSlugResult.error) {
     const fallbackResult = await supabase
       .from("tenants")
-      .select("id, name, trial_ends_at, subscription_status")
+      .select("id, name, trial_ends_at, subscription_status, billing_tier, max_patients_allowed")
       .eq("id", appUser.tenant_id)
       .single();
 
