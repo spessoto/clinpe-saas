@@ -98,6 +98,15 @@ function formatDateTime(value: string) {
   });
 }
 
+function formatDayLabel(value: Date) {
+  return value.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 function getEventTone(event: AgendaCalendarEvent) {
   if (event.status === "canceled" || event.confirmationStatus === "rejected") {
     return "bg-destructive/10 text-destructive hover:bg-destructive/20";
@@ -140,6 +149,10 @@ function groupEventsByDay(events: AgendaCalendarEvent[]) {
 }
 
 export function AgendaCalendar({ monthKey, events }: Props) {
+  const [selectedDay, setSelectedDay] = useState<{
+    date: Date;
+    events: AgendaCalendarEvent[];
+  } | null>(null);
   const [selectedEvent, setSelectedEvent] =
     useState<AgendaCalendarEvent | null>(null);
 
@@ -170,9 +183,11 @@ export function AgendaCalendar({ monthKey, events }: Props) {
             const isToday = isSameDay(day, today);
 
             return (
-              <div
+              <button
                 key={dayKey}
-                className={`min-h-36 rounded-xl border p-2 ${outOfMonth ? "border-slate-100 bg-slate-50" : "border-slate-200 bg-white"}`}
+                type="button"
+                onClick={() => setSelectedDay({ date: day, events: dayEvents })}
+                className={`min-h-28 rounded-xl border p-2 text-left transition hover:border-primary/40 ${outOfMonth ? "border-slate-100 bg-slate-50" : "border-slate-200 bg-white"}`}
               >
                 <div className="mb-2 flex items-center justify-between">
                   <span
@@ -188,34 +203,87 @@ export function AgendaCalendar({ monthKey, events }: Props) {
                 </div>
 
                 <div className="space-y-1">
-                  {dayEvents.slice(0, 3).map((event) => (
-                    <button
+                  {dayEvents.slice(0, 2).map((event) => (
+                    <div
                       key={event.id}
-                      type="button"
-                      onClick={() => setSelectedEvent(event)}
-                      className={`w-full rounded-xl px-2 py-1 text-left text-xs ${getEventTone(event)}`}
+                      className={`w-full rounded-lg px-2 py-1 text-xs ${getEventTone(event)}`}
                       title={`${event.summary} - ${formatHourLabel(event.start)}`}
                     >
-                      <p className="truncate font-semibold">{event.summary}</p>
-                      <div className="mt-1 flex items-center justify-between gap-2 text-[11px]">
-                        <p>{formatHourLabel(event.start)}</p>
-                        <span className="rounded-full bg-white/70 px-1.5 py-0.5 font-semibold">
-                          {getStatusLabel(event)}
-                        </span>
-                      </div>
-                    </button>
+                      <p className="truncate font-semibold leading-tight">
+                        {formatHourLabel(event.start)} · {event.summary}
+                      </p>
+                    </div>
                   ))}
-                  {dayEvents.length > 3 ? (
+                  {dayEvents.length > 2 ? (
                     <p className="text-[11px] font-semibold text-muted">
-                      +{dayEvents.length - 3} evento(s)
+                      +{dayEvents.length - 2} consulta(s)
                     </p>
                   ) : null}
+                  {dayEvents.length === 0 ? (
+                    <p className="text-[11px] text-muted">Sem consultas</p>
+                  ) : null}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
       </article>
+
+      {selectedDay ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">
+          <div className="surface-card w-full max-w-xl p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-bold text-secondary">
+                  Consultas do dia
+                </h3>
+                <p className="mt-1 text-sm capitalize text-muted">
+                  {formatDayLabel(selectedDay.date)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDay(null)}
+                className="btn-outline-modern px-2 py-1 text-xs"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="mt-4 max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+              {selectedDay.events.length === 0 ? (
+                <p className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-muted">
+                  Nenhuma consulta cadastrada para este dia.
+                </p>
+              ) : (
+                selectedDay.events.map((event) => (
+                  <button
+                    key={event.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setSelectedDay(null);
+                    }}
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition hover:border-primary/40 hover:bg-primary/5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-foreground">
+                        {formatHourLabel(event.start)} · {event.patientName}
+                      </p>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-muted">
+                        {getStatusLabel(event)}
+                      </span>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted">
+                      {event.patientEmail}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {selectedEvent ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4">

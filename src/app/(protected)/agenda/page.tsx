@@ -107,6 +107,7 @@ export default async function AgendaPage({ searchParams }: Props) {
       "id, scheduled_at, status, confirmation_status, patient:patients(name, email, phone)",
     )
     .eq("tenant_id", appUser.tenant_id)
+    .neq("status", "canceled")
     .gte("scheduled_at", monthStart.toISOString())
     .lt("scheduled_at", monthEnd.toISOString())
     .order("scheduled_at", { ascending: true });
@@ -165,6 +166,7 @@ export default async function AgendaPage({ searchParams }: Props) {
       .from("appointments")
       .select("id, scheduled_at, status, patient:patients(name, email, phone)")
       .eq("tenant_id", appUser.tenant_id)
+      .neq("status", "canceled")
       .gte("scheduled_at", monthStart.toISOString())
       .lt("scheduled_at", monthEnd.toISOString())
       .order("scheduled_at", { ascending: true });
@@ -251,33 +253,26 @@ export default async function AgendaPage({ searchParams }: Props) {
     <section className="space-y-6">
       <article className="surface-card p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-2xl font-bold">Agenda</h2>
-            <p className="mt-1 text-sm text-muted">
-              Calendário mensal com as consultas sincronizadas do Google
-              Calendar.
-            </p>
-          </div>
+          <h2 className="text-2xl font-bold">Agenda</h2>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1">
             <Link
               href={`/agenda?month=${toMonthKey(prevMonth)}`}
-              className="btn-outline-modern px-3 py-1.5 text-sm"
+              className="rounded-full px-3 py-1.5 text-sm font-semibold text-foreground transition hover:bg-slate-100"
             >
               Mês anterior
             </Link>
+            <p className="rounded-full bg-secondary/10 px-3 py-1 text-sm font-semibold text-secondary">
+              {formatMonthLabel(monthDate)}
+            </p>
             <Link
               href={`/agenda?month=${toMonthKey(nextMonth)}`}
-              className="btn-outline-modern px-3 py-1.5 text-sm"
+              className="rounded-full px-3 py-1.5 text-sm font-semibold text-foreground transition hover:bg-slate-100"
             >
               Próximo mês
             </Link>
           </div>
         </div>
-
-        <p className="mt-4 inline-flex rounded-full bg-secondary/10 px-3 py-1 text-sm font-semibold text-secondary">
-          {formatMonthLabel(monthDate)}
-        </p>
 
         {success ? (
           <p className="mt-3 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
@@ -300,11 +295,7 @@ export default async function AgendaPage({ searchParams }: Props) {
           </p>
         ) : null}
 
-        {integration?.google_email ? (
-          <p className="mt-3 text-sm text-muted">
-            Conta conectada: {integration.google_email}
-          </p>
-        ) : (
+        {!integration?.google_email ? (
           <p className="mt-3 rounded-md bg-warning/10 px-3 py-2 text-sm text-warning">
             Conecte sua conta em{" "}
             <Link href="/settings" className="font-semibold underline">
@@ -312,7 +303,7 @@ export default async function AgendaPage({ searchParams }: Props) {
             </Link>{" "}
             para manter a sincronização dos cancelamentos com o Google Calendar.
           </p>
-        )}
+        ) : null}
 
         {loadError ? (
           <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
