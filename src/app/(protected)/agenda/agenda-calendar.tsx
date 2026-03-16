@@ -21,10 +21,29 @@ export type AgendaCalendarEvent = {
 };
 
 type Props = {
-  monthDateIso: string;
   monthKey: string;
   events: AgendaCalendarEvent[];
 };
+
+function parseMonthKey(value: string) {
+  const [yearRaw, monthRaw] = value.split("-");
+  const year = Number(yearRaw);
+  const month = Number(monthRaw);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+
+  return new Date(year, month - 1, 1);
+}
+
+function toLocalDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 function startOfCalendarGrid(monthDate: Date) {
   const start = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
@@ -111,7 +130,7 @@ function groupEventsByDay(events: AgendaCalendarEvent[]) {
   const map = new Map<string, AgendaCalendarEvent[]>();
 
   for (const event of events) {
-    const key = new Date(event.start).toISOString().slice(0, 10);
+    const key = toLocalDateKey(new Date(event.start));
     const bucket = map.get(key) ?? [];
     bucket.push(event);
     map.set(key, bucket);
@@ -120,11 +139,11 @@ function groupEventsByDay(events: AgendaCalendarEvent[]) {
   return map;
 }
 
-export function AgendaCalendar({ monthDateIso, monthKey, events }: Props) {
+export function AgendaCalendar({ monthKey, events }: Props) {
   const [selectedEvent, setSelectedEvent] =
     useState<AgendaCalendarEvent | null>(null);
 
-  const monthDate = useMemo(() => new Date(monthDateIso), [monthDateIso]);
+  const monthDate = useMemo(() => parseMonthKey(monthKey), [monthKey]);
   const today = useMemo(() => new Date(), []);
   const weekDays = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
 
@@ -145,7 +164,7 @@ export function AgendaCalendar({ monthDateIso, monthKey, events }: Props) {
           ))}
 
           {calendarDays.map((day) => {
-            const dayKey = day.toISOString().slice(0, 10);
+            const dayKey = toLocalDateKey(day);
             const dayEvents = eventsMap.get(dayKey) ?? [];
             const outOfMonth = day.getMonth() !== monthDate.getMonth();
             const isToday = isSameDay(day, today);

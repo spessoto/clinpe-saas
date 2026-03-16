@@ -322,7 +322,6 @@ export default async function AgendaPage({ searchParams }: Props) {
       </article>
 
       <AgendaCalendar
-        monthDateIso={monthDate.toISOString()}
         monthKey={monthKey}
         events={events}
       />
