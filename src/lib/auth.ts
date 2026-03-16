@@ -52,23 +52,33 @@ async function requireAuthenticatedUserWithClient(
   let appUser = withBookingSlugResult.data as AppUser | null;
 
   if (!appUser && withBookingSlugResult.error) {
-    const shouldFallback =
-      withBookingSlugResult.error.code === "PGRST204" ||
-      withBookingSlugResult.error.message
-        .toLowerCase()
-        .includes("booking_slug");
+    // Fallback 1: Try without avatar/bio columns (migration 8 may not have run)
+    const fallbackResult = await supabase
+      .from("users")
+      .select("id, tenant_id, full_name, professional_register, booking_slug, email, role")
+      .eq("id", user.id)
+      .single();
 
-    if (shouldFallback) {
-      const fallbackResult = await supabase
+    if (fallbackResult.data) {
+      appUser = {
+        ...(fallbackResult.data as Omit<AppUser, "avatar_url" | "bio">),
+        avatar_url: null,
+        bio: null,
+      };
+    } else {
+      // Fallback 2: Try without booking_slug (migration 5 or 6 may not have run)
+      const fallback2Result = await supabase
         .from("users")
-        .select("id, tenant_id, full_name, professional_register, email, role, avatar_url, bio")
+        .select("id, tenant_id, full_name, professional_register, email, role")
         .eq("id", user.id)
         .single();
 
-      if (fallbackResult.data) {
+      if (fallback2Result.data) {
         appUser = {
-          ...(fallbackResult.data as Omit<AppUser, "booking_slug">),
+          ...(fallback2Result.data as Omit<AppUser, "booking_slug" | "avatar_url" | "bio">),
           booking_slug: null,
+          avatar_url: null,
+          bio: null,
         };
       }
     }
@@ -100,19 +110,41 @@ export async function requireActiveTenant() {
   let tenant = withSlugResult.data as Tenant | null;
 
   if (!tenant && withSlugResult.error) {
+    // Fallback 1: Try without billing/logo columns (migration 8 may not have run)
     const fallbackResult = await supabase
       .from("tenants")
       .select(
-        "id, name, trial_ends_at, subscription_status, billing_tier, max_patients_allowed, logo_url",
+        "id, name, slug, trial_ends_at, subscription_status",
       )
       .eq("id", appUser.tenant_id)
       .single();
 
     if (fallbackResult.data) {
       tenant = {
-        ...(fallbackResult.data as Omit<Tenant, "slug">),
-        slug: "",
+        ...(fallbackResult.data as Omit<Tenant, "billing_tier" | "max_patients_allowed" | "logo_url">),
+        billing_tier: "free_trial",
+        max_patients_allowed: 10,
+        logo_url: null,
       };
+    } else {
+      // Fallback 2: Try without slug (migration 4 may not have run)
+      const fallback2Result = await supabase
+        .from("tenants")
+        .select(
+          "id, name, trial_ends_at, subscription_status",
+        )
+        .eq("id", appUser.tenant_id)
+        .single();
+
+      if (fallback2Result.data) {
+        tenant = {
+          ...(fallback2Result.data as Omit<Tenant, "slug" | "billing_tier" | "max_patients_allowed" | "logo_url">),
+          slug: "",
+          billing_tier: "free_trial",
+          max_patients_allowed: 10,
+          logo_url: null,
+        };
+      }
     }
   }
 
