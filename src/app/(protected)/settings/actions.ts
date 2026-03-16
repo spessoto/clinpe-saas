@@ -202,29 +202,64 @@ export async function uploadProfileImageAction(formData: FormData) {
 
   try {
     const fileExtension = file.name.split(".").pop()?.toLowerCase() || "png";
-    const bucket = type === "avatar" ? "avatars" : "clinic-logos";
-    const fileName = `${tenant.id}/${appUser.id}/${Date.now()}.${fileExtension}`;
+    const preferredBucket = type === "avatar" ? "avatars" : "clinic-logos";
+    const fallbackBucket = "medical-images";
+    const preferredPath = `${tenant.id}/${appUser.id}/${Date.now()}.${fileExtension}`;
+    const fallbackPath = `${tenant.id}/${type}/${appUser.id}/${Date.now()}.${fileExtension}`;
 
     // Converter file para Uint8Array
     const fileBytes = new Uint8Array(await file.arrayBuffer());
 
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(fileName, fileBytes, {
+    let uploadedPath: string | null = null;
+    let uploadedBucket = preferredBucket;
+
+    const tryUpload = async (bucketName: string, path: string) => {
+      return supabase.storage.from(bucketName).upload(path, fileBytes, {
         cacheControl: "3600",
         upsert: false,
         contentType: file.type || "application/octet-stream",
       });
+    };
 
-    if (error) {
-      console.error(`Erro ao upload de ${type}:`, error);
-      return { error: error.message };
+    const preferredUpload = await tryUpload(preferredBucket, preferredPath);
+
+    if (preferredUpload.error) {
+      const message = preferredUpload.error.message.toLowerCase();
+      const isBucketMissing =
+        message.includes("bucket not found") ||
+        message.includes("not found") ||
+        message.includes("does not exist");
+
+      if (!isBucketMissing) {
+        console.error(`Erro ao upload de ${type}:`, preferredUpload.error);
+        return { error: preferredUpload.error.message };
+      }
+
+      const fallbackUpload = await tryUpload(fallbackBucket, fallbackPath);
+      if (fallbackUpload.error) {
+        console.error(
+          `Erro ao upload de ${type} no fallback:`,
+          fallbackUpload.error,
+        );
+        return {
+          error: `Falha no upload de imagem: ${fallbackUpload.error.message}`,
+        };
+      }
+
+      uploadedBucket = fallbackBucket;
+      uploadedPath = fallbackUpload.data.path;
+    } else {
+      uploadedPath = preferredUpload.data.path;
+    }
+
+    if (!uploadedPath) {
+      return { error: "Falha ao salvar arquivo no Storage" };
     }
 
     // Gerar URL pública
     const { data: publicUrlData } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(data.path);
+      .from(uploadedBucket)
+      .getPublicUrl(uploadedPath);
 
     if (!publicUrlData?.publicUrl) {
       return { error: "Falha ao gerar URL pública" };
@@ -232,14 +267,33 @@ export async function uploadProfileImageAction(formData: FormData) {
 
     // Atualizar campo correspondente no banco de dados
     if (type === "avatar") {
-      const { error: updateError } = await supabase
+      const avatarUpdate = await supabase
         .from("users")
         .update({ avatar_url: publicUrlData.publicUrl })
         .eq("id", appUser.id)
         .eq("tenant_id", appUser.tenant_id);
 
-      if (updateError) {
-        return { error: updateError.message };
+      if (avatarUpdate.error) {
+        const message = avatarUpdate.error.message.toLowerCase();
+        const isMissingAvatarColumn =
+          message.includes("avatar_url") &&
+          (message.includes("schema cache") ||
+            message.includes("column") ||
+            message.includes("not found"));
+
+        if (!isMissingAvatarColumn) {
+          return { error: avatarUpdate.error.message };
+        }
+
+        const legacyUpdate = await supabase
+          .from("users")
+          .update({ profile_photo_url: publicUrlData.publicUrl })
+          .eq("id", appUser.id)
+          .eq("tenant_id", appUser.tenant_id);
+
+        if (legacyUpdate.error) {
+          return { error: legacyUpdate.error.message };
+        }
       }
     } else if (type === "logo") {
       const { error: updateError } = await supabase

@@ -55,29 +55,34 @@ async function requireAuthenticatedUserWithClient(
     // Fallback 1: Try without avatar/bio columns (migration 8 may not have run)
     const fallbackResult = await supabase
       .from("users")
-      .select("id, tenant_id, full_name, professional_register, booking_slug, email, role")
+      .select(
+        "id, tenant_id, full_name, professional_register, booking_slug, email, role, avatar_url:profile_photo_url",
+      )
       .eq("id", user.id)
       .single();
 
     if (fallbackResult.data) {
       appUser = {
-        ...(fallbackResult.data as Omit<AppUser, "avatar_url" | "bio">),
-        avatar_url: null,
+        ...(fallbackResult.data as Omit<AppUser, "bio">),
         bio: null,
       };
     } else {
       // Fallback 2: Try without booking_slug (migration 5 or 6 may not have run)
       const fallback2Result = await supabase
         .from("users")
-        .select("id, tenant_id, full_name, professional_register, email, role")
+        .select(
+          "id, tenant_id, full_name, professional_register, email, role, avatar_url:profile_photo_url",
+        )
         .eq("id", user.id)
         .single();
 
       if (fallback2Result.data) {
         appUser = {
-          ...(fallback2Result.data as Omit<AppUser, "booking_slug" | "avatar_url" | "bio">),
+          ...(fallback2Result.data as Omit<
+            AppUser,
+            "booking_slug" | "bio"
+          >),
           booking_slug: null,
-          avatar_url: null,
           bio: null,
         };
       }
@@ -113,15 +118,16 @@ export async function requireActiveTenant() {
     // Fallback 1: Try without billing/logo columns (migration 8 may not have run)
     const fallbackResult = await supabase
       .from("tenants")
-      .select(
-        "id, name, slug, trial_ends_at, subscription_status",
-      )
+      .select("id, name, slug, trial_ends_at, subscription_status")
       .eq("id", appUser.tenant_id)
       .single();
 
     if (fallbackResult.data) {
       tenant = {
-        ...(fallbackResult.data as Omit<Tenant, "billing_tier" | "max_patients_allowed" | "logo_url">),
+        ...(fallbackResult.data as Omit<
+          Tenant,
+          "billing_tier" | "max_patients_allowed" | "logo_url"
+        >),
         billing_tier: "free_trial",
         max_patients_allowed: 10,
         logo_url: null,
@@ -130,15 +136,16 @@ export async function requireActiveTenant() {
       // Fallback 2: Try without slug (migration 4 may not have run)
       const fallback2Result = await supabase
         .from("tenants")
-        .select(
-          "id, name, trial_ends_at, subscription_status",
-        )
+        .select("id, name, trial_ends_at, subscription_status")
         .eq("id", appUser.tenant_id)
         .single();
 
       if (fallback2Result.data) {
         tenant = {
-          ...(fallback2Result.data as Omit<Tenant, "slug" | "billing_tier" | "max_patients_allowed" | "logo_url">),
+          ...(fallback2Result.data as Omit<
+            Tenant,
+            "slug" | "billing_tier" | "max_patients_allowed" | "logo_url"
+          >),
           slug: "",
           billing_tier: "free_trial",
           max_patients_allowed: 10,
