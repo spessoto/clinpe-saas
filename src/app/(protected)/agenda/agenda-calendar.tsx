@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
 
 import {
   cancelAppointmentAction,
@@ -148,6 +149,27 @@ function groupEventsByDay(events: AgendaCalendarEvent[]) {
   return map;
 }
 
+function CancelAppointmentButton({
+  disabled,
+  onClick,
+}: {
+  disabled: boolean;
+  onClick: () => void;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      onClick={onClick}
+      disabled={disabled || pending}
+      className="inline-flex w-full items-center justify-center rounded-xl border border-destructive/25 bg-destructive/10 px-4 py-2 font-semibold text-destructive transition hover:bg-destructive/15 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {pending ? "Cancelando..." : "Cancelar agendamento"}
+    </button>
+  );
+}
+
 export function AgendaCalendar({ monthKey, events }: Props) {
   const [pendingCancelIds, setPendingCancelIds] = useState<Set<string>>(
     () => new Set(),
@@ -199,7 +221,6 @@ export function AgendaCalendar({ monthKey, events }: Props) {
     }
 
     setPendingCancelIds((current) => new Set(current).add(selectedEvent.id));
-    setSelectedEvent(null);
   }
 
   return (
@@ -416,18 +437,14 @@ export function AgendaCalendar({ monthKey, events }: Props) {
                       value={selectedEvent.id}
                     />
                     <input type="hidden" name="month" value={monthKey} />
-                    <button
-                      type="submit"
+                    <CancelAppointmentButton
                       onClick={handleCancelSubmit}
                       disabled={
                         selectedEvent.status === "canceled" ||
                         selectedEvent.status === "completed" ||
                         selectedEvent.patientEmail === "Não informado"
                       }
-                      className="inline-flex w-full items-center justify-center rounded-xl border border-destructive/25 bg-destructive/10 px-4 py-2 font-semibold text-destructive transition hover:bg-destructive/15 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Cancelar agendamento
-                    </button>
+                    />
                   </form>
                 </>
               )}
