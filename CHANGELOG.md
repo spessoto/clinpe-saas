@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-03-18
+
+### Fixed
+
+- **Hotfix de migration do hard lock Asaas**
+  - `20260318000010_asaas_transition_and_hard_lock.sql` agora tolera ambientes onde `pop_documents`, `google_integrations` ou policies de storage ainda nao existem
+  - `public.is_tenant_access_active()` passou a considerar `subscription_expires_at`, alinhando o bloqueio do banco ao bloqueio do app
+  - Corrige falha no `db:push` com erro `relation public.pop_documents does not exist`
+
 ## [0.7.0] - 2026-03-18
 
 ### Added

@@ -14,6 +14,26 @@ comment on column public.tenants.asaas_customer_id is 'ID do cliente no Asaas';
 comment on column public.tenants.asaas_subscription_id is 'ID da assinatura recorrente no Asaas';
 comment on column public.tenants.subscription_expires_at is 'Data limite da assinatura ativa para bloqueio de acesso';
 
+create or replace function public.is_tenant_access_active(p_tenant_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    (now() <= t.trial_ends_at)
+    or (
+      t.subscription_status = 'active'
+      and (
+        t.subscription_expires_at is null
+        or now() <= t.subscription_expires_at
+      )
+    )
+  from public.tenants t
+  where t.id = p_tenant_id;
+$$;
+
 -- 2) Hard lock via RLS (areas internas)
 -- Patients
 alter policy "patients_select_same_tenant"
@@ -148,108 +168,152 @@ alter policy "materials_delete_same_tenant"
   );
 
 -- 3) Hard lock for booking/integrations content tables
-alter policy "google_integrations_select_same_tenant"
-  on public.google_integrations
-  using (
-    tenant_id = public.current_user_tenant_id()
-    and public.is_tenant_access_active(tenant_id)
-  );
+do $$
+begin
+  if to_regclass('public.google_integrations') is not null then
+    execute $sql$
+      alter policy "google_integrations_select_same_tenant"
+        on public.google_integrations
+        using (
+          tenant_id = public.current_user_tenant_id()
+          and public.is_tenant_access_active(tenant_id)
+        )
+    $sql$;
 
-alter policy "google_integrations_insert_same_tenant"
-  on public.google_integrations
-  with check (
-    tenant_id = public.current_user_tenant_id()
-    and user_id = auth.uid()
-    and public.is_tenant_access_active(tenant_id)
-  );
+    execute $sql$
+      alter policy "google_integrations_insert_same_tenant"
+        on public.google_integrations
+        with check (
+          tenant_id = public.current_user_tenant_id()
+          and user_id = auth.uid()
+          and public.is_tenant_access_active(tenant_id)
+        )
+    $sql$;
 
-alter policy "google_integrations_update_same_tenant"
-  on public.google_integrations
-  using (
-    tenant_id = public.current_user_tenant_id()
-    and user_id = auth.uid()
-    and public.is_tenant_access_active(tenant_id)
-  )
-  with check (
-    tenant_id = public.current_user_tenant_id()
-    and user_id = auth.uid()
-    and public.is_tenant_access_active(tenant_id)
-  );
+    execute $sql$
+      alter policy "google_integrations_update_same_tenant"
+        on public.google_integrations
+        using (
+          tenant_id = public.current_user_tenant_id()
+          and user_id = auth.uid()
+          and public.is_tenant_access_active(tenant_id)
+        )
+        with check (
+          tenant_id = public.current_user_tenant_id()
+          and user_id = auth.uid()
+          and public.is_tenant_access_active(tenant_id)
+        )
+    $sql$;
 
-alter policy "google_integrations_delete_same_tenant"
-  on public.google_integrations
-  using (
-    tenant_id = public.current_user_tenant_id()
-    and user_id = auth.uid()
-    and public.is_tenant_access_active(tenant_id)
-  );
+    execute $sql$
+      alter policy "google_integrations_delete_same_tenant"
+        on public.google_integrations
+        using (
+          tenant_id = public.current_user_tenant_id()
+          and user_id = auth.uid()
+          and public.is_tenant_access_active(tenant_id)
+        )
+    $sql$;
+  end if;
 
-alter policy "pop_documents_select_same_tenant"
-  on public.pop_documents
-  using (
-    tenant_id = public.current_user_tenant_id()
-    and public.is_tenant_access_active(tenant_id)
-  );
+  if to_regclass('public.pop_documents') is not null then
+    execute $sql$
+      alter policy "pop_documents_select_same_tenant"
+        on public.pop_documents
+        using (
+          tenant_id = public.current_user_tenant_id()
+          and public.is_tenant_access_active(tenant_id)
+        )
+    $sql$;
 
-alter policy "pop_documents_insert_same_tenant"
-  on public.pop_documents
-  with check (
-    tenant_id = public.current_user_tenant_id()
-    and public.is_tenant_access_active(tenant_id)
-  );
+    execute $sql$
+      alter policy "pop_documents_insert_same_tenant"
+        on public.pop_documents
+        with check (
+          tenant_id = public.current_user_tenant_id()
+          and public.is_tenant_access_active(tenant_id)
+        )
+    $sql$;
 
-alter policy "pop_documents_update_same_tenant"
-  on public.pop_documents
-  using (
-    tenant_id = public.current_user_tenant_id()
-    and public.is_tenant_access_active(tenant_id)
-  )
-  with check (
-    tenant_id = public.current_user_tenant_id()
-    and public.is_tenant_access_active(tenant_id)
-  );
+    execute $sql$
+      alter policy "pop_documents_update_same_tenant"
+        on public.pop_documents
+        using (
+          tenant_id = public.current_user_tenant_id()
+          and public.is_tenant_access_active(tenant_id)
+        )
+        with check (
+          tenant_id = public.current_user_tenant_id()
+          and public.is_tenant_access_active(tenant_id)
+        )
+    $sql$;
 
-alter policy "pop_documents_delete_same_tenant"
-  on public.pop_documents
-  using (
-    tenant_id = public.current_user_tenant_id()
-    and public.is_tenant_access_active(tenant_id)
-  );
+    execute $sql$
+      alter policy "pop_documents_delete_same_tenant"
+        on public.pop_documents
+        using (
+          tenant_id = public.current_user_tenant_id()
+          and public.is_tenant_access_active(tenant_id)
+        )
+    $sql$;
+  end if;
+end
+$$;
 
 -- 4) Hard lock on storage bucket medical-images
-alter policy "medical_images_select_same_tenant"
-  on storage.objects
-  using (
-    bucket_id = 'medical-images'
-    and split_part(name, '/', 1) = public.current_user_tenant_id()::text
-    and public.is_tenant_access_active(public.current_user_tenant_id())
-  );
+do $$
+begin
+  if exists (
+    select 1
+    from pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'medical_images_select_same_tenant'
+  ) then
+    execute $sql$
+      alter policy "medical_images_select_same_tenant"
+        on storage.objects
+        using (
+          bucket_id = 'medical-images'
+          and split_part(name, '/', 1) = public.current_user_tenant_id()::text
+          and public.is_tenant_access_active(public.current_user_tenant_id())
+        )
+    $sql$;
 
-alter policy "medical_images_insert_same_tenant"
-  on storage.objects
-  with check (
-    bucket_id = 'medical-images'
-    and split_part(name, '/', 1) = public.current_user_tenant_id()::text
-    and public.is_tenant_access_active(public.current_user_tenant_id())
-  );
+    execute $sql$
+      alter policy "medical_images_insert_same_tenant"
+        on storage.objects
+        with check (
+          bucket_id = 'medical-images'
+          and split_part(name, '/', 1) = public.current_user_tenant_id()::text
+          and public.is_tenant_access_active(public.current_user_tenant_id())
+        )
+    $sql$;
 
-alter policy "medical_images_update_same_tenant"
-  on storage.objects
-  using (
-    bucket_id = 'medical-images'
-    and split_part(name, '/', 1) = public.current_user_tenant_id()::text
-    and public.is_tenant_access_active(public.current_user_tenant_id())
-  )
-  with check (
-    bucket_id = 'medical-images'
-    and split_part(name, '/', 1) = public.current_user_tenant_id()::text
-    and public.is_tenant_access_active(public.current_user_tenant_id())
-  );
+    execute $sql$
+      alter policy "medical_images_update_same_tenant"
+        on storage.objects
+        using (
+          bucket_id = 'medical-images'
+          and split_part(name, '/', 1) = public.current_user_tenant_id()::text
+          and public.is_tenant_access_active(public.current_user_tenant_id())
+        )
+        with check (
+          bucket_id = 'medical-images'
+          and split_part(name, '/', 1) = public.current_user_tenant_id()::text
+          and public.is_tenant_access_active(public.current_user_tenant_id())
+        )
+    $sql$;
 
-alter policy "medical_images_delete_same_tenant"
-  on storage.objects
-  using (
-    bucket_id = 'medical-images'
-    and split_part(name, '/', 1) = public.current_user_tenant_id()::text
-    and public.is_tenant_access_active(public.current_user_tenant_id())
-  );
+    execute $sql$
+      alter policy "medical_images_delete_same_tenant"
+        on storage.objects
+        using (
+          bucket_id = 'medical-images'
+          and split_part(name, '/', 1) = public.current_user_tenant_id()::text
+          and public.is_tenant_access_active(public.current_user_tenant_id())
+        )
+    $sql$;
+  end if;
+end
+$$;
