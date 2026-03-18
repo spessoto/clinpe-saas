@@ -23,6 +23,12 @@ const emailEnvSchema = z.object({
   SMTP_FROM: z.string().min(1),
 });
 
+const asaasEnvSchema = z.object({
+  ASAAS_API_KEY: z.string().min(1),
+  ASAAS_WEBHOOK_SECRET: z.string().min(1),
+  ASAAS_API_BASE: z.string().url().default("https://api.asaas.com/v3"),
+});
+
 export type AppEnv = z.infer<typeof serverEnvSchema>;
 
 export function getEnv(): AppEnv {
@@ -109,6 +115,27 @@ export function getEmailEnv() {
 
     throw new Error(
       `Configuração de e-mail ausente ou inválida: ${missing}. Preencha SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS e SMTP_FROM no .env.local.`,
+    );
+  }
+
+  return parsed.data;
+}
+
+export function getAsaasEnv() {
+  const parsed = asaasEnvSchema.safeParse({
+    ASAAS_API_KEY: process.env.ASAAS_API_KEY,
+    ASAAS_WEBHOOK_SECRET: process.env.ASAAS_WEBHOOK_SECRET,
+    ASAAS_API_BASE: process.env.ASAAS_API_BASE,
+  });
+
+  if (!parsed.success) {
+    const missing = parsed.error.issues
+      .map((issue) => issue.path.join("."))
+      .filter(Boolean)
+      .join(", ");
+
+    throw new Error(
+      `Variáveis do Asaas ausentes: ${missing}. Configure ASAAS_API_KEY, ASAAS_WEBHOOK_SECRET e ASAAS_API_BASE no .env.local.`,
     );
   }
 

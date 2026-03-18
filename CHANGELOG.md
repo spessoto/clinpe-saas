@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-03-18
+
+### Added
+
+- **Migração para Asaas (assinatura recorrente)**
+  - `createCheckoutAction()` reescrito para criar cliente e assinatura no Asaas
+  - Webhook `/api/payments/webhook` reescrito para processar eventos do Asaas
+  - Novas variáveis de ambiente: `ASAAS_API_KEY`, `ASAAS_WEBHOOK_SECRET`, `ASAAS_API_BASE`
+
+- **Bloqueio rígido de acesso por assinatura vencida**
+  - Novo campo `subscription_expires_at` no tenant para bloquear acesso após vencimento
+  - Bloqueio aplicado também em rotas públicas de agendamento
+  - Migration `20260318000010_asaas_transition_and_hard_lock.sql` adiciona regras de hard lock em RLS
+
+### Changed
+
+- UI de billing atualizada para "Assinar com Asaas"
+- Mensagens de segurança e branding de pagamento migradas para Asaas
+
+## [0.6.0] - 2026-03-18
+
+### Added
+
+- **Integração Mercado Pago — Assinaturas recorrentes**
+  - SDK `mercadopago` instalado como dependência
+  - `getMercadoPagoEnv()` em `src/lib/env.ts` valida `MP_ACCESS_TOKEN` e `MP_WEBHOOK_SECRET`
+  - `src/app/billing/actions.ts`: server action `createCheckoutAction()` cria Preapproval no MP e redireciona ao checkout
+  - Planos configurados: Starter (50 pac.), Pro (100 pac.), Clínica (150 pac.) — mensais e anuais
+  - Toggle Mensal/Anual com desconto de 10% na cobrança anual (`period-toggle.tsx`)
+
+- **Página `/billing` — totalmente refeita**
+  - Cards de planos com preços mensais e anuais
+  - Exibe dias restantes de trial (ou "expirado") no topo
+  - Feedback de sucesso/erro após retorno do checkout MP
+  - CTA para contato em caso de mais de 200 pacientes
+
+- **Webhook `/api/payments/webhook` — reescrito com segurança**
+  - Validação de assinatura HMAC-SHA256 do header `x-signature` do Mercado Pago
+  - Busca detalhes da assinatura via `PreApproval.get()` após receber notificação
+  - Atualiza `subscription_status`, `billing_tier`, `max_patients_allowed`, `mp_subscription_id` e `mp_payer_email` no tenant
+  - Usa `createAdminClient()` para write seguro com service role key
+
+### Infrastructure
+
+- Migration `20260318000009_add_mp_billing.sql`: adiciona `mp_subscription_id` e `mp_payer_email` à tabela `tenants`
+
 ## [0.5.2] - 2026-03-16
 
 ### Fixed

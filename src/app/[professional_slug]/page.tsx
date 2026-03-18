@@ -87,6 +87,10 @@ export default async function ProfessionalBookingPage({
       message = `O autoagendamento está desativado para a clínica ${diagnostic.tenantName}. Ative booking_enabled na tabela tenants.`;
     }
 
+    if (diagnostic.status === "subscription_inactive") {
+      message = `A assinatura da clínica ${diagnostic.tenantName} está vencida ou inativa. O autoagendamento público fica bloqueado até a regularização.`;
+    }
+
     return <UnavailableBookingPage message={message} />;
   }
 

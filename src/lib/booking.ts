@@ -30,6 +30,9 @@ type Tenant = {
   booking_enabled: boolean;
   booking_page_title: string | null;
   booking_page_description: string | null;
+  trial_ends_at: string;
+  subscription_status: "trialing" | "active" | "past_due";
+  subscription_expires_at: string | null;
 };
 
 type GoogleIntegration = {
@@ -58,7 +61,23 @@ export type PublicProfessionalBookingDiagnostic =
   | { status: "ok" }
   | { status: "professional_not_found" }
   | { status: "tenant_not_found" }
-  | { status: "booking_disabled"; tenantName: string };
+  | { status: "booking_disabled"; tenantName: string }
+  | { status: "subscription_inactive"; tenantName: string };
+
+function hasPublicTenantAccess(tenant: {
+  trial_ends_at: string;
+  subscription_status: "trialing" | "active" | "past_due";
+  subscription_expires_at: string | null;
+}) {
+  const now = Date.now();
+  const inTrialWindow = new Date(tenant.trial_ends_at).getTime() >= now;
+  const hasActiveSubscription =
+    tenant.subscription_status === "active" &&
+    (!tenant.subscription_expires_at ||
+      new Date(tenant.subscription_expires_at).getTime() >= now);
+
+  return inTrialWindow || hasActiveSubscription;
+}
 
 function slugifyName(value: string) {
   return value
@@ -169,12 +188,12 @@ export async function getPublicBookingContext(tenantSlug: string) {
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "id, name, slug, booking_enabled, booking_page_title, booking_page_description",
+      "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, subscription_status, subscription_expires_at",
     )
     .eq("slug", tenantSlug)
     .single();
 
-  if (!tenant) {
+  if (!tenant || !hasPublicTenantAccess(tenant as Tenant)) {
     return null;
   }
 
@@ -256,12 +275,16 @@ export async function getPublicProfessionalBookingContext(
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "id, name, slug, booking_enabled, booking_page_title, booking_page_description",
+      "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, subscription_status, subscription_expires_at",
     )
     .eq("id", professional.tenant_id)
     .single();
 
-  if (!tenant || !tenant.booking_enabled) {
+  if (
+    !tenant ||
+    !tenant.booking_enabled ||
+    !hasPublicTenantAccess(tenant as Tenant)
+  ) {
     return null;
   }
 
@@ -344,7 +367,9 @@ export async function diagnosePublicProfessionalBooking(
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, name, booking_enabled")
+    .select(
+      "id, name, booking_enabled, trial_ends_at, subscription_status, subscription_expires_at",
+    )
     .eq("id", professional.tenant_id)
     .maybeSingle();
 
@@ -355,6 +380,13 @@ export async function diagnosePublicProfessionalBooking(
   if (!tenant.booking_enabled) {
     return {
       status: "booking_disabled",
+      tenantName: tenant.name,
+    };
+  }
+
+  if (!hasPublicTenantAccess(tenant as Tenant)) {
+    return {
+      status: "subscription_inactive",
       tenantName: tenant.name,
     };
   }

@@ -19,11 +19,27 @@ type Tenant = {
   name: string;
   slug: string;
   trial_ends_at: string;
+  subscription_expires_at: string | null;
   subscription_status: "trialing" | "active" | "past_due";
   billing_tier: "free_trial" | "tier_1" | "tier_2" | "tier_3";
   max_patients_allowed: number;
   logo_url: string | null;
 };
+
+function hasTenantAccess(tenant: {
+  trial_ends_at: string;
+  subscription_status: "trialing" | "active" | "past_due";
+  subscription_expires_at: string | null;
+}) {
+  const now = Date.now();
+  const inTrialWindow = new Date(tenant.trial_ends_at).getTime() >= now;
+  const hasActiveSubscription =
+    tenant.subscription_status === "active" &&
+    (!tenant.subscription_expires_at ||
+      new Date(tenant.subscription_expires_at).getTime() >= now);
+
+  return inTrialWindow || hasActiveSubscription;
+}
 
 export async function requireAuthenticatedUser() {
   const supabase = await createClient();
@@ -102,7 +118,7 @@ export async function requireActiveTenant() {
   const withSlugResult = await supabase
     .from("tenants")
     .select(
-      "id, name, slug, trial_ends_at, subscription_status, billing_tier, max_patients_allowed, logo_url",
+      "id, name, slug, trial_ends_at, subscription_expires_at, subscription_status, billing_tier, max_patients_allowed, logo_url",
     )
     .eq("id", appUser.tenant_id)
     .single();
@@ -123,8 +139,12 @@ export async function requireActiveTenant() {
       tenant = {
         ...(fallbackResult.data as Omit<
           Tenant,
-          "billing_tier" | "max_patients_allowed" | "logo_url"
+          | "subscription_expires_at"
+          | "billing_tier"
+          | "max_patients_allowed"
+          | "logo_url"
         >),
+        subscription_expires_at: null,
         billing_tier: "free_trial",
         max_patients_allowed: 10,
         logo_url: null,
@@ -141,9 +161,14 @@ export async function requireActiveTenant() {
         tenant = {
           ...(fallback2Result.data as Omit<
             Tenant,
-            "slug" | "billing_tier" | "max_patients_allowed" | "logo_url"
+            | "slug"
+            | "subscription_expires_at"
+            | "billing_tier"
+            | "max_patients_allowed"
+            | "logo_url"
           >),
           slug: "",
+          subscription_expires_at: null,
           billing_tier: "free_trial",
           max_patients_allowed: 10,
           logo_url: null,
@@ -158,9 +183,7 @@ export async function requireActiveTenant() {
     );
   }
 
-  const isExpired =
-    tenant.subscription_status !== "active" &&
-    new Date(tenant.trial_ends_at).getTime() < Date.now();
+  const isExpired = !hasTenantAccess(tenant as Tenant);
 
   if (isExpired) {
     redirect("/billing");

@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versao publicada: `v0.5.2`
+- Versao publicada: `v0.7.0`
 - Rebranding aplicado: `ClinPe` -> `PodoClin`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -58,6 +58,11 @@ GOOGLE_CLIENT_ID=xxxxxxxx
 GOOGLE_CLIENT_SECRET=xxxxxxxx
 NEXT_PUBLIC_APP_URL=https://pododesk.com.br
 
+# Asaas (assinaturas)
+ASAAS_API_KEY=xxxxxxxx
+ASAAS_WEBHOOK_SECRET=xxxxxxxx
+ASAAS_API_BASE=https://api.asaas.com/v3
+
 # E-mail SMTP (obrigatorio para confirmar/cancelar agendamentos)
 SMTP_HOST=smtp.hostinger.com
 SMTP_PORT=465
@@ -70,6 +75,7 @@ Observacoes:
 
 - `SUPABASE_SERVICE_ROLE_KEY` e obrigatoria para fluxos de booking publico.
 - `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` sao obrigatorias para conectar o Calendar.
+- `ASAAS_API_KEY` e `ASAAS_WEBHOOK_SECRET` sao obrigatorias para billing por assinatura recorrente.
 - `SMTP_*` sao obrigatorias para o envio de e-mail ao confirmar ou cancelar agendamentos. Funciona com Hostinger (porta 465), Gmail (porta 587 + senha de app) ou Resend.
 
 ## Banco de dados e migrations
