@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-03-18
+
+### Fixed
+
+- **Hotfix do build de `/billing` em produção**
+  - `src/app/billing/actions.ts` deixou de exportar objetos e tipos a partir de arquivo com `"use server"`
+  - `BILLING_PLANS`, `BillingTier` e `BillingPeriod` foram movidos para `src/app/billing/plans.ts`
+  - Corrige falha de build do Next.js: `A "use server" file can only export async functions, found object`
+
 ## [0.7.1] - 2026-03-18
 
 ### Fixed

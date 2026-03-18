@@ -3,12 +3,8 @@ import { CheckCircle, AlertCircle, Info, Check, Mail } from "lucide-react";
 
 import { requireAuthenticatedUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import {
-  BILLING_PLANS,
-  BillingTier,
-  BillingPeriod,
-  createCheckoutAction,
-} from "./actions";
+import { createCheckoutAction } from "./actions";
+import { BILLING_PLANS, type BillingPeriod, type BillingTier } from "./plans";
 import { PeriodToggle } from "./period-toggle";
 
 type SearchParams = Promise<{
