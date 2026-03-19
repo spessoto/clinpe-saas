@@ -22,29 +22,41 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 30);
 
-  const [patientsResult, lotsResult, rejectedTestsResult] = await Promise.all([
-    supabase
-      .from("patients")
-      .select("id, name")
-      .eq("tenant_id", appUser.tenant_id)
-      .order("name", { ascending: true }),
-    supabase
-      .from("sterilization_logs")
-      .select(
-        "id, batch_number, material_name, sterilized_at, chemical_indicator_status",
-      )
-      .eq("tenant_id", appUser.tenant_id)
-      .eq("chemical_indicator_status", "approved")
-      .gte("sterilized_at", cutoff.toISOString())
-      .order("sterilized_at", { ascending: false }),
-    supabase
-      .from("sterilization_biological_tests")
-      .select("sterilization_log_id")
-      .eq("tenant_id", appUser.tenant_id)
-      .eq("status", "rejected"),
-  ]);
+  const [patientsResult, lotsResult, rejectedTestsResult, patientHealthResult] =
+    await Promise.all([
+      supabase
+        .from("patients")
+        .select("id, name")
+        .eq("tenant_id", appUser.tenant_id)
+        .order("name", { ascending: true }),
+      supabase
+        .from("sterilization_logs")
+        .select(
+          "id, batch_number, material_name, sterilized_at, chemical_indicator_status",
+        )
+        .eq("tenant_id", appUser.tenant_id)
+        .eq("chemical_indicator_status", "approved")
+        .gte("sterilized_at", cutoff.toISOString())
+        .order("sterilized_at", { ascending: false }),
+      supabase
+        .from("sterilization_biological_tests")
+        .select("sterilization_log_id")
+        .eq("tenant_id", appUser.tenant_id)
+        .eq("status", "rejected"),
+      patientId
+        ? supabase
+            .from("patients")
+            .select(
+              "has_diabetes, diabetes_type, diabetes_on_insulin, has_vascular_issues, has_coagulation_disorders, has_oncological_history, continuous_meds, patient_allergies, is_smoker, predominant_footwear",
+            )
+            .eq("id", patientId)
+            .eq("tenant_id", appUser.tenant_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+    ]);
 
   const patients = patientsResult.data ?? [];
+  const patientHealth = patientHealthResult.data;
   const rejectedLotIdSet = new Set(
     (rejectedTestsResult.data ?? []).map((test) => test.sterilization_log_id),
   );
@@ -104,6 +116,13 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
             A — Triagem Sistêmica (Alertas de Risco)
           </legend>
 
+          {patientHealth ? (
+            <div className="rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">
+              ℹ️ Seções A e B pré-preenchidas com dados do cadastro do paciente.
+              Reconfirme com o paciente e ajuste se necessário.
+            </div>
+          ) : null}
+
           {/* Condições de risco — toggles single */}
           <div>
             <p className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">
@@ -112,17 +131,34 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
             <div className="flex flex-wrap gap-2">
               {(
                 [
-                  ["has_diabetes", "Diabetes"],
-                  ["has_vascular_issues", "Vascular / Cardíaco"],
-                  ["has_coagulation_disorders", "Distúrbio de Coagulação"],
-                  ["has_oncological_history", "Histórico Oncológico"],
-                ] as [string, string][]
-              ).map(([name, label]) => (
+                  [
+                    "has_diabetes",
+                    "Diabetes",
+                    patientHealth?.has_diabetes ?? false,
+                  ],
+                  [
+                    "has_vascular_issues",
+                    "Vascular / Cardíaco",
+                    patientHealth?.has_vascular_issues ?? false,
+                  ],
+                  [
+                    "has_coagulation_disorders",
+                    "Distúrbio de Coagulação",
+                    patientHealth?.has_coagulation_disorders ?? false,
+                  ],
+                  [
+                    "has_oncological_history",
+                    "Histórico Oncológico",
+                    patientHealth?.has_oncological_history ?? false,
+                  ],
+                ] as [string, string, boolean][]
+              ).map(([name, label, checked]) => (
                 <label key={name} className="cursor-pointer">
                   <input
                     type="checkbox"
                     name={name}
                     value="true"
+                    defaultChecked={checked}
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-destructive/40 bg-white px-4 text-sm font-medium text-destructive/80 transition peer-checked:border-destructive peer-checked:bg-destructive peer-checked:text-white">
@@ -143,6 +179,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
                 <span className="mb-1 block text-muted">Tipo</span>
                 <select
                   name="diabetes_type"
+                  defaultValue={patientHealth?.diabetes_type ?? ""}
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
                 >
                   <option value="">—</option>
@@ -154,6 +191,13 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
                 <span className="mb-1 block text-muted">Usa insulina?</span>
                 <select
                   name="diabetes_on_insulin"
+                  defaultValue={
+                    patientHealth?.diabetes_on_insulin === true
+                      ? "true"
+                      : patientHealth?.diabetes_on_insulin === false
+                        ? "false"
+                        : ""
+                  }
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
                 >
                   <option value="">—</option>
@@ -193,6 +237,9 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
                     type="checkbox"
                     name="continuous_meds"
                     value={med}
+                    defaultChecked={(
+                      patientHealth?.continuous_meds ?? []
+                    ).includes(med)}
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-amber-400/60 bg-white px-4 text-sm font-medium text-amber-700 transition peer-checked:border-amber-500 peer-checked:bg-amber-500 peer-checked:text-white">
@@ -223,6 +270,9 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
                     type="checkbox"
                     name="allergies"
                     value={allergy}
+                    defaultChecked={(
+                      patientHealth?.patient_allergies ?? []
+                    ).includes(allergy)}
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-orange-400/60 bg-white px-4 text-sm font-medium text-orange-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-500 peer-checked:text-white">
@@ -246,6 +296,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
                 type="checkbox"
                 name="is_smoker"
                 value="true"
+                defaultChecked={patientHealth?.is_smoker ?? false}
                 className="peer sr-only"
               />
               <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-slate-700 peer-checked:bg-slate-700 peer-checked:text-white">
@@ -298,6 +349,9 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
                     type="radio"
                     name="predominant_footwear"
                     value={shoe}
+                    defaultChecked={
+                      patientHealth?.predominant_footwear === shoe
+                    }
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">

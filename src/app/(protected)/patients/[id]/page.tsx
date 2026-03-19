@@ -30,7 +30,7 @@ export default async function PatientDetailsPage({ params }: Props) {
   const { data: patient, error: patientError } = await supabase
     .from("patients")
     .select(
-      "id, name, phone, birth_date, cpf, rg, email, address_street, address_neighborhood, address_zipcode, occupation, emergency_contact_name, emergency_contact_phone, health_alerts, referral_source",
+      "id, name, phone, birth_date, cpf, rg, email, address_street, address_neighborhood, address_zipcode, occupation, emergency_contact_name, emergency_contact_phone, health_alerts, referral_source, has_diabetes, diabetes_type, diabetes_on_insulin, has_vascular_issues, has_coagulation_disorders, has_oncological_history, continuous_meds, patient_allergies, is_smoker, predominant_footwear",
     )
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id)

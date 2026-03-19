@@ -21,7 +21,7 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
   const { data: patient } = await supabase
     .from("patients")
     .select(
-      "id, name, phone, birth_date, cpf, rg, email, address_street, address_neighborhood, address_zipcode, occupation, emergency_contact_name, emergency_contact_phone, referral_source",
+      "id, name, phone, birth_date, cpf, rg, email, address_street, address_neighborhood, address_zipcode, occupation, emergency_contact_name, emergency_contact_phone, referral_source, has_diabetes, diabetes_type, diabetes_on_insulin, has_vascular_issues, has_coagulation_disorders, has_oncological_history, continuous_meds, patient_allergies, is_smoker, predominant_footwear",
     )
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id)
@@ -195,6 +195,192 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
               />
             </label>
+          </div>
+        </fieldset>
+
+        {/* Histórico de Saúde */}
+        <fieldset className="space-y-5 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+          <legend className="px-2 text-base font-semibold text-destructive">
+            Histórico de Saúde (estado atual)
+          </legend>
+          <p className="text-xs text-muted">
+            Dados mestres do paciente. São pre-preenchidos na anamnese de cada
+            consulta e podem ser corrigidos lá.
+          </p>
+
+          {/* Condições crônicas */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+              Condições sistêmicas
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["has_diabetes", "Diabetes"],
+                  ["has_vascular_issues", "Vascular / Cardíaco"],
+                  ["has_coagulation_disorders", "Distúrbio de Coagulação"],
+                  ["has_oncological_history", "Histórico Oncológico"],
+                ] as [string, string][]
+              ).map(([name, label]) => (
+                <label key={name} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name={name}
+                    value="true"
+                    defaultChecked={!!patient[name as keyof typeof patient]}
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-destructive/40 bg-white px-4 text-sm font-medium text-destructive/80 transition peer-checked:border-destructive peer-checked:bg-destructive peer-checked:text-white">
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Detalhe diabetes */}
+          <div className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:grid-cols-3">
+            <p className="text-xs font-semibold text-muted sm:col-span-3">
+              Se Diabetes — detalhe:
+            </p>
+            <label className="block text-sm">
+              <span className="mb-1 block text-muted">Tipo</span>
+              <select
+                name="diabetes_type"
+                defaultValue={patient.diabetes_type ?? ""}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
+              >
+                <option value="">—</option>
+                <option value="1">Tipo 1</option>
+                <option value="2">Tipo 2</option>
+              </select>
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-muted">Usa insulina?</span>
+              <select
+                name="diabetes_on_insulin"
+                defaultValue={
+                  patient.diabetes_on_insulin === true
+                    ? "true"
+                    : patient.diabetes_on_insulin === false
+                      ? "false"
+                      : ""
+                }
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
+              >
+                <option value="">—</option>
+                <option value="true">Sim</option>
+                <option value="false">Não</option>
+              </select>
+            </label>
+          </div>
+
+          {/* Medicamentos */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+              Medicamentos de uso contínuo
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                "AAS / Anticoagulante",
+                "Imunossupressor",
+                "Corticoide",
+                "Outro",
+              ].map((med) => (
+                <label key={med} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="continuous_meds"
+                    value={med}
+                    defaultChecked={(patient.continuous_meds ?? []).includes(
+                      med,
+                    )}
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-amber-400/60 bg-white px-4 text-sm font-medium text-amber-700 transition peer-checked:border-amber-500 peer-checked:bg-amber-500 peer-checked:text-white">
+                    {med}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Alergias */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+              Alergias conhecidas
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                "Iodo",
+                "Látex (luvas)",
+                "Anestésico tópico",
+                "Cosméticos",
+                "Outra",
+              ].map((allergy) => (
+                <label key={allergy} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="patient_allergies"
+                    value={allergy}
+                    defaultChecked={(patient.patient_allergies ?? []).includes(
+                      allergy,
+                    )}
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-orange-400/60 bg-white px-4 text-sm font-medium text-orange-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-500 peer-checked:text-white">
+                    {allergy}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Hábitos base */}
+          <div className="flex flex-wrap gap-2">
+            <label className="cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_smoker"
+                value="true"
+                defaultChecked={patient.is_smoker ?? false}
+                className="peer sr-only"
+              />
+              <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-slate-700 peer-checked:bg-slate-700 peer-checked:text-white">
+                🚬 Fumante
+              </span>
+            </label>
+          </div>
+
+          {/* Calçado */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
+              Calçado predominante
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                "Salto alto",
+                "Bico fino",
+                "Sapatilha",
+                "Bota EPI",
+                "Tênis",
+                "Chinelo",
+                "Outro",
+              ].map((shoe) => (
+                <label key={shoe} className="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="predominant_footwear"
+                    value={shoe}
+                    defaultChecked={patient.predominant_footwear === shoe}
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
+                    {shoe}
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
         </fieldset>
 

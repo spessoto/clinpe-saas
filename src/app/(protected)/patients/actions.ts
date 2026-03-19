@@ -10,6 +10,41 @@ function getField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
+function getCheckbox(formData: FormData, key: string): boolean {
+  return formData.get(key) === "true";
+}
+
+function getMultiSelect(formData: FormData, key: string): string[] {
+  return formData
+    .getAll(key)
+    .map((v) => String(v))
+    .filter(Boolean);
+}
+
+export function buildHealthAlerts(data: {
+  has_diabetes: boolean;
+  diabetes_type?: string | null;
+  has_vascular_issues: boolean;
+  has_coagulation_disorders: boolean;
+  has_oncological_history: boolean;
+  is_smoker: boolean;
+  continuous_meds: string[];
+  patient_allergies: string[];
+}): string[] {
+  const alerts: string[] = [];
+  if (data.has_diabetes)
+    alerts.push(
+      `Diabetes${data.diabetes_type ? ` T${data.diabetes_type}` : ""}`,
+    );
+  if (data.has_vascular_issues) alerts.push("Vascular/Cardíaco");
+  if (data.has_coagulation_disorders) alerts.push("Distúrbio Coagulação");
+  if (data.has_oncological_history) alerts.push("Histórico Oncológico");
+  if (data.is_smoker) alerts.push("Fumante");
+  data.continuous_meds.forEach((m) => alerts.push(m));
+  data.patient_allergies.forEach((a) => alerts.push(`Alergia: ${a}`));
+  return alerts;
+}
+
 export type PatientLimitStatus = {
   current: number;
   max: number;
@@ -64,6 +99,40 @@ export async function createPatientAction(formData: FormData) {
   const emergencyContactName = getField(formData, "emergency_contact_name");
   const emergencyContactPhone = getField(formData, "emergency_contact_phone");
   const referralSource = getField(formData, "referral_source");
+  // Saúde
+  const hasDiabetes = getCheckbox(formData, "has_diabetes");
+  const diabetesType = getField(formData, "diabetes_type") || null;
+  const diabetesOnInsulin =
+    formData.get("diabetes_on_insulin") === "true"
+      ? true
+      : formData.get("diabetes_on_insulin") === "false"
+        ? false
+        : null;
+  const hasVascularIssues = getCheckbox(formData, "has_vascular_issues");
+  const hasCoagulationDisorders = getCheckbox(
+    formData,
+    "has_coagulation_disorders",
+  );
+  const hasOncologicalHistory = getCheckbox(
+    formData,
+    "has_oncological_history",
+  );
+  const continuousMeds = getMultiSelect(formData, "continuous_meds");
+  const patientAllergies = getMultiSelect(formData, "patient_allergies");
+  const isSmoker = getCheckbox(formData, "is_smoker");
+  const predominantFootwear =
+    getField(formData, "predominant_footwear") || null;
+
+  const healthAlerts = buildHealthAlerts({
+    has_diabetes: hasDiabetes,
+    diabetes_type: diabetesType,
+    has_vascular_issues: hasVascularIssues,
+    has_coagulation_disorders: hasCoagulationDisorders,
+    has_oncological_history: hasOncologicalHistory,
+    is_smoker: isSmoker,
+    continuous_meds: continuousMeds,
+    patient_allergies: patientAllergies,
+  });
 
   if (!name || !phone) {
     redirect("/patients/new?error=Nome e telefone sao obrigatorios");
@@ -92,6 +161,17 @@ export async function createPatientAction(formData: FormData) {
     emergency_contact_name: emergencyContactName || null,
     emergency_contact_phone: emergencyContactPhone || null,
     referral_source: referralSource || null,
+    has_diabetes: hasDiabetes,
+    diabetes_type: diabetesType,
+    diabetes_on_insulin: diabetesOnInsulin,
+    has_vascular_issues: hasVascularIssues,
+    has_coagulation_disorders: hasCoagulationDisorders,
+    has_oncological_history: hasOncologicalHistory,
+    continuous_meds: continuousMeds,
+    patient_allergies: patientAllergies,
+    is_smoker: isSmoker,
+    predominant_footwear: predominantFootwear,
+    health_alerts: healthAlerts,
   });
 
   if (error) {
@@ -121,6 +201,40 @@ export async function updatePatientAction(formData: FormData) {
   const emergencyContactName = getField(formData, "emergency_contact_name");
   const emergencyContactPhone = getField(formData, "emergency_contact_phone");
   const referralSource = getField(formData, "referral_source");
+  // Saúde
+  const hasDiabetes = getCheckbox(formData, "has_diabetes");
+  const diabetesType = getField(formData, "diabetes_type") || null;
+  const diabetesOnInsulin =
+    formData.get("diabetes_on_insulin") === "true"
+      ? true
+      : formData.get("diabetes_on_insulin") === "false"
+        ? false
+        : null;
+  const hasVascularIssues = getCheckbox(formData, "has_vascular_issues");
+  const hasCoagulationDisorders = getCheckbox(
+    formData,
+    "has_coagulation_disorders",
+  );
+  const hasOncologicalHistory = getCheckbox(
+    formData,
+    "has_oncological_history",
+  );
+  const continuousMeds = getMultiSelect(formData, "continuous_meds");
+  const patientAllergies = getMultiSelect(formData, "patient_allergies");
+  const isSmoker = getCheckbox(formData, "is_smoker");
+  const predominantFootwear =
+    getField(formData, "predominant_footwear") || null;
+
+  const healthAlerts = buildHealthAlerts({
+    has_diabetes: hasDiabetes,
+    diabetes_type: diabetesType,
+    has_vascular_issues: hasVascularIssues,
+    has_coagulation_disorders: hasCoagulationDisorders,
+    has_oncological_history: hasOncologicalHistory,
+    is_smoker: isSmoker,
+    continuous_meds: continuousMeds,
+    patient_allergies: patientAllergies,
+  });
 
   if (!id || !name || !phone) {
     redirect(`/patients/${id || ""}/edit?error=Campos invalidos`);
@@ -142,6 +256,17 @@ export async function updatePatientAction(formData: FormData) {
       emergency_contact_name: emergencyContactName || null,
       emergency_contact_phone: emergencyContactPhone || null,
       referral_source: referralSource || null,
+      has_diabetes: hasDiabetes,
+      diabetes_type: diabetesType,
+      diabetes_on_insulin: diabetesOnInsulin,
+      has_vascular_issues: hasVascularIssues,
+      has_coagulation_disorders: hasCoagulationDisorders,
+      has_oncological_history: hasOncologicalHistory,
+      continuous_meds: continuousMeds,
+      patient_allergies: patientAllergies,
+      is_smoker: isSmoker,
+      predominant_footwear: predominantFootwear,
+      health_alerts: healthAlerts,
     })
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id);

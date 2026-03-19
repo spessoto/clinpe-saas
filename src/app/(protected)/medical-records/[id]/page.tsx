@@ -103,9 +103,14 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
 
   // Tags de risco para exibir em destaque
   const riskTags: string[] = [];
-  if (anamnesis.has_diabetes) riskTags.push("Diabetes" + (anamnesis.diabetes_type ? ` T${anamnesis.diabetes_type}` : ""));
+  if (anamnesis.has_diabetes)
+    riskTags.push(
+      "Diabetes" +
+        (anamnesis.diabetes_type ? ` T${anamnesis.diabetes_type}` : ""),
+    );
   if (anamnesis.has_vascular_issues) riskTags.push("Vascular/Cardíaco");
-  if (anamnesis.has_coagulation_disorders) riskTags.push("Distúrbio Coagulação");
+  if (anamnesis.has_coagulation_disorders)
+    riskTags.push("Distúrbio Coagulação");
   if (anamnesis.has_oncological_history) riskTags.push("Histórico Oncológico");
   if (anamnesis.is_smoker) riskTags.push("Fumante");
   (anamnesis.continuous_meds ?? []).forEach((m) => riskTags.push(m));
@@ -134,7 +139,8 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
   const nailFindings: string[] = [];
   if (anamnesis.nail_onychocryptosis) {
     let label = "Onicocriptose";
-    if (anamnesis.onychocryptosis_toe) label += ` (${anamnesis.onychocryptosis_toe})`;
+    if (anamnesis.onychocryptosis_toe)
+      label += ` (${anamnesis.onychocryptosis_toe})`;
     if (anamnesis.onychocryptosis_granuloma) label += " + Granuloma";
     nailFindings.push(label);
   }
@@ -205,7 +211,9 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
             ) : null}
             {(anamnesis.allergies ?? []).length > 0 ? (
               <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
-                <p className="text-xs font-semibold text-orange-700">Alergias</p>
+                <p className="text-xs font-semibold text-orange-700">
+                  Alergias
+                </p>
                 <p className="mt-1 text-sm">
                   {(anamnesis.allergies ?? []).join(" • ")}
                 </p>
@@ -215,9 +223,9 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
         </section>
 
         {/* B — Hábitos */}
-        {(anamnesis.is_smoker ||
-          anamnesis.has_sport_activity ||
-          anamnesis.predominant_footwear) ? (
+        {anamnesis.is_smoker ||
+        anamnesis.has_sport_activity ||
+        anamnesis.predominant_footwear ? (
           <section className="mt-5">
             <h3 className="text-sm font-bold uppercase tracking-wide text-foreground/60">
               B — Hábitos e Estilo de Vida
@@ -231,7 +239,9 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
               {anamnesis.has_sport_activity ? (
                 <span className="rounded-lg bg-primary px-3 py-1 text-white">
                   🏃{" "}
-                  {anamnesis.sport_type ? anamnesis.sport_type : "Pratica esporte"}
+                  {anamnesis.sport_type
+                    ? anamnesis.sport_type
+                    : "Pratica esporte"}
                 </span>
               ) : null}
               {anamnesis.predominant_footwear ? (
@@ -274,7 +284,9 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
 
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             <div className="rounded-xl bg-slate-50 p-4">
-              <h4 className="font-semibold text-foreground">Queixa principal</h4>
+              <h4 className="font-semibold text-foreground">
+                Queixa principal
+              </h4>
               <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
                 {anamnesis.chief_complaint || "-"}
               </p>
@@ -335,7 +347,9 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
             ) : null}
 
             <div className="rounded-xl bg-slate-50 p-4">
-              <h4 className="font-semibold text-foreground">Avaliação clínica</h4>
+              <h4 className="font-semibold text-foreground">
+                Avaliação clínica
+              </h4>
               <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
                 {anamnesis.clinical_assessment || "-"}
               </p>

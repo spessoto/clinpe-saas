@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { buildHealthAlerts } from "@/app/(protected)/patients/actions";
 
 function getField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -37,7 +38,8 @@ export async function createMedicalRecordAction(formData: FormData) {
       : formData.get("diabetes_on_insulin") === "false"
         ? false
         : null;
-  const diabetesLastGlucose = getField(formData, "diabetes_last_glucose") || null;
+  const diabetesLastGlucose =
+    getField(formData, "diabetes_last_glucose") || null;
   const hasVascularIssues = formData.get("has_vascular_issues") === "true";
   const hasCoagulationDisorders =
     formData.get("has_coagulation_disorders") === "true";
@@ -56,7 +58,8 @@ export async function createMedicalRecordAction(formData: FormData) {
   const isSmoker = formData.get("is_smoker") === "true";
   const hasSportActivity = formData.get("has_sport_activity") === "true";
   const sportType = getField(formData, "sport_type") || null;
-  const predominantFootwear = getField(formData, "predominant_footwear") || null;
+  const predominantFootwear =
+    getField(formData, "predominant_footwear") || null;
 
   // ── C. Exame Físico ──────────────────────────────────────────────
   const bloodPressure = getField(formData, "blood_pressure") || null;
@@ -269,6 +272,35 @@ export async function createMedicalRecordAction(formData: FormData) {
       );
     }
   }
+
+  // Modelo híbrido: atualizar dado mestre do paciente com o estado de saúde confirmado na consulta
+  const updatedHealthAlerts = buildHealthAlerts({
+    has_diabetes: hasDiabetes,
+    diabetes_type: diabetesType,
+    has_vascular_issues: hasVascularIssues,
+    has_coagulation_disorders: hasCoagulationDisorders,
+    has_oncological_history: hasOncologicalHistory,
+    is_smoker: isSmoker,
+    continuous_meds: continuousMeds,
+    patient_allergies: allergies,
+  });
+
+  await supabase
+    .from("patients")
+    .update({
+      has_diabetes: hasDiabetes,
+      diabetes_type: diabetesType,
+      diabetes_on_insulin: diabetesOnInsulin,
+      has_vascular_issues: hasVascularIssues,
+      has_coagulation_disorders: hasCoagulationDisorders,
+      has_oncological_history: hasOncologicalHistory,
+      continuous_meds: continuousMeds,
+      patient_allergies: allergies,
+      is_smoker: isSmoker,
+      health_alerts: updatedHealthAlerts,
+    })
+    .eq("id", patientId)
+    .eq("tenant_id", appUser.tenant_id);
 
   revalidatePath(`/patients/${patientId}`);
   revalidatePath("/dashboard");
