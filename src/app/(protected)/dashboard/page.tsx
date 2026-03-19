@@ -33,29 +33,39 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const { start, end, startDate, endDate } = monthBoundaries();
 
-  const [appointmentsResult, patientsResult, materialsResult, financialResult] =
-    await Promise.all([
-      supabase
-        .from("appointments")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", appUser.tenant_id)
-        .gte("scheduled_at", start)
-        .lt("scheduled_at", end),
-      supabase
-        .from("patients")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", appUser.tenant_id),
-      supabase
-        .from("materials")
-        .select("id, quantity, minimum_stock")
-        .eq("tenant_id", appUser.tenant_id),
-      supabase
-        .from("financial_transactions")
-        .select("type, amount")
-        .eq("tenant_id", appUser.tenant_id)
-        .gte("occurred_on", startDate)
-        .lt("occurred_on", endDate),
-    ]);
+  const [
+    appointmentsResult,
+    patientsResult,
+    materialsResult,
+    financialResult,
+    pendingBiologicalTestsResult,
+  ] = await Promise.all([
+    supabase
+      .from("appointments")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", appUser.tenant_id)
+      .gte("scheduled_at", start)
+      .lt("scheduled_at", end),
+    supabase
+      .from("patients")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", appUser.tenant_id),
+    supabase
+      .from("materials")
+      .select("id, quantity, minimum_stock")
+      .eq("tenant_id", appUser.tenant_id),
+    supabase
+      .from("financial_transactions")
+      .select("type, amount")
+      .eq("tenant_id", appUser.tenant_id)
+      .gte("occurred_on", startDate)
+      .lt("occurred_on", endDate),
+    supabase
+      .from("sterilization_biological_tests")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", appUser.tenant_id)
+      .eq("status", "pending"),
+  ]);
 
   const lowStockCount =
     materialsResult.data?.filter((m) => m.quantity <= m.minimum_stock).length ??
@@ -83,6 +93,8 @@ export default async function DashboardPage() {
     style: "currency",
     currency: "BRL",
   }).format(monthlyBalance);
+
+  const pendingBiologicalTests = pendingBiologicalTestsResult.count ?? 0;
 
   const cards = [
     {
@@ -207,6 +219,22 @@ export default async function DashboardPage() {
             className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
           >
             Abrir régua de recall
+          </Link>
+        </article>
+        <article className="surface-card p-5">
+          <h3 className="text-lg font-semibold text-secondary">
+            Central de esterilização
+          </h3>
+          <p className="mt-2 text-sm text-muted">
+            {pendingBiologicalTests > 0
+              ? `Você tem ${pendingBiologicalTests} teste(s) biológico(s) aguardando leitura.`
+              : "Sem testes biológicos pendentes no momento."}
+          </p>
+          <Link
+            href="/sterilization"
+            className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+          >
+            Abrir central
           </Link>
         </article>
       </div>

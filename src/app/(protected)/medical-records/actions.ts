@@ -33,6 +33,10 @@ export async function createMedicalRecordAction(formData: FormData) {
   const procedurePerformed = getField(formData, "procedure_performed");
   const recommendations = getField(formData, "recommendations");
   const evolutionNotes = getField(formData, "evolution_notes");
+  const sterilizationLotIds = formData
+    .getAll("sterilization_lot_ids")
+    .map((value) => String(value).trim())
+    .filter(Boolean);
 
   if (!patientId || !chiefComplaint || !clinicalAssessment) {
     redirect(
@@ -54,6 +58,57 @@ export async function createMedicalRecordAction(formData: FormData) {
   const files = formData
     .getAll("photos")
     .filter((value): value is File => value instanceof File && value.size > 0);
+
+  if (sterilizationLotIds.length > 0) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+
+    const { data: selectedLots } = await supabase
+      .from("sterilization_logs")
+      .select("id, chemical_indicator_status, sterilized_at")
+      .eq("tenant_id", appUser.tenant_id)
+      .in("id", sterilizationLotIds);
+
+    if (!selectedLots || selectedLots.length !== sterilizationLotIds.length) {
+      redirect(
+        `/medical-records/new?patient_id=${patientId}&error=Lote de esterilizacao invalido ou fora do tenant`,
+      );
+    }
+
+    const hasInvalidChemicalIndicator = selectedLots.some(
+      (lot) => lot.chemical_indicator_status !== "approved",
+    );
+
+    if (hasInvalidChemicalIndicator) {
+      redirect(
+        `/medical-records/new?patient_id=${patientId}&error=Somente lotes com indicador quimico aprovado podem ser vinculados`,
+      );
+    }
+
+    const hasOldLot = selectedLots.some(
+      (lot) => new Date(lot.sterilized_at).getTime() < cutoff.getTime(),
+    );
+
+    if (hasOldLot) {
+      redirect(
+        `/medical-records/new?patient_id=${patientId}&error=Selecione apenas lotes validos dos ultimos 30 dias`,
+      );
+    }
+
+    const { data: rejectedTests } = await supabase
+      .from("sterilization_biological_tests")
+      .select("id")
+      .eq("tenant_id", appUser.tenant_id)
+      .eq("status", "rejected")
+      .in("sterilization_log_id", sterilizationLotIds)
+      .limit(1);
+
+    if ((rejectedTests ?? []).length > 0) {
+      redirect(
+        `/medical-records/new?patient_id=${patientId}&error=Um dos lotes selecionados foi reprovado no teste biologico e nao pode ser utilizado`,
+      );
+    }
+  }
 
   const uploadedUrls: string[] = [];
 
@@ -103,6 +158,24 @@ export async function createMedicalRecordAction(formData: FormData) {
     redirect(
       `/medical-records/new?patient_id=${patientId}&error=${encodeURIComponent(error?.message ?? "Falha ao salvar prontuário")}`,
     );
+  }
+
+  if (sterilizationLotIds.length > 0) {
+    const rows = sterilizationLotIds.map((lotId) => ({
+      tenant_id: appUser.tenant_id,
+      medical_record_id: created.id,
+      sterilization_log_id: lotId,
+    }));
+
+    const { error: linkError } = await supabase
+      .from("medical_record_sterilization_lots")
+      .insert(rows);
+
+    if (linkError) {
+      redirect(
+        `/medical-records/new?patient_id=${patientId}&error=${encodeURIComponent(linkError.message)}`,
+      );
+    }
   }
 
   revalidatePath(`/patients/${patientId}`);

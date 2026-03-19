@@ -22,12 +22,40 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
   const supabase = await createClient();
   const { id } = await params;
 
-  const { data: record } = await supabase
-    .from("medical_records")
-    .select("id, patient_id, created_at, anamnesis_data, photos")
-    .eq("id", id)
-    .eq("tenant_id", appUser.tenant_id)
-    .single();
+  const [recordResult, lotLinksResult] = await Promise.all([
+    supabase
+      .from("medical_records")
+      .select("id, patient_id, created_at, anamnesis_data, photos")
+      .eq("id", id)
+      .eq("tenant_id", appUser.tenant_id)
+      .single(),
+    supabase
+      .from("medical_record_sterilization_lots")
+      .select(
+        "id, sterilization_log_id, lot:sterilization_logs(batch_number, material_name, sterilized_at)",
+      )
+      .eq("tenant_id", appUser.tenant_id)
+      .eq("medical_record_id", id),
+  ]);
+
+  const record = recordResult.data;
+  const lotLinks =
+    (lotLinksResult.data as Array<{
+      id: string;
+      sterilization_log_id: string;
+      lot:
+        | {
+            batch_number: string;
+            material_name: string;
+            sterilized_at: string;
+          }
+        | {
+            batch_number: string;
+            material_name: string;
+            sterilized_at: string;
+          }[]
+        | null;
+    }> | null) ?? [];
 
   if (!record) {
     notFound();
@@ -103,6 +131,42 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
                 </div>
               </a>
             ))}
+          </div>
+        )}
+      </article>
+
+      <article className="surface-card p-6">
+        <h3 className="text-lg font-semibold text-secondary">
+          Rastreabilidade de materiais
+        </h3>
+
+        {lotLinks.length === 0 ? (
+          <p className="mt-2 text-sm text-muted">
+            Nenhum lote de esterilização vinculado a este prontuário.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {lotLinks.map((link) => {
+              const lot = Array.isArray(link.lot) ? link.lot[0] : link.lot;
+
+              return (
+                <Link
+                  key={link.id}
+                  href={`/sterilization/${link.sterilization_log_id}`}
+                  className="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 hover:border-primary/40"
+                >
+                  <p className="font-semibold text-primary">
+                    Materiais utilizados: {lot?.batch_number ?? "Lote"}
+                  </p>
+                  <p className="text-sm text-muted">
+                    {lot?.material_name ?? "Material não informado"} •{" "}
+                    {lot?.sterilized_at
+                      ? new Date(lot.sterilized_at).toLocaleString("pt-BR")
+                      : "Data não informada"}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         )}
       </article>
