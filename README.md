@@ -1,10 +1,10 @@
 # ClinPe App
 
-SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuarios, autoagendamento e integracao com Google Calendar.
+SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuários, autoagendamento e integração com Google Calendar.
 
 ## Status do projeto
 
-- Versao publicada: `v0.9.1`
+- Versão publicada: `v0.9.3`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -17,16 +17,20 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Funcionalidades implementadas
 
-- Epico 1: auth e onboarding com criacao automatica de tenant e trial
-- Epico 2: dashboard com KPIs e CRUD de pacientes
-- Epico 3: prontuarios com upload de imagens no Storage
-- Epico 4: integracao com Google Calendar + autoagendamento publico por profissional em `/{professional_slug}`
-- Epico 5: POPs com templates e substituicao dinamica de placeholders
-- Agenda: calendario mensal de consultas lido do banco de dados, com pop-up de dados do paciente e acoes de confirmacao/cancelamento
-- Confirmacao e cancelamento de agendamento: profissional pode confirmar ou cancelar cada consulta diretamente na agenda, com notificacao por e-mail assíncrona (fila persistente)
-- Notificacao por e-mail: envio SMTP com template HTML responsivo (nodemailer) informando data, clinica, profissional e proximo passo
+- Épico 1: auth e onboarding com criação automática de tenant e trial
+- Épico 2: dashboard com KPIs e CRUD de pacientes
+- Épico 3: prontuários com upload de imagens no Storage
+- Épico 4: integração com Google Calendar + autoagendamento público por profissional em `/{professional_slug}`
+- Épico 5: POPs com templates e substituição dinâmica de placeholders
+- Agenda: calendário mensal de consultas lido do banco de dados, com pop-up de dados do paciente e ações de confirmação/cancelamento
+- Confirmação e cancelamento de agendamento: profissional pode confirmar ou cancelar cada consulta diretamente na agenda, com notificação por e-mail assíncrona (fila persistente)
+- Notificação por e-mail: envio SMTP com template HTML responsivo (nodemailer) informando data, clínica, profissional e próximo passo
 - Cancelamento remove automaticamente o evento do Google Calendar do profissional
-- Configuracoes white-label: perfil, nome da clinica, e-mail/nome do usuario, dias e horarios de atendimento, duracao da consulta e integracao Google
+- Configurações white-label: perfil, nome da clínica, e-mail/nome do usuário, dias e horários de atendimento, duração da consulta e integração Google
+- **Ficha completa do paciente**: CPF, RG, e-mail, endereço, ocupação, contato de emergência, fonte de captação
+- **Histórico de Saúde no cadastro**: diabetes (tipo + insulina), vascular, coagulação, oncológico, medicamentos contínuos, alergias, fumante, calçado — exibidos como alertas visuais no perfil
+- **Anamnese estruturada podológica**: ficha A/B/C com triagem sistêmica, hábitos e exame físico; toggles CSS-only otimizados para tablet/luvas; snapshot JSONB por consulta para audit trail legal
+- **Modelo híbrido**: dados de saúde crônicos armazenados no cadastro (dado mestre) e replicados como snapshot em cada prontuário; formulário de novo prontuário pré-preenche a partir do cadastro
 
 ## Requisitos locais
 
@@ -141,8 +145,10 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260318000009_add_mp_billing.sql` — legado da fase Mercado Pago
 - `20260318000010_asaas_transition_and_hard_lock.sql` — transicao para Asaas e endurecimento do hard lock por assinatura/trial
 - `20260318000011_admin_panel_foundation.sql` — fundacao do painel admin, free permanente, extensao manual de trial e audit log
-- `20260319000020_email_queue.sql` — fila assíncrona de notificacoes de e-mail com retries
-
+- `20260319000020_email_queue.sql` — fila assíncrona de notificacoes de e-mail com retries- `20260319000021_epic10_operational_finance_base.sql` — base do módulo financeiro operacional
+- `20260319000022_sterilization_traceability_v2.sql` — rastreabilidade de esterilização v2
+- `20260319000023_patient_extended_fields.sql` — campos administrativos do paciente: CPF, RG, e-mail, endereço, ocupação, contato de emergência, origem
+- `20260319000024_patient_health_columns.sql` — colunas estruturadas de saúde no cadastro do paciente (modelo híbrido) com índices GIN em arrays
 Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e Google.
 
 > **Atencao:** O nome dos arquivos de migration usa o formato `YYYYMMDDNNNNNN` (14 digitos sem underscore entre data e sequencia). Arquivos com o formato antigo `YYYYMMDD_NNNNNN` causam conflito de versao na CLI do Supabase.

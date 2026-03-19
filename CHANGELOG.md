@@ -1,3 +1,39 @@
+## [0.9.3] - 2026-03-19
+
+### Added
+
+- **Ficha completa de cadastro do paciente** (dados administrativos e de saúde)
+  - Campos de identificação: CPF, RG, e-mail
+  - Contato e localização: bairro, endereço, CEP
+  - Perfil social: ocupação, contato de emergência (nome e telefone)
+  - Origem: fonte de captação (referral_source)
+  - **Seção Histórico de Saúde** com toggles CSS-only (tablet/luvas): diabetes + tipo + insulina, vascular/cardíaco, distúrbio de coagulação, histórico oncológico, fumante, medicamentos contínuos, alergias, calçado predominante
+  - Migration `20260319000023_patient_extended_fields.sql` (campos administrativos)
+  - Migration `20260319000024_patient_health_columns.sql` (colunas estruturadas de saúde + índices GIN em arrays)
+
+- **Ficha de Anamnese Estruturada Podológica** no prontuário
+  - Seção A — Triagem Sistêmica: condições de risco, sub-campos de diabetes, medicamentos e alergias
+  - Seção B — Hábitos e Estilo de Vida: fumante, atividade esportiva, calçado predominante
+  - Seção C — Exame Físico: PA, glicemia capilar, queixa, avaliação dermatológica (5 achados), ortopédica (4 achados), ungueal (4 achados)
+  - Desfecho: avaliação clínica, procedimento, recomendações, evolução
+  - Dados persistidos em `anamnesis_data JSONB` para audit trail legal
+  - Visualização estruturada com chips de risco, achados e tags no prontuário
+
+- **Modelo híbrido de saúde** (dado mestre + snapshot por consulta)
+  - Dados de saúde crônicos ficam no cadastro do paciente (`patients`) como dado mestre
+  - Cada consulta snap-shot os dados na `anamnesis_data` do prontuário para rastreabilidade legal
+  - `health_alerts TEXT[]` auto-calculado por `buildHealthAlerts()` — exibido como banner de alerta no perfil do paciente
+  - Formulário de novo prontuário pré-preenche seções A e B com `defaultChecked`/`defaultValue` a partir do cadastro; banner avisa o profissional
+  - Ao salvar prontuário, dados de saúde do paciente são atualizados automaticamente no cadastro
+
+### Changed
+
+- Utilitário `buildHealthAlerts` extraído para `src/lib/health-alerts.ts` (módulo puro, sem `"use server"`) para compatibilidade com Turbopack/Next.js 16 (apenas funções `async` podem ser exportadas de Server Actions)
+
+### Fixed
+
+- Erro de build no deploy (`Server Actions must be async functions`): `buildHealthAlerts` era exportada de `patients/actions.ts` (`"use server"`), causando falha no Turbopack — movida para `src/lib/health-alerts.ts`
+
 ## [0.9.2] - 2026-03-19
 
 ### Added
