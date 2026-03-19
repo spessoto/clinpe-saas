@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 
 import { createPublicBookingAction } from "@/app/public-booking-actions";
 import { getAvailableSlots, getPublicBookingContext } from "@/lib/booking";
@@ -63,6 +64,18 @@ export default async function PublicBookingPage({
   return (
     <main className="bg-[radial-gradient(circle_at_top,#ccfbf1,transparent_35%),linear-gradient(180deg,#f8fafc,white)] px-6 py-12">
       <section className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        {context.tenant.logo_url ? (
+          <div className="lg:col-span-2 flex justify-start">
+            <Image
+              src={context.tenant.logo_url}
+              alt={`Logo da clínica ${context.tenant.name}`}
+              width={150}
+              height={60}
+              className="max-h-[60px] w-[150px] object-contain"
+            />
+          </div>
+        ) : null}
+
         <article className="surface-card p-8">
           <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
             Autoagendamento ClinPé

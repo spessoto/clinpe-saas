@@ -91,6 +91,7 @@ export function ImageUpload({
   const sizeClass = isAvatar ? "w-32 h-32" : "w-48 h-32";
   const hiddenFieldName =
     type === "avatar" ? "current_profile_photo_url" : "current_logo_url";
+  const fileInputName = isAvatar ? "profile_photo" : "logo_file";
 
   return (
     <div className={className}>
@@ -113,6 +114,7 @@ export function ImageUpload({
       >
         <input
           type="file"
+          name={fileInputName}
           accept="image/*"
           onChange={handleChange}
           disabled={uploading}

@@ -51,6 +51,15 @@ export default async function SettingsPage({ searchParams }: Props) {
   const success = typeof params.success === "string" ? params.success : null;
   const error = typeof params.error === "string" ? params.error : null;
 
+  const { data: tenantBranding } = await supabase
+    .from("tenants")
+    .select("name, logo_url")
+    .eq("id", tenant.id)
+    .maybeSingle();
+
+  const clinicName = tenantBranding?.name ?? tenant.name;
+  const clinicLogoUrl = tenantBranding?.logo_url ?? tenant.logo_url;
+
   const withSettings = await supabase
     .from("users")
     .select(
@@ -154,7 +163,7 @@ export default async function SettingsPage({ searchParams }: Props) {
           <div className="mt-4 grid gap-6 md:grid-cols-2">
             <ImageUpload
               type="logo"
-              currentUrl={tenant.logo_url}
+              currentUrl={clinicLogoUrl}
               label="Logo da Clínica"
               className="md:col-span-1"
             />
@@ -167,7 +176,7 @@ export default async function SettingsPage({ searchParams }: Props) {
                 <input
                   name="clinic_name"
                   required
-                  defaultValue={tenant.name}
+                  defaultValue={clinicName}
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
                 />
               </label>

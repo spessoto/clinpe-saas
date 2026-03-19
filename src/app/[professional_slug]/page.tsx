@@ -112,13 +112,27 @@ export default async function ProfessionalBookingPage({
   });
 
   return (
-    <main className="bg-[#f3f7f8] px-6 py-10">
+    <main className="bg-[#f3f7f8] px-4 py-8 sm:px-6 sm:py-10">
       <section className="mx-auto max-w-6xl">
-        <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+        {context.tenant.logo_url ? (
+          <div className="mb-6 flex justify-start sm:mb-8">
+            <Image
+              src={context.tenant.logo_url}
+              alt={`Logo da clínica ${context.tenant.name}`}
+              width={150}
+              height={60}
+              className="max-h-[60px] w-[150px] object-contain"
+            />
+          </div>
+        ) : null}
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,760px)_320px] lg:justify-center lg:gap-8">
           <section className="space-y-6">
             <header>
-              <h1 className="text-4xl font-bold">Agende sua consulta</h1>
-              <p className="mt-2 max-w-2xl text-sm text-muted">
+              <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+                Agende sua consulta
+              </h1>
+              <p className="mt-2 max-w-2xl text-base text-muted">
                 Siga as etapas abaixo para reservar seu horário com nosso
                 especialista em podologia.
               </p>
@@ -135,7 +149,11 @@ export default async function ProfessionalBookingPage({
               </p>
             ) : null}
 
-            <form action={createPublicBookingAction} className="space-y-6">
+            <form
+              id="public-booking-form"
+              action={createPublicBookingAction}
+              className="space-y-6"
+            >
               <input
                 type="hidden"
                 name="tenant_slug"
@@ -152,7 +170,7 @@ export default async function ProfessionalBookingPage({
                 value={context.professional.id}
               />
 
-              <article className="soft-panel p-5">
+              <article className="soft-panel p-5 sm:p-6">
                 <p className="text-sm font-semibold text-secondary">
                   1. Serviço selecionado
                 </p>
@@ -166,7 +184,7 @@ export default async function ProfessionalBookingPage({
                 </div>
               </article>
 
-              <article className="soft-panel p-5">
+              <article className="soft-panel p-5 sm:p-6">
                 <p className="text-sm font-semibold text-secondary">
                   2. Especialista
                 </p>
@@ -196,7 +214,7 @@ export default async function ProfessionalBookingPage({
                 </div>
               </article>
 
-              <article className="soft-panel p-5">
+              <article className="soft-panel p-5 sm:p-6">
                 <p className="text-sm font-semibold text-secondary">
                   3. Data e horário
                 </p>
@@ -225,7 +243,7 @@ export default async function ProfessionalBookingPage({
                             required
                             className="peer sr-only"
                           />
-                          <span className="flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-foreground transition hover:border-primary/40 hover:bg-primary/5 peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
+                          <span className="flex h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold text-foreground transition hover:border-primary/40 hover:bg-primary/5 peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
                             {new Date(slot).toLocaleTimeString("pt-BR", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -243,7 +261,7 @@ export default async function ProfessionalBookingPage({
                 </div>
               </article>
 
-              <article className="soft-panel p-5">
+              <article className="soft-panel p-5 sm:p-6">
                 <p className="text-sm font-semibold text-secondary">
                   4. Dados pessoais
                 </p>
@@ -299,10 +317,11 @@ export default async function ProfessionalBookingPage({
             </form>
           </section>
 
-          <aside className="lg:sticky lg:top-6 lg:h-fit">
+          <aside className="hidden lg:sticky lg:top-8 lg:block lg:h-fit">
             <article className="surface-card p-5">
-              <h2 className="text-lg font-bold text-secondary">
+              <h2 className="text-[2rem] leading-[1.1] font-bold text-secondary sm:text-2xl">
                 Resumo do agendamento
+                <br />& Próximos Passos
               </h2>
               <dl className="mt-4 space-y-3 text-sm">
                 <div className="flex items-center justify-between gap-3">
@@ -330,11 +349,6 @@ export default async function ProfessionalBookingPage({
                   </dd>
                 </div>
               </dl>
-
-              <div className="mt-4 rounded-lg bg-primary/10 px-3 py-2 text-xs text-primary">
-                Sua confirmação cria o horário no sistema e sincroniza na agenda
-                do profissional.
-              </div>
             </article>
           </aside>
         </div>

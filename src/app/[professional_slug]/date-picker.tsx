@@ -96,18 +96,18 @@ export function DatePicker({
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-7 gap-2 text-center">
+      <div className="mt-5 grid grid-cols-7 gap-2.5 text-center">
         {weekDays.map((day) => (
           <span
             key={day}
-            className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400"
+            className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500"
           >
             {day}
           </span>
         ))}
 
         {Array.from({ length: leadingEmptyDays }).map((_, index) => (
-          <span key={`leading-${index}`} className="h-11 rounded-2xl" />
+          <span key={`leading-${index}`} className="h-12 rounded-2xl" />
         ))}
 
         {monthDays.map((day) => {
@@ -119,10 +119,10 @@ export function DatePicker({
               type="button"
               onClick={() => navigateToDate(day)}
               className={[
-                "h-11 rounded-2xl text-sm font-semibold transition",
+                "h-12 rounded-2xl text-sm font-semibold transition",
                 isSelected
                   ? "bg-primary text-white shadow-[0_12px_24px_-18px_rgba(15,143,135,0.9)]"
-                  : "bg-slate-50 text-foreground hover:bg-primary/10 hover:text-primary",
+                  : "bg-slate-100 text-foreground hover:bg-primary/10 hover:text-primary",
               ].join(" ")}
               aria-pressed={isSelected}
             >
@@ -132,7 +132,7 @@ export function DatePicker({
         })}
 
         {Array.from({ length: trailingEmptyDays }).map((_, index) => (
-          <span key={`trailing-${index}`} className="h-11 rounded-2xl" />
+          <span key={`trailing-${index}`} className="h-12 rounded-2xl" />
         ))}
       </div>
 

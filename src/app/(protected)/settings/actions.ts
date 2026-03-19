@@ -56,6 +56,7 @@ export async function saveSettingsAction(formData: FormData) {
   const clinicName = getField(formData, "clinic_name");
   const fullName = getField(formData, "full_name");
   const email = getField(formData, "email");
+  const currentLogoUrl = getField(formData, "current_logo_url");
 
   if (!clinicName || !fullName || !email) {
     redirect("/settings?error=Preencha clínica, nome e e-mail.");
@@ -93,6 +94,7 @@ export async function saveSettingsAction(formData: FormData) {
     getField(formData, "current_profile_photo_url") ||
     appUser.avatar_url ||
     null;
+  let logoUrl = currentLogoUrl || tenant.logo_url || null;
 
   const profilePhoto = formData.get("profile_photo");
   if (isUploadedFile(profilePhoto) && profilePhoto.size > 0) {
@@ -114,6 +116,28 @@ export async function saveSettingsAction(formData: FormData) {
 
     const { data } = supabase.storage.from("medical-images").getPublicUrl(path);
     profilePhotoUrl = data.publicUrl;
+  }
+
+  const logoFile = formData.get("logo_file");
+  if (isUploadedFile(logoFile) && logoFile.size > 0) {
+    const safeName = sanitizeFileName(logoFile.name || "logo.jpg");
+    const path = `${tenant.id}/logos/${appUser.id}/${Date.now()}-${randomUUID()}-${safeName}`;
+    const fileBytes = new Uint8Array(await logoFile.arrayBuffer());
+
+    const { error: uploadError } = await supabase.storage
+      .from("medical-images")
+      .upload(path, fileBytes, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: logoFile.type || "application/octet-stream",
+      });
+
+    if (uploadError) {
+      redirect(`/settings?error=${encodeURIComponent(uploadError.message)}`);
+    }
+
+    const { data } = supabase.storage.from("medical-images").getPublicUrl(path);
+    logoUrl = data.publicUrl;
   }
 
   let bookingSlug = appUser.booking_slug;
@@ -150,10 +174,13 @@ export async function saveSettingsAction(formData: FormData) {
     redirect(`/settings?error=${encodeURIComponent(userError.message)}`);
   }
 
-  if (clinicName !== tenant.name) {
+  if (clinicName !== tenant.name || logoUrl !== tenant.logo_url) {
     const { error: tenantError } = await supabase
       .from("tenants")
-      .update({ name: clinicName })
+      .update({
+        name: clinicName,
+        logo_url: logoUrl,
+      })
       .eq("id", tenant.id);
 
     if (tenantError) {

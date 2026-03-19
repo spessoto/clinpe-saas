@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versão publicada: `v0.9.3`
+- Versão publicada: `v0.10.0`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -31,6 +31,11 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Histórico de Saúde no cadastro**: diabetes (tipo + insulina), vascular, coagulação, oncológico, medicamentos contínuos, alergias, fumante, calçado — exibidos como alertas visuais no perfil
 - **Anamnese estruturada podológica**: ficha A/B/C com triagem sistêmica, hábitos e exame físico; toggles CSS-only otimizados para tablet/luvas; snapshot JSONB por consulta para audit trail legal
 - **Modelo híbrido**: dados de saúde crônicos armazenados no cadastro (dado mestre) e replicados como snapshot em cada prontuário; formulário de novo prontuário pré-preenche a partir do cadastro
+- **Fluxo de retorno no prontuário**: ao iniciar nova consulta pelo detalhe do paciente, o nome fica pré-preenchido e bloqueado; formulário inclui marcador de consulta de retorno
+- **Configurações de branding mais robustas**: upload e persistência de logotipo da clínica reforçados no `/settings`
+- **Autoagendamento com identidade visual da clínica**: páginas públicas exibem logo da clínica no topo
+- **UX mobile aprimorada**: menu drawer com overlay na área protegida e menu hambúrguer na landing page
+- **Landing page comercial atualizada**: seção de planos completa (Starter, Pro, Clínica, Enterprise) com toggle mensal/anual
 
 ## Requisitos locais
 
@@ -145,7 +150,8 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260318000009_add_mp_billing.sql` — legado da fase Mercado Pago
 - `20260318000010_asaas_transition_and_hard_lock.sql` — transicao para Asaas e endurecimento do hard lock por assinatura/trial
 - `20260318000011_admin_panel_foundation.sql` — fundacao do painel admin, free permanente, extensao manual de trial e audit log
-- `20260319000020_email_queue.sql` — fila assíncrona de notificacoes de e-mail com retries- `20260319000021_epic10_operational_finance_base.sql` — base do módulo financeiro operacional
+- `20260319000020_email_queue.sql` — fila assíncrona de notificacoes de e-mail com retries
+- `20260319000021_epic10_operational_finance_base.sql` — base do módulo financeiro operacional
 - `20260319000022_sterilization_traceability_v2.sql` — rastreabilidade de esterilização v2
 - `20260319000023_patient_extended_fields.sql` — campos administrativos do paciente: CPF, RG, e-mail, endereço, ocupação, contato de emergência, origem
 - `20260319000024_patient_health_columns.sql` — colunas estruturadas de saúde no cadastro do paciente (modelo híbrido) com índices GIN em arrays

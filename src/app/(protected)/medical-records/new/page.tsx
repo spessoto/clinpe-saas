@@ -55,6 +55,11 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
 
   const patients = patientsResult.data ?? [];
   const patientHealth = patientHealthResult.data;
+  const selectedPatient = patientId
+    ? (patients.find((patient) => patient.id === patientId) ??
+      (patientHealth ? { id: patientId, name: patientHealth.name } : null))
+    : null;
+  const isPatientLocked = Boolean(patientId && selectedPatient?.name);
   const rejectedLotIdSet = new Set(
     (rejectedTestsResult.data ?? []).map((test) => test.sterilization_log_id),
   );
@@ -64,7 +69,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
   );
 
   return (
-    <section className="surface-card max-w-3xl p-6">
+    <section className="surface-card mx-auto max-w-5xl p-6 md:p-8">
       <h2 className="text-2xl font-bold">Novo prontuário</h2>
       <p className="mt-1 text-sm text-muted">
         Registre anamnese estruturada e envie imagens clínicas.
@@ -76,40 +81,53 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
         </p>
       ) : null}
 
-      <form action={createMedicalRecordAction} className="mt-6 space-y-8">
+      <form action={createMedicalRecordAction} className="mt-6 space-y-8 pb-24">
         {/* ── Identificação da consulta ─────────────────────────── */}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 sm:grid-cols-2">
           <label className="block text-sm sm:col-span-2">
             <span className="mb-1 block text-foreground">Paciente *</span>
-            <select
-              name="patient_id"
-              required
-              defaultValue={patientId}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-            >
-              <option value="">Selecione...</option>
-              {patients.map((patient) => (
-                <option key={patient.id} value={patient.id}>
-                  {patient.name}
-                </option>
-              ))}
-            </select>
+            {isPatientLocked ? (
+              <>
+                <input type="hidden" name="patient_id" value={patientId} />
+                <input
+                  value={selectedPatient?.name ?? ""}
+                  readOnly
+                  aria-readonly="true"
+                  className="w-full cursor-not-allowed rounded-md border border-slate-300 bg-slate-100 px-3 py-2 text-foreground outline-none"
+                />
+              </>
+            ) : (
+              <select
+                name="patient_id"
+                required
+                defaultValue={patientId}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              >
+                <option value="">Selecione...</option>
+                {patients.map((patient) => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </label>
 
-          <label className="block text-sm">
-            <span className="mb-1 block text-foreground">
-              ID da consulta (opcional)
-            </span>
+          <input type="hidden" name="appointment_id" value={appointmentId} />
+
+          <label className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-foreground">
             <input
-              name="appointment_id"
-              defaultValue={appointmentId}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              type="checkbox"
+              name="is_return_visit"
+              value="true"
+              className="h-4 w-4"
             />
+            <span>Consulta de retorno</span>
           </label>
         </div>
 
         {/* ── A. TRIAGEM SISTÊMICA ──────────────────────────────── */}
-        <fieldset className="space-y-5 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+        <fieldset className="space-y-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 md:p-5">
           <legend className="px-2 text-sm font-bold uppercase tracking-wide text-destructive">
             A — Triagem Sistêmica (Alertas de Risco)
           </legend>
@@ -283,7 +301,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
         </fieldset>
 
         {/* ── B. HÁBITOS E ESTILO DE VIDA ──────────────────────── */}
-        <fieldset className="space-y-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <fieldset className="space-y-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
           <legend className="px-2 text-sm font-bold uppercase tracking-wide text-foreground">
             B — Hábitos e Estilo de Vida
           </legend>
@@ -362,7 +380,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
         </fieldset>
 
         {/* ── C. EXAME FÍSICO PODOLÓGICO ────────────────────────── */}
-        <fieldset className="space-y-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <fieldset className="space-y-6 rounded-2xl border border-primary/20 bg-primary/5 p-4 md:p-5">
           <legend className="px-2 text-sm font-bold uppercase tracking-wide text-primary">
             C — Exame Físico do Dia
           </legend>
@@ -530,7 +548,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
         </fieldset>
 
         {/* ── DESFECHO DA CONSULTA ──────────────────────────────── */}
-        <fieldset className="space-y-4">
+        <fieldset className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 md:p-5">
           <legend className="text-base font-semibold text-foreground">
             Desfecho da Consulta
           </legend>
@@ -582,69 +600,76 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
         </fieldset>
 
         {/* ── REGISTRO FOTOGRÁFICO ─────────────────────────────── */}
-        <label className="block text-sm">
-          <span className="mb-1 block text-foreground">
-            Imagens do procedimento
-          </span>
-          <input
-            type="file"
-            name="photos"
-            multiple
-            accept="image/*"
-            className="w-full rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-sm"
-          />
-        </label>
-
-        {/* ── RASTREABILIDADE ───────────────────────────────────── */}
-        <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h3 className="text-base font-semibold text-foreground">
-            Rastreabilidade de materiais
-          </h3>
-          <p className="mt-1 text-sm text-muted">
-            Adicione os lotes utilizados (somente lotes válidos dos últimos 30
-            dias).
-          </p>
-
-          {validLots.length === 0 ? (
-            <p className="mt-3 rounded-md bg-warning/10 px-3 py-2 text-sm text-warning">
-              Nenhum lote válido disponível. Registre os ciclos na Central de
-              Esterilização.
+        <div className="grid gap-4 lg:grid-cols-2">
+          <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+            <h3 className="text-base font-semibold text-foreground">
+              Imagens do procedimento
+            </h3>
+            <p className="mt-1 text-sm text-muted">
+              Envie fotos para comparação clínica e documentação de evolução.
             </p>
-          ) : (
-            <div className="mt-3 grid gap-2">
-              {validLots.map((lot) => (
-                <label
-                  key={lot.id}
-                  className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    name="sterilization_lot_ids"
-                    value={lot.id}
-                  />
-                  <span className="font-semibold text-foreground">
-                    {lot.batch_number}
-                  </span>
-                  <span className="text-muted">• {lot.material_name}</span>
-                  <span className="text-muted">
-                    • {new Date(lot.sterilized_at).toLocaleString("pt-BR")}
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
-        </article>
+            <input
+              type="file"
+              name="photos"
+              multiple
+              accept="image/*"
+              className="mt-3 w-full rounded-md border border-dashed border-slate-300 bg-white px-3 py-4 text-sm"
+            />
+          </article>
 
-        <div className="flex flex-wrap gap-2">
-          <button type="submit" className="btn-gradient">
-            Salvar prontuário
-          </button>
-          <Link
-            href={patientId ? `/patients/${patientId}` : "/patients"}
-            className="btn-outline-modern"
-          >
-            Cancelar
-          </Link>
+          {/* ── RASTREABILIDADE ───────────────────────────────────── */}
+          <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+            <h3 className="text-base font-semibold text-foreground">
+              Rastreabilidade de materiais
+            </h3>
+            <p className="mt-1 text-sm text-muted">
+              Adicione os lotes utilizados (somente lotes válidos dos últimos 30
+              dias).
+            </p>
+
+            {validLots.length === 0 ? (
+              <p className="mt-3 rounded-md bg-warning/10 px-3 py-2 text-sm text-warning">
+                Nenhum lote válido disponível. Registre os ciclos na Central de
+                Esterilização.
+              </p>
+            ) : (
+              <div className="mt-3 grid max-h-56 gap-2 overflow-y-auto pr-1">
+                {validLots.map((lot) => (
+                  <label
+                    key={lot.id}
+                    className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      name="sterilization_lot_ids"
+                      value={lot.id}
+                    />
+                    <span className="font-semibold text-foreground">
+                      {lot.batch_number}
+                    </span>
+                    <span className="text-muted">• {lot.material_name}</span>
+                    <span className="text-muted">
+                      • {new Date(lot.sterilized_at).toLocaleString("pt-BR")}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </article>
+        </div>
+
+        <div className="sticky bottom-0 z-10 -mx-6 border-t border-slate-200 bg-white/95 px-6 py-4 backdrop-blur md:-mx-8 md:px-8">
+          <div className="flex flex-wrap justify-end gap-2">
+            <Link
+              href={patientId ? `/patients/${patientId}` : "/patients"}
+              className="btn-outline-modern"
+            >
+              Cancelar
+            </Link>
+            <button type="submit" className="btn-gradient">
+              Salvar prontuário
+            </button>
+          </div>
         </div>
       </form>
     </section>

@@ -1,9 +1,52 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.10.0] - 2026-03-19
+
+### Added
+
+- **Nova landing page comercial** em `src/app/page.tsx`
+  - Hero, seções de recursos e pricing completo (Starter, Pro, Clínica, Enterprise)
+  - Toggle de cobrança mensal/anual com atualização dinâmica dos preços
+  - Menu mobile no header da home para manter navegação funcional em telas pequenas
+
+- **Branding público da clínica no agendamento**
+  - Logo da clínica exibida no topo das páginas públicas de booking (`/[professional_slug]` e `/clinic/[tenant_slug]/book`)
+  - Contexto de booking passou a incluir `tenant.logo_url`
+
+- **Fluxo clínico de retorno no novo prontuário**
+  - Campo de paciente pré-preenchido e bloqueado quando a abertura parte de `/patients/[id]`
+  - Checkbox de "consulta de retorno" no formulário
+  - Persistência do indicador de retorno em `anamnesis_data`
+
+### Changed
+
+- **UX/UI do booking público refinada** para melhor legibilidade e responsividade
+  - Melhorias de espaçamento, hierarquia visual e calendário
+  - Conteúdo centralizado e ajustes no comportamento do resumo entre desktop e mobile
+
+- **Navegação mobile da área protegida** evoluída para drawer com overlay e animação,
+  preservando a sidebar no desktop
+
+- **Página de novo prontuário redesenhada** com organização por seções, layout mais amplo,
+  cards mais claros e barra de ações fixa
+
+### Fixed
+
+- **Persistência do logotipo da clínica em `/settings`**
+  - Fluxo de salvamento reforçado para manter `logo_url` após submit
+  - Upload de logo integrado ao submit principal (`logo_file`) com fallback de leitura de branding
+
 ## [0.9.5] - 2026-03-19
 
 ### Fixed
 
 - **Erro de schema cache `referral_source`** — mesma causa raiz do `health_alerts`: PostgREST não reconhece colunas da migration 8
-  - Diagnóstico via `select('*')` revelou que PostgREST conhece 25 de 27 colunas — faltam `health_alerts` e `referral_source` (ambas da m igration 8)
+  - Diagnóstico via `select('*')` revelou que PostgREST conhece 25 de 27 colunas — faltam `health_alerts` e `referral_source` (ambas da migration 8)
   - Todas as queries de pacientes agora usam `select('*')` em vez de listar colunas explícitas, evitando erros de schema cache
   - Removido `referral_source` dos payloads de `insert`/`update` (campo do formulário permanece para quando o cache atualizar)
   - `medical-records/new/page.tsx`: select de saúde do paciente também migrado para `select('*')`
@@ -151,15 +194,6 @@
 - `requireAdminAccess()` em `src/lib/auth.ts` agora verifica `is_admin` do banco ao invés de apenas email
 - `AppUser` type agora inclui campo `is_admin: boolean`
 - Admin migration queries agora trazem `is_admin` do banco
-
-## [0.7.2] - 2026-03-18
-
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.7.2] - 2026-03-18
 

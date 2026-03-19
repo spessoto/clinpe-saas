@@ -28,6 +28,7 @@ type Tenant = {
   id: string;
   name: string;
   slug: string;
+  logo_url: string | null;
   booking_enabled: boolean;
   booking_page_title: string | null;
   booking_page_description: string | null;
@@ -182,7 +183,7 @@ export async function getPublicBookingContext(tenantSlug: string) {
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
+      "id, name, slug, logo_url, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
     )
     .eq("slug", tenantSlug)
     .single();
@@ -284,7 +285,7 @@ export async function getPublicProfessionalBookingContext(
     supabase
       .from("tenants")
       .select(
-        "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
+        "id, name, slug, logo_url, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
       )
       .eq("id", professional.tenant_id)
       .single(),
@@ -385,7 +386,7 @@ export async function diagnosePublicProfessionalBooking(
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "id, name, booking_enabled, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
+      "id, name, logo_url, booking_enabled, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
     )
     .eq("id", professional.tenant_id)
     .maybeSingle();

@@ -27,6 +27,7 @@ export async function createMedicalRecordAction(formData: FormData) {
 
   const patientId = getField(formData, "patient_id");
   const appointmentId = getField(formData, "appointment_id");
+  const isReturnVisit = formData.get("is_return_visit") === "true";
 
   // ── A. Triagem Sistêmica ──────────────────────────────────────────
   const hasDiabetes = formData.get("has_diabetes") === "true";
@@ -202,6 +203,7 @@ export async function createMedicalRecordAction(formData: FormData) {
       patient_id: patientId,
       appointment_id: appointmentId || null,
       anamnesis_data: {
+        is_return_visit: isReturnVisit,
         // A — Triagem Sistêmica
         has_diabetes: hasDiabetes,
         diabetes_type: diabetesType,

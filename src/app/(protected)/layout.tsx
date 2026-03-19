@@ -4,6 +4,59 @@ import { signOutAction } from "@/app/auth-actions";
 import { BrandLogoWhite } from "@/components/brand-logo";
 import { requireActiveTenant } from "@/lib/auth";
 
+function SidebarContent({ canAccessAdmin }: { canAccessAdmin: boolean }) {
+  const linkClass =
+    "rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18";
+
+  return (
+    <>
+      <nav className="mt-6 flex flex-col gap-2 text-sm">
+        <Link href="/dashboard" className={linkClass}>
+          Dashboard
+        </Link>
+        <Link href="/patients" className={linkClass}>
+          Pacientes
+        </Link>
+        <Link href="/patients/recall" className={linkClass}>
+          Pacientes para retorno
+        </Link>
+        <Link href="/agenda" className={linkClass}>
+          Agenda
+        </Link>
+        <Link href="/finance" className={linkClass}>
+          Financeiro
+        </Link>
+        <Link href="/sterilization" className={linkClass}>
+          Esterilização
+        </Link>
+        <Link href="/settings" className={linkClass}>
+          Configurações
+        </Link>
+        <Link href="/pop-documents" className={linkClass}>
+          POPs
+        </Link>
+        {canAccessAdmin ? (
+          <Link
+            href="/admin"
+            className="rounded-xl bg-white/12 px-3 py-2 font-semibold text-white transition hover:bg-white/18"
+          >
+            Painel admin
+          </Link>
+        ) : null}
+      </nav>
+
+      <form action={signOutAction} className="mt-8">
+        <button
+          type="submit"
+          className="w-full rounded-xl border border-white/40 bg-transparent px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+        >
+          Sair
+        </button>
+      </form>
+    </>
+  );
+}
+
 export default async function ProtectedLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -13,86 +66,41 @@ export default async function ProtectedLayout({
     appUser.email.trim().toLowerCase();
 
   return (
-    <div className="min-h-screen bg-transparent md:flex">
-      <aside className="w-full bg-[#0F766E] px-5 py-6 text-white md:sticky md:top-0 md:h-screen md:w-72 md:flex-shrink-0">
-        <BrandLogoWhite className="h-auto w-36" />
+    <div className="min-h-screen bg-transparent">
+      <details className="group relative z-40 md:hidden">
+        <summary className="flex cursor-pointer list-none items-center justify-between bg-[#0F766E] px-5 py-4 text-white">
+          <BrandLogoWhite className="h-auto w-32" />
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/40 bg-white/10">
+            <span className="flex w-4 flex-col gap-1.5">
+              <span className="block h-0.5 w-full bg-white" />
+              <span className="block h-0.5 w-full bg-white" />
+              <span className="block h-0.5 w-full bg-white" />
+            </span>
+          </span>
+        </summary>
 
-        <nav className="mt-6 flex flex-col gap-2 text-sm">
-          <Link
-            href="/dashboard"
-            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/patients"
-            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
-            Pacientes
-          </Link>
-          <Link
-            href="/patients/recall"
-            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
-            Pacientes para retorno
-          </Link>
-          <Link
-            href="/agenda"
-            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
-            Agenda
-          </Link>
-          <Link
-            href="/finance"
-            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
-            Financeiro
-          </Link>
-          <Link
-            href="/sterilization"
-            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
-            Esterilização
-          </Link>
-          <Link
-            href="/medical-records/new"
-            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
-            Prontuários
-          </Link>
-          <Link
-            href="/settings"
-            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
-            Configurações
-          </Link>
-          <Link
-            href="/pop-documents"
-            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
-            POPs
-          </Link>
-          {canAccessAdmin ? (
-            <Link
-              href="/admin"
-              className="rounded-xl bg-white/12 px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-            >
-              Painel admin
-            </Link>
-          ) : null}
-        </nav>
+        <div className="pointer-events-none fixed inset-0 bg-slate-900/45 opacity-0 transition-opacity duration-300 ease-out group-open:pointer-events-auto group-open:opacity-100" />
 
-        <form action={signOutAction} className="mt-8">
-          <button
-            type="submit"
-            className="w-full rounded-xl border border-white/40 bg-transparent px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
-          >
-            Sair
-          </button>
-        </form>
-      </aside>
+        <aside className="fixed inset-y-0 left-0 w-72 -translate-x-full overflow-y-auto bg-[#0F766E] px-5 py-6 text-white shadow-2xl transition-transform duration-300 ease-out group-open:translate-x-0">
+          <div className="flex justify-center">
+            <BrandLogoWhite className="h-auto w-36" />
+          </div>
 
-      <main className="w-full px-6 py-8 md:px-8">{children}</main>
+          <SidebarContent canAccessAdmin={canAccessAdmin} />
+        </aside>
+      </details>
+
+      <div className="md:flex">
+        <aside className="hidden bg-[#0F766E] px-5 py-6 text-white md:sticky md:top-0 md:flex md:h-screen md:w-72 md:flex-shrink-0 md:flex-col">
+          <div className="flex justify-center">
+            <BrandLogoWhite className="h-auto w-36" />
+          </div>
+
+          <SidebarContent canAccessAdmin={canAccessAdmin} />
+        </aside>
+
+        <main className="w-full px-6 py-8 md:px-8">{children}</main>
+      </div>
     </div>
   );
 }
