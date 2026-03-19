@@ -6,12 +6,14 @@ interface ToggleAdminButtonProps {
   userId: string;
   userEmail: string;
   isAdmin: boolean;
+  currentPage: number;
 }
 
 export function ToggleAdminButton({
   userId,
   userEmail,
   isAdmin,
+  currentPage,
 }: ToggleAdminButtonProps) {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const action = isAdmin ? "revogar" : "dar";
@@ -24,6 +26,7 @@ export function ToggleAdminButton({
   return (
     <form action={toggleAdminRoleAction} className="inline">
       <input type="hidden" name="userId" value={userId} />
+      <input type="hidden" name="page" value={String(currentPage)} />
       <button
         type="submit"
         onClick={handleClick}

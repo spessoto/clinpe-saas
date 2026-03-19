@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { requireAdminAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-export type AdminUser = {
+type AdminUser = {
   id: string;
   email: string;
   full_name: string;
@@ -14,22 +14,51 @@ export type AdminUser = {
   created_at: string;
 };
 
-export async function getAdminUsersList(): Promise<AdminUser[]> {
+const ADMIN_USERS_PAGE_SIZE = 50;
+
+type AdminUsersListResult = {
+  users: AdminUser[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export async function getAdminUsersList(
+  page = 1,
+): Promise<AdminUsersListResult> {
   // Verify current user is admin
   await requireAdminAccess();
 
   const supabase = await createClient();
+  const currentPage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+  const from = (currentPage - 1) * ADMIN_USERS_PAGE_SIZE;
+  const to = from + ADMIN_USERS_PAGE_SIZE - 1;
 
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from("users")
-    .select("id, email, full_name, is_admin, created_at")
+    .select("id, email, full_name, is_admin, created_at", { count: "exact" })
+    .range(from, to)
     .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(`Erro ao buscar usuários: ${error.message}`);
   }
 
-  return (data || []) as AdminUser[];
+  const users = (data || []) as AdminUser[];
+  const resolvedCount = typeof count === "number" ? count : users.length;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(resolvedCount / ADMIN_USERS_PAGE_SIZE),
+  );
+
+  return {
+    users,
+    totalCount: resolvedCount,
+    page: currentPage,
+    pageSize: ADMIN_USERS_PAGE_SIZE,
+    totalPages,
+  };
 }
 
 export async function toggleAdminRoleAction(formData: FormData) {
@@ -37,8 +66,13 @@ export async function toggleAdminRoleAction(formData: FormData) {
   const currentAdmin = await requireAdminAccess();
 
   const userId = String(formData.get("userId") ?? "").trim();
+  const currentPage = Math.max(
+    1,
+    Number.parseInt(String(formData.get("page") ?? "1"), 10) || 1,
+  );
+  const pageQuery = `page=${currentPage}`;
   if (!userId || userId.length === 0) {
-    redirect("/admin/users?error=ID%20de%20usuário%20inválido");
+    redirect(`/admin/users?${pageQuery}&error=ID%20de%20usuário%20inválido`);
   }
 
   const supabase = await createClient();
@@ -51,7 +85,7 @@ export async function toggleAdminRoleAction(formData: FormData) {
     .single();
 
   if (userError || !userData) {
-    redirect("/admin/users?error=Usuário%20não%20encontrado");
+    redirect(`/admin/users?${pageQuery}&error=Usuário%20não%20encontrado`);
   }
 
   const currentIsAdmin = userData.is_admin;
@@ -67,7 +101,7 @@ export async function toggleAdminRoleAction(formData: FormData) {
 
     if (count === 1) {
       redirect(
-        "/admin/users?error=Não%20é%20possível%20revogar%20seu%20acesso%20admin%20se%20você%20for%20o%20único%20admin",
+        `/admin/users?${pageQuery}&error=Não%20é%20possível%20revogar%20seu%20acesso%20admin%20se%20você%20for%20o%20único%20admin`,
       );
     }
   }
@@ -80,7 +114,7 @@ export async function toggleAdminRoleAction(formData: FormData) {
 
   if (updateError) {
     redirect(
-      `/admin/users?error=${encodeURIComponent("Erro ao atualizar admin: " + updateError.message)}`,
+      `/admin/users?${pageQuery}&error=${encodeURIComponent("Erro ao atualizar admin: " + updateError.message)}`,
     );
   }
 
@@ -90,6 +124,6 @@ export async function toggleAdminRoleAction(formData: FormData) {
   // Redirect with success message
   const action = newIsAdmin ? "promovido" : "rebaixado";
   redirect(
-    `/admin/users?success=${encodeURIComponent(`Usuário foi ${action} com sucesso`)}`,
+    `/admin/users?${pageQuery}&success=${encodeURIComponent(`Usuário foi ${action} com sucesso`)}`,
   );
 }

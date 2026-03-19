@@ -1,3 +1,57 @@
+## [0.9.1] - 2026-03-19
+
+### Added
+
+- Operacionalizacao da fila assíncrona de e-mail
+  - Endpoint interno `GET /api/internal/email-queue/process` para consultar status da fila
+  - Script `scripts/process-email-queue.mjs` para execucao manual/cron com status antes e depois
+  - Script npm `email-queue:process` para facilitar automacao
+
+### Changed
+
+- Protecao do endpoint interno de fila unificada via secret em header `Authorization: Bearer <EMAIL_QUEUE_CRON_SECRET>`
+- Documentacao atualizada com instrucoes de cron e monitoramento da fila
+
+## [0.9.0] - 2026-03-19
+
+### Added
+
+- Fila assíncrona de e-mail para notificações de agendamento
+  - Nova migration `20260319000020_email_queue.sql` com tabela `email_queue` e índices de processamento
+  - Biblioteca `src/lib/email-queue.ts` para enfileirar e processar notificações com retry/backoff
+  - Endpoint interno `POST /api/internal/email-queue/process` protegido por `EMAIL_QUEUE_CRON_SECRET`
+
+### Changed
+
+- Ações de confirmação/cancelamento na agenda deixaram de depender de envio SMTP síncrono
+  - `src/app/(protected)/agenda/actions.ts` agora enfileira notificações no banco
+  - Mensagens de sucesso da agenda atualizadas para refletir envio assíncrono
+- Otimizações de render/cache em rotas críticas
+  - Agenda com `revalidate = 300`
+  - Admin com revalidação periódica
+- Página de usuários admin com paginação server-side
+  - Busca limitada, navegação por página e preservação de contexto ao alterar role
+- Estratégia de análise de bundle atualizada para Next.js 16
+  - Script `analyze` usa `next build --webpack`
+
+### Performance
+
+- Paralelização de queries em fluxos críticos (agenda e booking)
+- Retry com backoff nas chamadas do Google Calendar para reduzir falhas transitórias
+- Nova migration de índices para hot paths (`20260319000019_performance_indexes_hot_paths.sql`)
+
+### Pruning
+
+- Remoção de artefatos temporários de build/análise do repositório
+- Ignorar logs locais de análise/build no `.gitignore`
+- Limpeza de textos residuais de branding em telas e mensagens de UX
+
+### Validation
+
+- Lint: OK
+- Testes: OK
+- Build de produção: executado sem erro explícito nas validações finais
+
 ## [0.8.0] - 2026-03-19
 
 ### Added

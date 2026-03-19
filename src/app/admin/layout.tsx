@@ -4,7 +4,7 @@ import { signOutAction } from "@/app/auth-actions";
 import { BrandLogoWhite } from "@/components/brand-logo";
 import { requireAdminAccess } from "@/lib/auth";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 export default async function AdminLayout({
   children,

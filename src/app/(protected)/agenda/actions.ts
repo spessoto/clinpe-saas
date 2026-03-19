@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
-import { sendAppointmentDecisionEmail } from "@/lib/email";
+import { enqueueAppointmentDecisionEmail } from "@/lib/email-queue";
 import { deleteGoogleCalendarEvent } from "@/lib/google-calendar";
 import { createClient } from "@/lib/supabase/server";
 
@@ -106,7 +106,17 @@ async function getManagedAppointment(appointmentId: string) {
     appointmentQuery = appointmentQuery.eq("professional_id", appUser.id);
   }
 
-  const { data: appointment, error } = await appointmentQuery.single();
+  const [appointmentResult, integrationResult] = await Promise.all([
+    appointmentQuery.single(),
+    supabase
+      .from("google_integrations")
+      .select("access_token, refresh_token, expires_at")
+      .eq("tenant_id", appUser.tenant_id)
+      .eq("user_id", appUser.id)
+      .maybeSingle(),
+  ]);
+
+  const { data: appointment, error } = appointmentResult;
 
   if (error || !appointment) {
     throw new Error("Agendamento não encontrado.");
@@ -126,12 +136,7 @@ async function getManagedAppointment(appointmentId: string) {
         phone: string | null;
       } | null) ?? null);
 
-  const { data: integration } = await supabase
-    .from("google_integrations")
-    .select("access_token, refresh_token, expires_at")
-    .eq("tenant_id", appUser.tenant_id)
-    .eq("user_id", appUser.id)
-    .maybeSingle();
+  const { data: integration } = integrationResult;
 
   const appointmentRecord: {
     id: string;
@@ -204,13 +209,16 @@ export async function confirmAppointmentAction(formData: FormData) {
           "Agendamento confirmado, mas o paciente não possui e-mail cadastrado.";
       } else {
         try {
-          await sendAppointmentDecisionEmail({
-            to: appointment.patient.email,
-            patientName: appointment.patient.name,
-            clinicName: tenant.name,
-            professionalName: appUser.full_name,
-            scheduledAt: appointment.scheduled_at,
-            decision: "confirmed",
+          await enqueueAppointmentDecisionEmail({
+            tenantId: appUser.tenant_id,
+            payload: {
+              to: appointment.patient.email,
+              patientName: appointment.patient.name,
+              clinicName: tenant.name,
+              professionalName: appUser.full_name,
+              scheduledAt: appointment.scheduled_at,
+              decision: "confirmed",
+            },
           });
         } catch {
           warningMessage = getFriendlyEmailWarning();
@@ -232,7 +240,7 @@ export async function confirmAppointmentAction(formData: FormData) {
   redirect(
     buildAgendaPath({
       month,
-      success: "Agendamento confirmado e paciente notificado por e-mail.",
+      success: "Agendamento confirmado. O paciente será notificado por e-mail.",
     }),
   );
 }
@@ -301,13 +309,16 @@ export async function cancelAppointmentAction(formData: FormData) {
         );
       } else {
         try {
-          await sendAppointmentDecisionEmail({
-            to: appointment.patient.email,
-            patientName: appointment.patient.name,
-            clinicName: tenant.name,
-            professionalName: appUser.full_name,
-            scheduledAt: appointment.scheduled_at,
-            decision: "canceled",
+          await enqueueAppointmentDecisionEmail({
+            tenantId: appUser.tenant_id,
+            payload: {
+              to: appointment.patient.email,
+              patientName: appointment.patient.name,
+              clinicName: tenant.name,
+              professionalName: appUser.full_name,
+              scheduledAt: appointment.scheduled_at,
+              decision: "canceled",
+            },
           });
         } catch {
           warningMessage = appendWarning(
@@ -332,7 +343,7 @@ export async function cancelAppointmentAction(formData: FormData) {
   redirect(
     buildAgendaPath({
       month,
-      success: "Agendamento cancelado e paciente notificado por e-mail.",
+      success: "Agendamento cancelado. O paciente será notificado por e-mail.",
     }),
   );
 }

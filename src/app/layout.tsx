@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PodoDesk",
+  title: "ClinPé",
   description: "Plataforma SaaS para gestão de podologia",
 };
 

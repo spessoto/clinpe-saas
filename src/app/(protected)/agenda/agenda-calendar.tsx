@@ -410,7 +410,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
               {selectedEvent.isExternal ? (
                 <p className="sm:col-span-2 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
                   Evento vindo do Google Calendar. Para confirmar/cancelar com
-                  e-mail, crie o agendamento pelo fluxo do PodoDesk.
+                  e-mail, crie o agendamento pelo fluxo do ClinPé.
                 </p>
               ) : (
                 <>

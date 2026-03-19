@@ -5,12 +5,23 @@ import { getAdminUsersList } from "@/app/admin/users/actions";
 import { ToggleAdminButton } from "@/app/admin/users/toggle-admin-button";
 import { requireAdminAccess } from "@/lib/auth";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
+const ADMIN_USERS_PAGE_SIZE = 50;
 
 type SearchParams = Promise<{
   error?: string;
   success?: string;
+  page?: string;
 }>;
+
+function parsePage(page: string | undefined) {
+  const parsed = Number.parseInt(page ?? "1", 10);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return 1;
+  }
+
+  return parsed;
+}
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
@@ -27,10 +38,16 @@ export default async function AdminUsersPage(props: {
   searchParams: SearchParams;
 }) {
   const searchParams = await props.searchParams;
-  const currentAdmin = await requireAdminAccess();
-  const users = await getAdminUsersList();
+  await requireAdminAccess();
+  const page = parsePage(searchParams.page);
+  const { users, totalCount, totalPages } = await getAdminUsersList(page);
 
   const adminCount = users.filter((u) => u.is_admin).length;
+  const isFirstPage = page <= 1;
+  const isLastPage = page >= totalPages;
+  const startIndex =
+    totalCount === 0 ? 0 : (page - 1) * ADMIN_USERS_PAGE_SIZE + 1;
+  const endIndex = Math.min(page * ADMIN_USERS_PAGE_SIZE, totalCount);
 
   return (
     <div className="space-y-6">
@@ -38,8 +55,8 @@ export default async function AdminUsersPage(props: {
         <div>
           <h1 className="text-3xl font-bold">Gerenciamento de Usuários</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {users.length} usuário{users.length !== 1 ? "s" : ""} cadastrado
-            {users.length !== 1 ? "s" : ""} • {adminCount} admin
+            Exibindo {startIndex}-{endIndex} de {totalCount} usuário
+            {totalCount !== 1 ? "s" : ""} • {adminCount} admin
             {adminCount !== 1 ? "s" : ""}
           </p>
         </div>
@@ -130,6 +147,7 @@ export default async function AdminUsersPage(props: {
                         userId={user.id}
                         userEmail={user.email}
                         isAdmin={user.is_admin}
+                        currentPage={page}
                       />
                     </td>
                   </tr>
@@ -137,6 +155,38 @@ export default async function AdminUsersPage(props: {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 text-sm">
+        <p className="text-muted-foreground">
+          Página {page} de {totalPages}
+        </p>
+        <div className="flex items-center gap-2">
+          {isFirstPage ? (
+            <span className="rounded-md border border-border px-3 py-1 text-muted-foreground">
+              Anterior
+            </span>
+          ) : (
+            <Link
+              href={`/admin/users?page=${page - 1}`}
+              className="rounded-md border border-border px-3 py-1 hover:bg-muted"
+            >
+              Anterior
+            </Link>
+          )}
+          {isLastPage ? (
+            <span className="rounded-md border border-border px-3 py-1 text-muted-foreground">
+              Próxima
+            </span>
+          ) : (
+            <Link
+              href={`/admin/users?page=${page + 1}`}
+              className="rounded-md border border-border px-3 py-1 hover:bg-muted"
+            >
+              Próxima
+            </Link>
+          )}
         </div>
       </div>
 

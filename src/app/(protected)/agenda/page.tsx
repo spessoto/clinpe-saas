@@ -1,15 +1,26 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 
-import {
-  AgendaCalendar,
-  type AgendaCalendarEvent,
-} from "@/app/(protected)/agenda/agenda-calendar";
+import type { AgendaCalendarEvent } from "@/app/(protected)/agenda/agenda-calendar";
 import { requireActiveTenant } from "@/lib/auth";
 import { listGoogleCalendarEvents } from "@/lib/google-calendar";
 import { createClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
+
+const AgendaCalendar = dynamic(
+  () =>
+    import("@/app/(protected)/agenda/agenda-calendar").then(
+      (mod) => mod.AgendaCalendar,
+    ),
+  {
+    loading: () => (
+      <article className="surface-card p-6">
+        <div className="h-80 animate-pulse rounded-xl bg-slate-100" />
+      </article>
+    ),
+  },
+);
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -246,7 +257,7 @@ export default async function AgendaPage({ searchParams }: Props) {
 
       if (events.length > 0) {
         warningBanner ??=
-          "Mostrando eventos do Google Calendar. Para confirmar/cancelar com e-mail, o agendamento precisa existir no PodoDesk.";
+          "Mostrando eventos do Google Calendar. Para confirmar/cancelar com e-mail, o agendamento precisa existir no ClinPé.";
       }
     } catch {
       // If Google API fails, we keep the database result (possibly empty).

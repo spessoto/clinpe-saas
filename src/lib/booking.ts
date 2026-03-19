@@ -280,13 +280,23 @@ export async function getPublicProfessionalBookingContext(
     return null;
   }
 
-  const { data: tenant } = await supabase
-    .from("tenants")
-    .select(
-      "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
-    )
-    .eq("id", professional.tenant_id)
-    .single();
+  const [{ data: tenant }, { data: integration }] = await Promise.all([
+    supabase
+      .from("tenants")
+      .select(
+        "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
+      )
+      .eq("id", professional.tenant_id)
+      .single(),
+    supabase
+      .from("google_integrations")
+      .select(
+        "user_id, google_email, booking_widget_url, access_token, refresh_token, expires_at",
+      )
+      .eq("tenant_id", professional.tenant_id)
+      .eq("user_id", professional.id)
+      .maybeSingle(),
+  ]);
 
   if (
     !tenant ||
@@ -295,15 +305,6 @@ export async function getPublicProfessionalBookingContext(
   ) {
     return null;
   }
-
-  const { data: integration } = await supabase
-    .from("google_integrations")
-    .select(
-      "user_id, google_email, booking_widget_url, access_token, refresh_token, expires_at",
-    )
-    .eq("tenant_id", professional.tenant_id)
-    .eq("user_id", professional.id)
-    .maybeSingle();
 
   return {
     tenant: tenant as Tenant,
@@ -437,21 +438,22 @@ export async function getAvailableSlots(input: {
   );
   const dayEnd = addDays(dayStart, 1);
 
-  const { data: appointments } = await supabase
-    .from("appointments")
-    .select("scheduled_at")
-    .eq("tenant_id", context.tenant.id)
-    .eq("professional_id", input.professionalId)
-    .neq("status", "canceled")
-    .gte("scheduled_at", dayStart.toISOString())
-    .lt("scheduled_at", dayEnd.toISOString());
-
-  const { data: integration } = await supabase
-    .from("google_integrations")
-    .select("user_id, google_email, access_token, refresh_token, expires_at")
-    .eq("tenant_id", context.tenant.id)
-    .eq("user_id", input.professionalId)
-    .maybeSingle();
+  const [{ data: appointments }, { data: integration }] = await Promise.all([
+    supabase
+      .from("appointments")
+      .select("scheduled_at")
+      .eq("tenant_id", context.tenant.id)
+      .eq("professional_id", input.professionalId)
+      .neq("status", "canceled")
+      .gte("scheduled_at", dayStart.toISOString())
+      .lt("scheduled_at", dayEnd.toISOString()),
+    supabase
+      .from("google_integrations")
+      .select("user_id, google_email, access_token, refresh_token, expires_at")
+      .eq("tenant_id", context.tenant.id)
+      .eq("user_id", input.professionalId)
+      .maybeSingle(),
+  ]);
 
   let busyRanges: Array<{ start?: string | null; end?: string | null }> = [];
 
@@ -600,7 +602,7 @@ export async function createPublicBooking(input: {
       const googleEventId = await createGoogleCalendarEvent(
         integration as GoogleIntegration,
         {
-          summary: `Consulta PodoDesk - ${input.patientName}`,
+          summary: `Consulta ClinPé - ${input.patientName}`,
           description: `Agendamento público da clínica ${context.tenant.name}. Telefone: ${input.patientPhone}. E-mail: ${input.patientEmail}`,
           start: input.scheduledAt,
           end: addMinutes(

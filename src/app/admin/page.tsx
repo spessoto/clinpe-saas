@@ -9,7 +9,7 @@ import { requireAdminAccess } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getEffectiveTrialEnd, hasTenantAccess } from "@/lib/tenant-access";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 type SearchParams = Promise<{
   status?: string;

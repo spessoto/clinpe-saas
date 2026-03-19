@@ -26,6 +26,8 @@
 
 # debug
 yarn-error.log*
+analyze-build.log
+build-output.log
 
 # Temporary scripts with secrets
 scripts/create-admin-user.mjs
@@ -37,6 +39,7 @@ tmp_schema_dump.sql
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel

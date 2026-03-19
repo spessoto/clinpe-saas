@@ -101,3 +101,17 @@ export async function sendAppointmentDecisionEmail(
     html: mail.html,
   });
 }
+
+export async function sendAppointmentDecisionEmailWithTimeout(
+  input: AppointmentDecisionEmailInput,
+  timeoutMs = 1200,
+) {
+  const timedResult = await Promise.race([
+    sendAppointmentDecisionEmail(input).then(() => "sent" as const),
+    new Promise<"timed_out">((resolve) => {
+      setTimeout(() => resolve("timed_out"), timeoutMs);
+    }),
+  ]);
+
+  return timedResult;
+}
