@@ -4,6 +4,7 @@ import { CheckCircle, AlertCircle, Info, Check, Mail } from "lucide-react";
 
 import { isConfiguredAdminEmail, requireAuthenticatedUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import type { TenantBillingStatus } from "@/lib/tenant-access";
 import { getEffectiveTrialEnd } from "@/lib/tenant-access";
 import { createCheckoutAction } from "./actions";
 import { BILLING_PLANS, type BillingPeriod, type BillingTier } from "./plans";
@@ -27,7 +28,7 @@ function getTrialStatus(tenant: {
   trial_ends_at: string;
   trial_extension_days: number;
   is_permanent_free_plan: boolean;
-  subscription_status: string;
+  subscription_status: TenantBillingStatus;
 }) {
   if (tenant.is_permanent_free_plan) {
     return { type: "free_permanent" as const };
