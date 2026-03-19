@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { deletePatientAction } from "@/app/(protected)/patients/actions";
 import { requireActiveTenant } from "@/lib/auth";
+import { buildHealthAlerts } from "@/lib/health-alerts";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = {
@@ -30,7 +31,7 @@ export default async function PatientDetailsPage({ params }: Props) {
   const { data: patient, error: patientError } = await supabase
     .from("patients")
     .select(
-      "id, name, phone, birth_date, cpf, rg, email, address_street, address_neighborhood, address_zipcode, occupation, emergency_contact_name, emergency_contact_phone, health_alerts, referral_source, has_diabetes, diabetes_type, diabetes_on_insulin, has_vascular_issues, has_coagulation_disorders, has_oncological_history, continuous_meds, patient_allergies, is_smoker, predominant_footwear",
+      "id, name, phone, birth_date, cpf, rg, email, address_street, address_neighborhood, address_zipcode, occupation, emergency_contact_name, emergency_contact_phone, referral_source, has_diabetes, diabetes_type, diabetes_on_insulin, has_vascular_issues, has_coagulation_disorders, has_oncological_history, continuous_meds, patient_allergies, is_smoker, predominant_footwear",
     )
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id)
@@ -118,11 +119,16 @@ export default async function PatientDetailsPage({ params }: Props) {
     canceled: "Cancelada",
   };
 
-  const healthAlerts = Array.isArray(patient.health_alerts)
-    ? patient.health_alerts
-        .map((value) => String(value).trim())
-        .filter((value) => value.length > 0)
-    : [];
+  const healthAlerts = buildHealthAlerts({
+    has_diabetes: patient.has_diabetes,
+    diabetes_type: patient.diabetes_type,
+    has_vascular_issues: patient.has_vascular_issues,
+    has_coagulation_disorders: patient.has_coagulation_disorders,
+    has_oncological_history: patient.has_oncological_history,
+    is_smoker: patient.is_smoker,
+    continuous_meds: patient.continuous_meds ?? [],
+    patient_allergies: patient.patient_allergies ?? [],
+  });
 
   const whatsappPhone = normalizePhoneForWhatsApp(patient.phone);
   const whatsappMessage = encodeURIComponent(

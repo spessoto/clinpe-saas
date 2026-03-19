@@ -6,7 +6,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
-import { buildHealthAlerts } from "@/lib/health-alerts";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
@@ -274,17 +273,6 @@ export async function createMedicalRecordAction(formData: FormData) {
   }
 
   // Modelo híbrido: atualizar dado mestre do paciente com o estado de saúde confirmado na consulta
-  const updatedHealthAlerts = buildHealthAlerts({
-    has_diabetes: hasDiabetes,
-    diabetes_type: diabetesType,
-    has_vascular_issues: hasVascularIssues,
-    has_coagulation_disorders: hasCoagulationDisorders,
-    has_oncological_history: hasOncologicalHistory,
-    is_smoker: isSmoker,
-    continuous_meds: continuousMeds,
-    patient_allergies: allergies,
-  });
-
   await supabase
     .from("patients")
     .update({
@@ -297,7 +285,6 @@ export async function createMedicalRecordAction(formData: FormData) {
       continuous_meds: continuousMeds,
       patient_allergies: allergies,
       is_smoker: isSmoker,
-      health_alerts: updatedHealthAlerts,
     })
     .eq("id", patientId)
     .eq("tenant_id", appUser.tenant_id);

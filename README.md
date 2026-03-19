@@ -149,7 +149,7 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260319000022_sterilization_traceability_v2.sql` — rastreabilidade de esterilização v2
 - `20260319000023_patient_extended_fields.sql` — campos administrativos do paciente: CPF, RG, e-mail, endereço, ocupação, contato de emergência, origem
 - `20260319000024_patient_health_columns.sql` — colunas estruturadas de saúde no cadastro do paciente (modelo híbrido) com índices GIN em arrays
-Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e Google.
+  Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e Google.
 
 > **Atencao:** O nome dos arquivos de migration usa o formato `YYYYMMDDNNNNNN` (14 digitos sem underscore entre data e sequencia). Arquivos com o formato antigo `YYYYMMDD_NNNNNN` causam conflito de versao na CLI do Supabase.
 

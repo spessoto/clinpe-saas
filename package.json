@@ -1,6 +1,6 @@
 {
   "name": "clinpe-app",
-  "version": "0.9.1",
+  "version": "0.9.4",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",

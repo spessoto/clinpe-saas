@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
-import { buildHealthAlerts } from "@/lib/health-alerts";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
@@ -100,17 +99,6 @@ export async function createPatientAction(formData: FormData) {
   const predominantFootwear =
     getField(formData, "predominant_footwear") || null;
 
-  const healthAlerts = buildHealthAlerts({
-    has_diabetes: hasDiabetes,
-    diabetes_type: diabetesType,
-    has_vascular_issues: hasVascularIssues,
-    has_coagulation_disorders: hasCoagulationDisorders,
-    has_oncological_history: hasOncologicalHistory,
-    is_smoker: isSmoker,
-    continuous_meds: continuousMeds,
-    patient_allergies: patientAllergies,
-  });
-
   if (!name || !phone) {
     redirect("/patients/new?error=Nome e telefone sao obrigatorios");
   }
@@ -148,7 +136,6 @@ export async function createPatientAction(formData: FormData) {
     patient_allergies: patientAllergies,
     is_smoker: isSmoker,
     predominant_footwear: predominantFootwear,
-    health_alerts: healthAlerts,
   });
 
   if (error) {
@@ -202,17 +189,6 @@ export async function updatePatientAction(formData: FormData) {
   const predominantFootwear =
     getField(formData, "predominant_footwear") || null;
 
-  const healthAlerts = buildHealthAlerts({
-    has_diabetes: hasDiabetes,
-    diabetes_type: diabetesType,
-    has_vascular_issues: hasVascularIssues,
-    has_coagulation_disorders: hasCoagulationDisorders,
-    has_oncological_history: hasOncologicalHistory,
-    is_smoker: isSmoker,
-    continuous_meds: continuousMeds,
-    patient_allergies: patientAllergies,
-  });
-
   if (!id || !name || !phone) {
     redirect(`/patients/${id || ""}/edit?error=Campos invalidos`);
   }
@@ -243,7 +219,6 @@ export async function updatePatientAction(formData: FormData) {
       patient_allergies: patientAllergies,
       is_smoker: isSmoker,
       predominant_footwear: predominantFootwear,
-      health_alerts: healthAlerts,
     })
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id);

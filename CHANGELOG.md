@@ -1,3 +1,14 @@
+## [0.9.4] - 2026-03-19
+
+### Fixed
+
+- **Erro persistente de schema cache do PostgREST** (`Could not find the 'health_alerts' column of 'patients' in the schema cache`)
+  - Causa raiz: a coluna `health_alerts` é 100% derivada das colunas de saúde (`has_diabetes`, `has_vascular_issues`, etc.) mas era gravada/lida via PostgREST, que mantinha cache stale impossível de invalidar
+  - Ponto cego encontrado: `medical-records/actions.ts` fazia `.update({ health_alerts })` sem nenhum fallback
+  - Correção definitiva: removida toda leitura/escrita de `health_alerts` via PostgREST em 3 arquivos (`patients/actions.ts`, `patients/[id]/page.tsx`, `medical-records/actions.ts`)
+  - Alertas de saúde agora são computados em render-time via `buildHealthAlerts()` a partir das colunas estruturadas que funcionam normalmente
+  - Banner de alertas clínicos continua funcionando sem depender do schema cache
+
 ## [0.9.3] - 2026-03-19
 
 ### Added
