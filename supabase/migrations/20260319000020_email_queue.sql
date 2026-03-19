@@ -21,6 +21,16 @@ create index if not exists idx_email_queue_status_next_attempt
 create index if not exists idx_email_queue_tenant_created_at
   on public.email_queue (tenant_id, created_at desc);
 
+create or replace function public.set_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
 drop trigger if exists set_email_queue_updated_at on public.email_queue;
 create trigger set_email_queue_updated_at
   before update on public.email_queue
