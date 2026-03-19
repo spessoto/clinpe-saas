@@ -1,11 +1,11 @@
-# PodoDesk App
+# ClinPe App
 
 SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuarios, autoagendamento e integracao com Google Calendar.
 
 ## Status do projeto
 
-- Versao publicada: `v0.7.2`
-- Rebranding aplicado: `ClinPe` -> `PodoDesk`
+- Versao publicada: `v0.9.1`
+- Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
 ## Stack
