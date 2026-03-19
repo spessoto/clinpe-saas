@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -43,7 +43,9 @@ export default async function SterilizationCycleDetailsPage({ params }: Props) {
   const tests = testsResult.data ?? [];
 
   if (!cycle) {
-    notFound();
+    redirect(
+      `/sterilization?error=${encodeURIComponent("Lote não encontrado para este usuário.")}`,
+    );
   }
 
   const latestTest = tests[0] ?? null;

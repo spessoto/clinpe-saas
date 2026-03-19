@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -58,7 +58,9 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
     }> | null) ?? [];
 
   if (!record) {
-    notFound();
+    redirect(
+      `/patients?error=${encodeURIComponent("Prontuário não encontrado para este usuário.")}`,
+    );
   }
 
   const anamnesis = (record.anamnesis_data ?? {}) as AnamnesisData;

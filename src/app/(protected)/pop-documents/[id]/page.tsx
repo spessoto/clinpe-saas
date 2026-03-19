@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { PrintButton } from "@/components/print-button";
 import { requireActiveTenant } from "@/lib/auth";
@@ -30,7 +30,9 @@ export default async function PopDocumentDetailsPage({ params }: Props) {
     .single();
 
   if (!document) {
-    notFound();
+    redirect(
+      `/pop-documents?error=${encodeURIComponent("Documento POP não encontrado para este usuário.")}`,
+    );
   }
 
   const renderedContent = injectProfessionalData(document.content, {

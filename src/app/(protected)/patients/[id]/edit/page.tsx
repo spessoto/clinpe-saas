@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { updatePatientAction } from "@/app/(protected)/patients/actions";
 import { requireActiveTenant } from "@/lib/auth";
@@ -26,7 +26,9 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
     .single();
 
   if (!patient) {
-    notFound();
+    redirect(
+      `/patients?error=${encodeURIComponent("Paciente não encontrado para edição neste usuário.")}`,
+    );
   }
 
   return (
