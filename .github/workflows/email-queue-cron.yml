@@ -38,6 +38,8 @@ jobs:
           set -euo pipefail
           curl --fail --silent --show-error \
             -H "Authorization: Bearer ${EMAIL_QUEUE_CRON_SECRET}" \
+            -H "Accept: application/json" \
+            -A "Mozilla/5.0 (compatible; ClinPeQueueBot/1.0; +https://pododesk.com.br)" \
             "${APP_URL%/}/api/internal/email-queue/process"
           echo
 
@@ -48,6 +50,8 @@ jobs:
           curl --fail --silent --show-error \
             -X POST \
             -H "Authorization: Bearer ${EMAIL_QUEUE_CRON_SECRET}" \
+            -H "Accept: application/json" \
+            -A "Mozilla/5.0 (compatible; ClinPeQueueBot/1.0; +https://pododesk.com.br)" \
             "${APP_URL%/}/api/internal/email-queue/process?limit=${EMAIL_QUEUE_BATCH_LIMIT}"
           echo
 
@@ -57,5 +61,7 @@ jobs:
           set -euo pipefail
           curl --fail --silent --show-error \
             -H "Authorization: Bearer ${EMAIL_QUEUE_CRON_SECRET}" \
+            -H "Accept: application/json" \
+            -A "Mozilla/5.0 (compatible; ClinPeQueueBot/1.0; +https://pododesk.com.br)" \
             "${APP_URL%/}/api/internal/email-queue/process"
           echo
