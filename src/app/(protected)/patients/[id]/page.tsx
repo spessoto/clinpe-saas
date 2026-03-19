@@ -29,7 +29,9 @@ export default async function PatientDetailsPage({ params }: Props) {
 
   const { data: patient, error: patientError } = await supabase
     .from("patients")
-    .select("id, name, phone, birth_date, health_alerts, referral_source")
+    .select(
+      "id, name, phone, birth_date, cpf, rg, email, address_street, address_neighborhood, address_zipcode, occupation, emergency_contact_name, emergency_contact_phone, health_alerts, referral_source",
+    )
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id)
     .single();
@@ -145,18 +147,77 @@ export default async function PatientDetailsPage({ params }: Props) {
         ) : null}
 
         <h2 className="text-2xl font-bold">{patient.name}</h2>
-        <p className="mt-2 text-sm text-muted">Telefone: {patient.phone}</p>
-        <p className="text-sm text-muted">
-          Nascimento:{" "}
-          {patient.birth_date
-            ? new Date(patient.birth_date).toLocaleDateString("pt-BR")
-            : "Não informado"}
-        </p>
-        {patient.referral_source ? (
-          <p className="text-sm text-muted">
-            Origem do paciente: {patient.referral_source}
+
+        <div className="mt-3 grid gap-1 text-sm text-muted">
+          {patient.birth_date ? (
+            <p>
+              Nasc.:{" "}
+              <span className="text-foreground">
+                {new Date(patient.birth_date + "T12:00:00").toLocaleDateString(
+                  "pt-BR",
+                )}
+                {" — "}
+                {Math.floor(
+                  (Date.now() -
+                    new Date(patient.birth_date + "T12:00:00").getTime()) /
+                    (365.25 * 24 * 60 * 60 * 1000),
+                )}{" "}
+                anos
+              </span>
+            </p>
+          ) : null}
+          {patient.cpf ? (
+            <p>
+              CPF: <span className="text-foreground">{patient.cpf}</span>
+            </p>
+          ) : null}
+          {patient.rg ? (
+            <p>
+              RG: <span className="text-foreground">{patient.rg}</span>
+            </p>
+          ) : null}
+          <p>
+            WhatsApp: <span className="text-foreground">{patient.phone}</span>
           </p>
-        ) : null}
+          {patient.email ? (
+            <p>
+              E-mail: <span className="text-foreground">{patient.email}</span>
+            </p>
+          ) : null}
+          {patient.address_neighborhood || patient.address_zipcode ? (
+            <p>
+              Bairro / CEP:{" "}
+              <span className="text-foreground">
+                {[patient.address_neighborhood, patient.address_zipcode]
+                  .filter(Boolean)
+                  .join(" — ")}
+              </span>
+            </p>
+          ) : null}
+          {patient.occupation ? (
+            <p>
+              Ocupação:{" "}
+              <span className="text-foreground">{patient.occupation}</span>
+            </p>
+          ) : null}
+          {patient.emergency_contact_name ? (
+            <p>
+              Emergência:{" "}
+              <span className="text-foreground">
+                {patient.emergency_contact_name}
+                {patient.emergency_contact_phone
+                  ? ` — ${patient.emergency_contact_phone}`
+                  : ""}
+              </span>
+            </p>
+          ) : null}
+          {patient.referral_source ? (
+            <p>
+              Origem:{" "}
+              <span className="text-foreground">{patient.referral_source}</span>
+            </p>
+          ) : null}
+        </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
           <Link

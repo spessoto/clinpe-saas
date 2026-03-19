@@ -10,7 +10,42 @@ type Props = {
 };
 
 type AnamnesisData = {
+  // A
+  has_diabetes?: boolean;
+  diabetes_type?: string | null;
+  diabetes_on_insulin?: boolean | null;
+  diabetes_last_glucose?: string | null;
+  has_vascular_issues?: boolean;
+  has_coagulation_disorders?: boolean;
+  has_oncological_history?: boolean;
+  continuous_meds?: string[];
+  allergies?: string[];
+  // B
+  is_smoker?: boolean;
+  has_sport_activity?: boolean;
+  sport_type?: string | null;
+  predominant_footwear?: string | null;
+  // C
+  blood_pressure?: string | null;
+  capillary_glucose?: string | null;
   chief_complaint?: string;
+  skin_anhydrosis?: boolean;
+  skin_hyperhidrosis?: boolean;
+  skin_tinea_pedis?: boolean;
+  skin_plantar_wart?: boolean;
+  skin_hyperkeratosis?: boolean;
+  hyperkeratosis_location?: string | null;
+  orth_hallux_valgus?: boolean;
+  orth_claw_toes?: boolean;
+  orth_flat_foot?: boolean;
+  orth_cavus_foot?: boolean;
+  nail_onychocryptosis?: boolean;
+  onychocryptosis_toe?: string | null;
+  onychocryptosis_granuloma?: boolean | null;
+  nail_onychomycosis?: boolean;
+  nail_onycholysis?: boolean;
+  nail_onychogryphosis?: boolean;
+  // Desfecho
   clinical_assessment?: string;
   procedure_performed?: string;
   recommendations?: string;
@@ -66,6 +101,47 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
   const anamnesis = (record.anamnesis_data ?? {}) as AnamnesisData;
   const photos = Array.isArray(record.photos) ? record.photos : [];
 
+  // Tags de risco para exibir em destaque
+  const riskTags: string[] = [];
+  if (anamnesis.has_diabetes) riskTags.push("Diabetes" + (anamnesis.diabetes_type ? ` T${anamnesis.diabetes_type}` : ""));
+  if (anamnesis.has_vascular_issues) riskTags.push("Vascular/Cardíaco");
+  if (anamnesis.has_coagulation_disorders) riskTags.push("Distúrbio Coagulação");
+  if (anamnesis.has_oncological_history) riskTags.push("Histórico Oncológico");
+  if (anamnesis.is_smoker) riskTags.push("Fumante");
+  (anamnesis.continuous_meds ?? []).forEach((m) => riskTags.push(m));
+  (anamnesis.allergies ?? []).forEach((a) => riskTags.push(`Alergia: ${a}`));
+
+  // Achados clínicos do dia
+  const skinFindings: string[] = [];
+  if (anamnesis.skin_anhydrosis) skinFindings.push("Anidrose/Fissuras");
+  if (anamnesis.skin_hyperhidrosis) skinFindings.push("Hiperidrose/Bromidrose");
+  if (anamnesis.skin_tinea_pedis) skinFindings.push("Tinea Pedis");
+  if (anamnesis.skin_plantar_wart) skinFindings.push("Verruga Plantar");
+  if (anamnesis.skin_hyperkeratosis)
+    skinFindings.push(
+      "Hiperqueratose" +
+        (anamnesis.hyperkeratosis_location
+          ? ` (${anamnesis.hyperkeratosis_location})`
+          : ""),
+    );
+
+  const orthFindings: string[] = [];
+  if (anamnesis.orth_hallux_valgus) orthFindings.push("Hálux Valgo");
+  if (anamnesis.orth_claw_toes) orthFindings.push("Dedos em Garra/Martelo");
+  if (anamnesis.orth_flat_foot) orthFindings.push("Pé Plano");
+  if (anamnesis.orth_cavus_foot) orthFindings.push("Pé Cavo");
+
+  const nailFindings: string[] = [];
+  if (anamnesis.nail_onychocryptosis) {
+    let label = "Onicocriptose";
+    if (anamnesis.onychocryptosis_toe) label += ` (${anamnesis.onychocryptosis_toe})`;
+    if (anamnesis.onychocryptosis_granuloma) label += " + Granuloma";
+    nailFindings.push(label);
+  }
+  if (anamnesis.nail_onychomycosis) nailFindings.push("Onicomicose");
+  if (anamnesis.nail_onycholysis) nailFindings.push("Onicólise");
+  if (anamnesis.nail_onychogryphosis) nailFindings.push("Onicogrifose");
+
   return (
     <section className="space-y-6">
       <article className="surface-card p-6">
@@ -74,38 +150,219 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
           Criado em {new Date(record.created_at).toLocaleString("pt-BR")}
         </p>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl bg-slate-50 p-4">
-            <h3 className="font-semibold text-foreground">Queixa principal</h3>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
-              {anamnesis.chief_complaint || "-"}
+        {/* Tags de risco */}
+        {riskTags.length > 0 ? (
+          <div className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-destructive">
+              Alertas de Risco
             </p>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {riskTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-lg bg-destructive px-2 py-1 text-xs font-semibold text-white"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="rounded-xl bg-slate-50 p-4">
-            <h3 className="font-semibold text-foreground">Avaliação clínica</h3>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
-              {anamnesis.clinical_assessment || "-"}
-            </p>
+        ) : null}
+
+        {/* A — Triagem Sistêmica */}
+        <section className="mt-6">
+          <h3 className="text-sm font-bold uppercase tracking-wide text-destructive/80">
+            A — Triagem Sistêmica
+          </h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {anamnesis.has_diabetes ? (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold text-muted">Diabetes</p>
+                <p className="mt-1 text-sm">
+                  {anamnesis.diabetes_type
+                    ? `Tipo ${anamnesis.diabetes_type}`
+                    : "Tipo não informado"}
+                  {anamnesis.diabetes_on_insulin === true
+                    ? " • Usa insulina"
+                    : anamnesis.diabetes_on_insulin === false
+                      ? " • Não usa insulina"
+                      : ""}
+                  {anamnesis.diabetes_last_glucose
+                    ? ` • Última glicemia: ${anamnesis.diabetes_last_glucose}`
+                    : ""}
+                </p>
+              </div>
+            ) : null}
+            {(anamnesis.continuous_meds ?? []).length > 0 ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <p className="text-xs font-semibold text-amber-700">
+                  Medicamentos contínuos
+                </p>
+                <p className="mt-1 text-sm">
+                  {(anamnesis.continuous_meds ?? []).join(" • ")}
+                </p>
+              </div>
+            ) : null}
+            {(anamnesis.allergies ?? []).length > 0 ? (
+              <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
+                <p className="text-xs font-semibold text-orange-700">Alergias</p>
+                <p className="mt-1 text-sm">
+                  {(anamnesis.allergies ?? []).join(" • ")}
+                </p>
+              </div>
+            ) : null}
           </div>
-          <div className="rounded-xl bg-slate-50 p-4">
-            <h3 className="font-semibold text-foreground">Procedimento</h3>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
-              {anamnesis.procedure_performed || "-"}
-            </p>
+        </section>
+
+        {/* B — Hábitos */}
+        {(anamnesis.is_smoker ||
+          anamnesis.has_sport_activity ||
+          anamnesis.predominant_footwear) ? (
+          <section className="mt-5">
+            <h3 className="text-sm font-bold uppercase tracking-wide text-foreground/60">
+              B — Hábitos e Estilo de Vida
+            </h3>
+            <div className="mt-2 flex flex-wrap gap-2 text-sm">
+              {anamnesis.is_smoker ? (
+                <span className="rounded-lg bg-slate-700 px-3 py-1 text-white">
+                  🚬 Fumante
+                </span>
+              ) : null}
+              {anamnesis.has_sport_activity ? (
+                <span className="rounded-lg bg-primary px-3 py-1 text-white">
+                  🏃{" "}
+                  {anamnesis.sport_type ? anamnesis.sport_type : "Pratica esporte"}
+                </span>
+              ) : null}
+              {anamnesis.predominant_footwear ? (
+                <span className="rounded-lg border border-slate-300 bg-white px-3 py-1">
+                  👟 {anamnesis.predominant_footwear}
+                </span>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {/* C — Exame Físico */}
+        <section className="mt-5">
+          <h3 className="text-sm font-bold uppercase tracking-wide text-primary/80">
+            C — Exame Físico do Dia
+          </h3>
+
+          {anamnesis.blood_pressure || anamnesis.capillary_glucose ? (
+            <div className="mt-2 flex flex-wrap gap-4 text-sm">
+              {anamnesis.blood_pressure ? (
+                <span>
+                  PA:{" "}
+                  <strong className="text-foreground">
+                    {anamnesis.blood_pressure}
+                  </strong>{" "}
+                  mmHg
+                </span>
+              ) : null}
+              {anamnesis.capillary_glucose ? (
+                <span>
+                  Glicemia capilar:{" "}
+                  <strong className="text-foreground">
+                    {anamnesis.capillary_glucose}
+                  </strong>{" "}
+                  mg/dL
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <div className="rounded-xl bg-slate-50 p-4">
+              <h4 className="font-semibold text-foreground">Queixa principal</h4>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
+                {anamnesis.chief_complaint || "-"}
+              </p>
+            </div>
+
+            {skinFindings.length > 0 ? (
+              <div className="rounded-xl bg-slate-50 p-4">
+                <h4 className="font-semibold text-foreground">
+                  Achados — Pele
+                </h4>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {skinFindings.map((f) => (
+                    <span
+                      key={f}
+                      className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                    >
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {orthFindings.length > 0 ? (
+              <div className="rounded-xl bg-slate-50 p-4">
+                <h4 className="font-semibold text-foreground">
+                  Achados — Ortopédico
+                </h4>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {orthFindings.map((f) => (
+                    <span
+                      key={f}
+                      className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                    >
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {nailFindings.length > 0 ? (
+              <div className="rounded-xl bg-slate-50 p-4">
+                <h4 className="font-semibold text-foreground">
+                  Achados — Unhas
+                </h4>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {nailFindings.map((f) => (
+                    <span
+                      key={f}
+                      className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                    >
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="rounded-xl bg-slate-50 p-4">
+              <h4 className="font-semibold text-foreground">Avaliação clínica</h4>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
+                {anamnesis.clinical_assessment || "-"}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 p-4">
+              <h4 className="font-semibold text-foreground">Procedimento</h4>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
+                {anamnesis.procedure_performed || "-"}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 p-4">
+              <h4 className="font-semibold text-foreground">Recomendações</h4>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
+                {anamnesis.recommendations || "-"}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 p-4 md:col-span-2">
+              <h4 className="font-semibold text-foreground">Evolução</h4>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
+                {anamnesis.evolution_notes || "-"}
+              </p>
+            </div>
           </div>
-          <div className="rounded-xl bg-slate-50 p-4">
-            <h3 className="font-semibold text-foreground">Recomendações</h3>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
-              {anamnesis.recommendations || "-"}
-            </p>
-          </div>
-          <div className="rounded-xl bg-slate-50 p-4 md:col-span-2">
-            <h3 className="font-semibold text-foreground">Evolução</h3>
-            <p className="mt-1 whitespace-pre-wrap text-sm text-muted">
-              {anamnesis.evolution_notes || "-"}
-            </p>
-          </div>
-        </div>
+        </section>
       </article>
 
       <article className="surface-card p-6">

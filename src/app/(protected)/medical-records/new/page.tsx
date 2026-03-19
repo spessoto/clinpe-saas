@@ -66,92 +66,470 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
         </p>
       ) : null}
 
-      <form action={createMedicalRecordAction} className="mt-6 space-y-4">
-        <label className="block text-sm">
-          <span className="mb-1 block text-foreground">Paciente *</span>
-          <select
-            name="patient_id"
-            required
-            defaultValue={patientId}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-          >
-            <option value="">Selecione...</option>
-            {patients.map((patient) => (
-              <option key={patient.id} value={patient.id}>
-                {patient.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block text-sm">
-          <span className="mb-1 block text-foreground">
-            ID da consulta (opcional)
-          </span>
-          <input
-            name="appointment_id"
-            defaultValue={appointmentId}
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-          />
-        </label>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block text-sm md:col-span-2">
-            <span className="mb-1 block text-foreground">
-              Queixa principal *
-            </span>
-            <textarea
-              name="chief_complaint"
+      <form action={createMedicalRecordAction} className="mt-6 space-y-8">
+        {/* ── Identificação da consulta ─────────────────────────── */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm sm:col-span-2">
+            <span className="mb-1 block text-foreground">Paciente *</span>
+            <select
+              name="patient_id"
               required
-              rows={3}
+              defaultValue={patientId}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-            />
-          </label>
-
-          <label className="block text-sm md:col-span-2">
-            <span className="mb-1 block text-foreground">
-              Avaliação clínica *
-            </span>
-            <textarea
-              name="clinical_assessment"
-              required
-              rows={4}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-            />
+            >
+              <option value="">Selecione...</option>
+              {patients.map((patient) => (
+                <option key={patient.id} value={patient.id}>
+                  {patient.name}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="block text-sm">
             <span className="mb-1 block text-foreground">
-              Procedimento realizado
+              ID da consulta (opcional)
             </span>
-            <textarea
-              name="procedure_performed"
-              rows={3}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-            />
-          </label>
-
-          <label className="block text-sm">
-            <span className="mb-1 block text-foreground">Recomendações</span>
-            <textarea
-              name="recommendations"
-              rows={3}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-            />
-          </label>
-
-          <label className="block text-sm md:col-span-2">
-            <span className="mb-1 block text-foreground">
-              Evolução/observações
-            </span>
-            <textarea
-              name="evolution_notes"
-              rows={4}
+            <input
+              name="appointment_id"
+              defaultValue={appointmentId}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
             />
           </label>
         </div>
 
+        {/* ── A. TRIAGEM SISTÊMICA ──────────────────────────────── */}
+        <fieldset className="space-y-5 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+          <legend className="px-2 text-sm font-bold uppercase tracking-wide text-destructive">
+            A — Triagem Sistêmica (Alertas de Risco)
+          </legend>
+
+          {/* Condições de risco — toggles single */}
+          <div>
+            <p className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">
+              Condições sistêmicas
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["has_diabetes", "Diabetes"],
+                  ["has_vascular_issues", "Vascular / Cardíaco"],
+                  ["has_coagulation_disorders", "Distúrbio de Coagulação"],
+                  ["has_oncological_history", "Histórico Oncológico"],
+                ] as [string, string][]
+              ).map(([name, label]) => (
+                <label key={name} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name={name}
+                    value="true"
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-destructive/40 bg-white px-4 text-sm font-medium text-destructive/80 transition peer-checked:border-destructive peer-checked:bg-destructive peer-checked:text-white">
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Diabetes — sub-campos */}
+          <div className="rounded-lg border border-slate-200 bg-white p-3">
+            <p className="mb-2 text-xs font-semibold text-muted">
+              Se Diabetes — detalhe:
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <label className="block text-sm">
+                <span className="mb-1 block text-muted">Tipo</span>
+                <select
+                  name="diabetes_type"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
+                >
+                  <option value="">—</option>
+                  <option value="1">Tipo 1</option>
+                  <option value="2">Tipo 2</option>
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-muted">Usa insulina?</span>
+                <select
+                  name="diabetes_on_insulin"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
+                >
+                  <option value="">—</option>
+                  <option value="true">Sim</option>
+                  <option value="false">Não</option>
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-muted">
+                  Última glicemia (valor)
+                </span>
+                <input
+                  name="diabetes_last_glucose"
+                  placeholder="Ex: 120 mg/dL"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Medicamentos contínuos — multi-toggle */}
+          <div>
+            <p className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">
+              Medicamentos de uso contínuo
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  "AAS / Anticoagulante",
+                  "Imunossupressor",
+                  "Corticoide",
+                  "Outro (ver obs.)",
+                ] as string[]
+              ).map((med) => (
+                <label key={med} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="continuous_meds"
+                    value={med}
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-amber-400/60 bg-white px-4 text-sm font-medium text-amber-700 transition peer-checked:border-amber-500 peer-checked:bg-amber-500 peer-checked:text-white">
+                    {med}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Alergias — multi-toggle */}
+          <div>
+            <p className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">
+              Alergias conhecidas
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  "Iodo",
+                  "Látex (luvas)",
+                  "Anestésico tópico",
+                  "Cosméticos",
+                  "Outra (ver obs.)",
+                ] as string[]
+              ).map((allergy) => (
+                <label key={allergy} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="allergies"
+                    value={allergy}
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-orange-400/60 bg-white px-4 text-sm font-medium text-orange-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-500 peer-checked:text-white">
+                    {allergy}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </fieldset>
+
+        {/* ── B. HÁBITOS E ESTILO DE VIDA ──────────────────────── */}
+        <fieldset className="space-y-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <legend className="px-2 text-sm font-bold uppercase tracking-wide text-foreground">
+            B — Hábitos e Estilo de Vida
+          </legend>
+
+          <div className="flex flex-wrap gap-2">
+            <label className="cursor-pointer">
+              <input
+                type="checkbox"
+                name="is_smoker"
+                value="true"
+                className="peer sr-only"
+              />
+              <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-slate-700 peer-checked:bg-slate-700 peer-checked:text-white">
+                🚬 Fumante
+              </span>
+            </label>
+
+            <label className="cursor-pointer">
+              <input
+                type="checkbox"
+                name="has_sport_activity"
+                value="true"
+                className="peer sr-only"
+              />
+              <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
+                🏃 Pratica esporte
+              </span>
+            </label>
+          </div>
+
+          <label className="block text-sm">
+            <span className="mb-1 block text-muted">
+              Esporte e frequência (se pratica)
+            </span>
+            <input
+              name="sport_type"
+              placeholder="Ex: Corrida 3x/semana, Natação diária..."
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold text-muted uppercase tracking-wide">
+              Calçado predominante
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  "Salto alto",
+                  "Bico fino",
+                  "Sapatilha",
+                  "Bota EPI",
+                  "Tênis",
+                  "Chinelo",
+                  "Outro",
+                ] as string[]
+              ).map((shoe) => (
+                <label key={shoe} className="cursor-pointer">
+                  <input
+                    type="radio"
+                    name="predominant_footwear"
+                    value={shoe}
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
+                    {shoe}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </fieldset>
+
+        {/* ── C. EXAME FÍSICO PODOLÓGICO ────────────────────────── */}
+        <fieldset className="space-y-6 rounded-xl border border-primary/20 bg-primary/5 p-4">
+          <legend className="px-2 text-sm font-bold uppercase tracking-wide text-primary">
+            C — Exame Físico do Dia
+          </legend>
+
+          {/* Sinais vitais */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1 block text-muted">
+                Pressão Arterial (mmHg)
+              </span>
+              <input
+                name="blood_pressure"
+                placeholder="Ex: 120/80"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-muted">
+                Glicemia Capilar (mg/dL)
+              </span>
+              <input
+                name="capillary_glucose"
+                placeholder="Ex: 95"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+          </div>
+
+          {/* Queixa */}
+          <label className="block text-sm">
+            <span className="mb-1 block font-semibold text-foreground">
+              Queixa principal *
+            </span>
+            <textarea
+              name="chief_complaint"
+              required
+              rows={2}
+              placeholder="Ex: Dor no hálux direito há 3 dias"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+
+          {/* Avaliação Dermatológica */}
+          <div>
+            <p className="mb-2 text-sm font-semibold text-foreground">
+              Avaliação Dermatológica (Pele)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["skin_anhydrosis", "Anidrose / Fissuras"],
+                  ["skin_hyperhidrosis", "Hiperidrose / Bromidrose"],
+                  ["skin_tinea_pedis", "Tinea Pedis (frieira)"],
+                  ["skin_plantar_wart", "Verruga Plantar"],
+                  ["skin_hyperkeratosis", "Hiperqueratose / Calosidade"],
+                ] as [string, string][]
+              ).map(([name, label]) => (
+                <label key={name} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name={name}
+                    value="true"
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <label className="mt-3 block text-sm">
+              <span className="mb-1 block text-muted">
+                Localização da hiperqueratose (se presente)
+              </span>
+              <input
+                name="hyperkeratosis_location"
+                placeholder="Ex: Plantar lateral D, interdigital D2-D3"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+          </div>
+
+          {/* Avaliação Ortopédica */}
+          <div>
+            <p className="mb-2 text-sm font-semibold text-foreground">
+              Avaliação Ortopédica Visível
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["orth_hallux_valgus", "Hálux Valgo (joanete)"],
+                  ["orth_claw_toes", "Dedos em Garra / Martelo"],
+                  ["orth_flat_foot", "Pé Plano (chato)"],
+                  ["orth_cavus_foot", "Pé Cavo"],
+                ] as [string, string][]
+              ).map(([name, label]) => (
+                <label key={name} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name={name}
+                    value="true"
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Avaliação das Unhas */}
+          <div>
+            <p className="mb-2 text-sm font-semibold text-foreground">
+              Avaliação das Unhas (Lâmina Ungueal)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["nail_onychocryptosis", "Onicocriptose (encravada)"],
+                  ["nail_onychomycosis", "Onicomicose (micose)"],
+                  ["nail_onycholysis", "Onicólise (descolamento)"],
+                  ["nail_onychogryphosis", "Onicogrifose (espessada)"],
+                ] as [string, string][]
+              ).map(([name, label]) => (
+                <label key={name} className="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name={name}
+                    value="true"
+                    className="peer sr-only"
+                  />
+                  <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
+                    {label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="block text-sm">
+                <span className="mb-1 block text-muted">
+                  Onicocriptose — dedo afetado
+                </span>
+                <input
+                  name="onychocryptosis_toe"
+                  placeholder="Ex: Hálux D, 2º dedo E"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-muted">
+                  Granuloma / infecção?
+                </span>
+                <select
+                  name="onychocryptosis_granuloma"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none"
+                >
+                  <option value="">—</option>
+                  <option value="true">Sim</option>
+                  <option value="false">Não</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </fieldset>
+
+        {/* ── DESFECHO DA CONSULTA ──────────────────────────────── */}
+        <fieldset className="space-y-4">
+          <legend className="text-base font-semibold text-foreground">
+            Desfecho da Consulta
+          </legend>
+
+          <label className="block text-sm">
+            <span className="mb-1 block text-foreground">
+              Avaliação clínica geral / observações *
+            </span>
+            <textarea
+              name="clinical_assessment"
+              required
+              rows={3}
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">
+                Procedimento realizado
+              </span>
+              <textarea
+                name="procedure_performed"
+                rows={3}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">Recomendações</span>
+              <textarea
+                name="recommendations"
+                rows={3}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+          </div>
+
+          <label className="block text-sm">
+            <span className="mb-1 block text-foreground">
+              Evolução / observações adicionais
+            </span>
+            <textarea
+              name="evolution_notes"
+              rows={3}
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+        </fieldset>
+
+        {/* ── REGISTRO FOTOGRÁFICO ─────────────────────────────── */}
         <label className="block text-sm">
           <span className="mb-1 block text-foreground">
             Imagens do procedimento
@@ -163,12 +541,9 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
             accept="image/*"
             className="w-full rounded-md border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-sm"
           />
-          <span className="mt-1 block text-xs text-muted">
-            As imagens serão enviadas para `medical-images/{appUser.tenant_id}
-            /...`.
-          </span>
         </label>
 
+        {/* ── RASTREABILIDADE ───────────────────────────────────── */}
         <article className="rounded-xl border border-slate-200 bg-slate-50 p-4">
           <h3 className="text-base font-semibold text-foreground">
             Rastreabilidade de materiais

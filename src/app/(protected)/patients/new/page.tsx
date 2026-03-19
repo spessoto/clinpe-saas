@@ -85,33 +85,172 @@ export default async function NewPatientPage({ searchParams }: Props) {
         </p>
       ) : null}
 
-      <form action={createPatientAction} className="mt-6 space-y-4">
-        <label className="block text-sm">
-          <span className="mb-1 block text-foreground">Nome</span>
-          <input
-            name="name"
-            required
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-          />
-        </label>
+      <form action={createPatientAction} className="mt-6 space-y-8">
+        {/* Identificação */}
+        <fieldset className="space-y-4">
+          <legend className="text-base font-semibold text-foreground">
+            Identificação
+          </legend>
+          <label className="block text-sm">
+            <span className="mb-1 block text-foreground">Nome completo *</span>
+            <input
+              name="name"
+              required
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
 
-        <label className="block text-sm">
-          <span className="mb-1 block text-foreground">Telefone</span>
-          <input
-            name="phone"
-            required
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-          />
-        </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">
+                Data de nascimento
+              </span>
+              <input
+                type="date"
+                name="birth_date"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
 
-        <label className="block text-sm">
-          <span className="mb-1 block text-foreground">Data de nascimento</span>
-          <input
-            type="date"
-            name="birth_date"
-            className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-          />
-        </label>
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">CPF</span>
+              <input
+                name="cpf"
+                placeholder="000.000.000-00"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">RG</span>
+              <input
+                name="rg"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+          </div>
+        </fieldset>
+
+        {/* Contato e Localização */}
+        <fieldset className="space-y-4">
+          <legend className="text-base font-semibold text-foreground">
+            Contato e Localização
+          </legend>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">
+                WhatsApp / Telefone *
+              </span>
+              <input
+                name="phone"
+                required
+                placeholder="(11) 99999-9999"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">E-mail</span>
+              <input
+                type="email"
+                name="email"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+
+            <label className="block text-sm sm:col-span-2">
+              <span className="mb-1 block text-foreground">Logradouro</span>
+              <input
+                name="address_street"
+                placeholder="Rua, número, complemento"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">Bairro</span>
+              <input
+                name="address_neighborhood"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">CEP</span>
+              <input
+                name="address_zipcode"
+                placeholder="00000-000"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+          </div>
+        </fieldset>
+
+        {/* Perfil Social */}
+        <fieldset className="space-y-4">
+          <legend className="text-base font-semibold text-foreground">
+            Perfil Social e Segurança
+          </legend>
+          <label className="block text-sm">
+            <span className="mb-1 block text-foreground">
+              Profissão / Ocupação
+            </span>
+            <input
+              name="occupation"
+              placeholder="Ex: Construção civil, Bancário, Nadador..."
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">
+                Contato de emergência — nome
+              </span>
+              <input
+                name="emergency_contact_name"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">
+                Contato de emergência — telefone
+              </span>
+              <input
+                name="emergency_contact_phone"
+                placeholder="(11) 99999-9999"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+          </div>
+        </fieldset>
+
+        {/* Origem (Marketing) */}
+        <fieldset className="space-y-3">
+          <legend className="text-base font-semibold text-foreground">
+            Origem
+          </legend>
+          <label className="block text-sm">
+            <span className="mb-1 block text-foreground">
+              Como nos conheceu?
+            </span>
+            <select
+              name="referral_source"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            >
+              <option value="">Não informado</option>
+              <option value="Instagram">Instagram</option>
+              <option value="Indicação">Indicação de paciente</option>
+              <option value="Passou na frente">
+                Passou na frente da clínica
+              </option>
+              <option value="Google">Pesquisa no Google</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </label>
+        </fieldset>
 
         <div className="flex gap-2">
           <button type="submit" className="btn-gradient">

@@ -54,6 +54,16 @@ export async function createPatientAction(formData: FormData) {
   const name = getField(formData, "name");
   const phone = getField(formData, "phone");
   const birthDate = getField(formData, "birth_date");
+  const cpf = getField(formData, "cpf");
+  const rg = getField(formData, "rg");
+  const email = getField(formData, "email");
+  const addressStreet = getField(formData, "address_street");
+  const addressNeighborhood = getField(formData, "address_neighborhood");
+  const addressZipcode = getField(formData, "address_zipcode");
+  const occupation = getField(formData, "occupation");
+  const emergencyContactName = getField(formData, "emergency_contact_name");
+  const emergencyContactPhone = getField(formData, "emergency_contact_phone");
+  const referralSource = getField(formData, "referral_source");
 
   if (!name || !phone) {
     redirect("/patients/new?error=Nome e telefone sao obrigatorios");
@@ -72,6 +82,16 @@ export async function createPatientAction(formData: FormData) {
     name,
     phone,
     birth_date: birthDate || null,
+    cpf: cpf || null,
+    rg: rg || null,
+    email: email || null,
+    address_street: addressStreet || null,
+    address_neighborhood: addressNeighborhood || null,
+    address_zipcode: addressZipcode || null,
+    occupation: occupation || null,
+    emergency_contact_name: emergencyContactName || null,
+    emergency_contact_phone: emergencyContactPhone || null,
+    referral_source: referralSource || null,
   });
 
   if (error) {
@@ -91,6 +111,16 @@ export async function updatePatientAction(formData: FormData) {
   const name = getField(formData, "name");
   const phone = getField(formData, "phone");
   const birthDate = getField(formData, "birth_date");
+  const cpf = getField(formData, "cpf");
+  const rg = getField(formData, "rg");
+  const email = getField(formData, "email");
+  const addressStreet = getField(formData, "address_street");
+  const addressNeighborhood = getField(formData, "address_neighborhood");
+  const addressZipcode = getField(formData, "address_zipcode");
+  const occupation = getField(formData, "occupation");
+  const emergencyContactName = getField(formData, "emergency_contact_name");
+  const emergencyContactPhone = getField(formData, "emergency_contact_phone");
+  const referralSource = getField(formData, "referral_source");
 
   if (!id || !name || !phone) {
     redirect(`/patients/${id || ""}/edit?error=Campos invalidos`);
@@ -102,6 +132,16 @@ export async function updatePatientAction(formData: FormData) {
       name,
       phone,
       birth_date: birthDate || null,
+      cpf: cpf || null,
+      rg: rg || null,
+      email: email || null,
+      address_street: addressStreet || null,
+      address_neighborhood: addressNeighborhood || null,
+      address_zipcode: addressZipcode || null,
+      occupation: occupation || null,
+      emergency_contact_name: emergencyContactName || null,
+      emergency_contact_phone: emergencyContactPhone || null,
+      referral_source: referralSource || null,
     })
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id);
