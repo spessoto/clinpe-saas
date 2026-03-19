@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { deletePatientAction } from "@/app/(protected)/patients/actions";
 import { requireActiveTenant } from "@/lib/auth";
@@ -27,7 +27,7 @@ export default async function PatientDetailsPage({ params }: Props) {
   const supabase = await createClient();
   const { id } = await params;
 
-  const { data: patient } = await supabase
+  const { data: patient, error: patientError } = await supabase
     .from("patients")
     .select("id, name, phone, birth_date, health_alerts, referral_source")
     .eq("id", id)
@@ -35,7 +35,10 @@ export default async function PatientDetailsPage({ params }: Props) {
     .single();
 
   if (!patient) {
-    notFound();
+    const message = patientError?.message
+      ? `Paciente não encontrado para este usuário (${patientError.message}).`
+      : "Paciente não encontrado para este usuário.";
+    redirect(`/patients?error=${encodeURIComponent(message)}`);
   }
 
   const [recordsResult, appointmentsResult] = await Promise.all([
