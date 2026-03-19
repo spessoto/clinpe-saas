@@ -6,8 +6,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
+import { buildHealthAlerts } from "@/lib/health-alerts";
 import { createClient } from "@/lib/supabase/server";
-import { buildHealthAlerts } from "@/app/(protected)/patients/actions";
 
 function getField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
