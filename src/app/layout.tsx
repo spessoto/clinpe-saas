@@ -3,12 +3,12 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
-  variable: "--font-podoclin-sans",
+  variable: "--font-pododesk-sans",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "PodoClin SaaS",
+  title: "PodoDesk",
   description: "Plataforma SaaS para gestão de podologia",
 };
 

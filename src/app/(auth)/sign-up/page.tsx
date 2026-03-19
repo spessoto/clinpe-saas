@@ -17,7 +17,7 @@ export default async function SignUpPage({ searchParams }: Props) {
         <BrandLogo className="mx-auto h-auto w-44" priority />
         <h1 className="mt-4 text-2xl font-bold">Criar conta</h1>
         <p className="mt-1 text-sm text-muted">
-          Comece seu trial de 7 dias na PodoClin.
+          Comece seu trial de 7 dias na PodoDesk.
         </p>
 
         {error ? (

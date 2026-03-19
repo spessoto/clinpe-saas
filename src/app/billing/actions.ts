@@ -1,5 +1,6 @@
 "use server";
 
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
 
 import { requireAuthenticatedUser } from "@/lib/auth";
@@ -140,7 +141,15 @@ export async function createCheckoutAction(formData: FormData) {
     }
 
     redirect("/billing?status=success");
-  } catch {
-    redirect("/billing?error=Erro+ao+conectar+com+Asaas");
+  } catch (err) {
+    if (isRedirectError(err)) throw err;
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Erro desconhecido ao contatar Asaas";
+    console.error("[billing] createCheckoutAction falhou:", message);
+    redirect(
+      `/billing?error=${encodeURIComponent("Erro ao conectar com Asaas: " + message)}`,
+    );
   }
 }

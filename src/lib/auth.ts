@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 
+import { getPanelAdminEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { hasTenantAccess } from "@/lib/tenant-access";
 
-type AppUser = {
+export type AppUser = {
   id: string;
   tenant_id: string;
   full_name: string;
@@ -10,15 +12,18 @@ type AppUser = {
   booking_slug: string | null;
   email: string;
   role: "owner" | "staff";
+  is_admin: boolean;
   avatar_url: string | null;
   bio: string | null;
 };
 
-type Tenant = {
+export type Tenant = {
   id: string;
   name: string;
   slug: string;
   trial_ends_at: string;
+  trial_extension_days: number;
+  is_permanent_free_plan: boolean;
   subscription_expires_at: string | null;
   subscription_status: "trialing" | "active" | "past_due";
   billing_tier: "free_trial" | "tier_1" | "tier_2" | "tier_3";
@@ -26,19 +31,9 @@ type Tenant = {
   logo_url: string | null;
 };
 
-function hasTenantAccess(tenant: {
-  trial_ends_at: string;
-  subscription_status: "trialing" | "active" | "past_due";
-  subscription_expires_at: string | null;
-}) {
-  const now = Date.now();
-  const inTrialWindow = new Date(tenant.trial_ends_at).getTime() >= now;
-  const hasActiveSubscription =
-    tenant.subscription_status === "active" &&
-    (!tenant.subscription_expires_at ||
-      new Date(tenant.subscription_expires_at).getTime() >= now);
-
-  return inTrialWindow || hasActiveSubscription;
+export function isConfiguredAdminEmail(email: string) {
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  return Boolean(adminEmail) && adminEmail === email.trim().toLowerCase();
 }
 
 export async function requireAuthenticatedUser() {
@@ -60,7 +55,7 @@ async function requireAuthenticatedUserWithClient(
   const withBookingSlugResult = await supabase
     .from("users")
     .select(
-      "id, tenant_id, full_name, professional_register, booking_slug, email, role, avatar_url, bio",
+      "id, tenant_id, full_name, professional_register, booking_slug, email, role, is_admin, avatar_url, bio",
     )
     .eq("id", user.id)
     .single();
@@ -68,11 +63,10 @@ async function requireAuthenticatedUserWithClient(
   let appUser = withBookingSlugResult.data as AppUser | null;
 
   if (!appUser && withBookingSlugResult.error) {
-    // Fallback 1: Try without avatar/bio columns (migration 8 may not have run)
     const fallbackResult = await supabase
       .from("users")
       .select(
-        "id, tenant_id, full_name, professional_register, booking_slug, email, role, avatar_url:profile_photo_url",
+        "id, tenant_id, full_name, professional_register, booking_slug, email, role, is_admin, avatar_url:profile_photo_url",
       )
       .eq("id", user.id)
       .single();
@@ -83,11 +77,10 @@ async function requireAuthenticatedUserWithClient(
         bio: null,
       };
     } else {
-      // Fallback 2: Try without booking_slug (migration 5 or 6 may not have run)
       const fallback2Result = await supabase
         .from("users")
         .select(
-          "id, tenant_id, full_name, professional_register, email, role, avatar_url:profile_photo_url",
+          "id, tenant_id, full_name, professional_register, email, role, is_admin, avatar_url:profile_photo_url",
         )
         .eq("id", user.id)
         .single();
@@ -111,24 +104,46 @@ async function requireAuthenticatedUserWithClient(
   return appUser as AppUser;
 }
 
+export async function requireAdminAccess() {
+  const supabase = await createClient();
+  const appUser = await requireAuthenticatedUserWithClient(supabase);
+
+  // Check if user has admin role in database
+  if (!appUser.is_admin) {
+    // Fallback to ADMIN_EMAIL env var for backwards compatibility
+    const { ADMIN_EMAIL } = getPanelAdminEnv();
+    if (
+      appUser.email.trim().toLowerCase() !== ADMIN_EMAIL.trim().toLowerCase()
+    ) {
+      redirect(
+        `/billing?error=${encodeURIComponent("Acesso administrativo negado.")}`,
+      );
+    }
+  }
+
+  return appUser;
+}
+
 export async function requireActiveTenant() {
   const supabase = await createClient();
   const appUser = await requireAuthenticatedUserWithClient(supabase);
 
+  // Redirect admins to admin panel
+  if (appUser.is_admin || isConfiguredAdminEmail(appUser.email)) {
+    redirect("/admin");
+  }
+
   const withSlugResult = await supabase
     .from("tenants")
     .select(
-      "id, name, slug, trial_ends_at, subscription_expires_at, subscription_status, billing_tier, max_patients_allowed, logo_url",
+      "id, name, slug, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_expires_at, subscription_status, billing_tier, max_patients_allowed, logo_url",
     )
     .eq("id", appUser.tenant_id)
     .single();
 
-  // Backward compatibility: tenant slug was introduced in a later migration.
-  // If migration 000004 has not run yet, fallback avoids login loop.
   let tenant = withSlugResult.data as Tenant | null;
 
   if (!tenant && withSlugResult.error) {
-    // Fallback 1: Try without billing/logo columns (migration 8 may not have run)
     const fallbackResult = await supabase
       .from("tenants")
       .select("id, name, slug, trial_ends_at, subscription_status")
@@ -139,18 +154,21 @@ export async function requireActiveTenant() {
       tenant = {
         ...(fallbackResult.data as Omit<
           Tenant,
+          | "trial_extension_days"
+          | "is_permanent_free_plan"
           | "subscription_expires_at"
           | "billing_tier"
           | "max_patients_allowed"
           | "logo_url"
         >),
+        trial_extension_days: 0,
+        is_permanent_free_plan: false,
         subscription_expires_at: null,
         billing_tier: "free_trial",
         max_patients_allowed: 10,
         logo_url: null,
       };
     } else {
-      // Fallback 2: Try without slug (migration 4 may not have run)
       const fallback2Result = await supabase
         .from("tenants")
         .select("id, name, trial_ends_at, subscription_status")
@@ -162,12 +180,16 @@ export async function requireActiveTenant() {
           ...(fallback2Result.data as Omit<
             Tenant,
             | "slug"
+            | "trial_extension_days"
+            | "is_permanent_free_plan"
             | "subscription_expires_at"
             | "billing_tier"
             | "max_patients_allowed"
             | "logo_url"
           >),
           slug: "",
+          trial_extension_days: 0,
+          is_permanent_free_plan: false,
           subscription_expires_at: null,
           billing_tier: "free_trial",
           max_patients_allowed: 10,
@@ -183,9 +205,7 @@ export async function requireActiveTenant() {
     );
   }
 
-  const isExpired = !hasTenantAccess(tenant as Tenant);
-
-  if (isExpired) {
+  if (!hasTenantAccess(tenant as Tenant)) {
     redirect("/billing");
   }
 

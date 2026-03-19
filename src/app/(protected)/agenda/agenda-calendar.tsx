@@ -31,7 +31,12 @@ function parseMonthKey(value: string) {
   const year = Number(yearRaw);
   const month = Number(monthRaw);
 
-  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    month < 1 ||
+    month > 12
+  ) {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   }
@@ -212,7 +217,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
     return new Date(year, month - 1, day);
   }, [selectedDayKey]);
   const selectedDayEvents = selectedDayKey
-    ? eventsMap.get(selectedDayKey) ?? []
+    ? (eventsMap.get(selectedDayKey) ?? [])
     : [];
 
   function handleCancelSubmit() {
@@ -405,7 +410,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
               {selectedEvent.isExternal ? (
                 <p className="sm:col-span-2 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
                   Evento vindo do Google Calendar. Para confirmar/cancelar com
-                  e-mail, crie o agendamento pelo fluxo do PodoClin.
+                  e-mail, crie o agendamento pelo fluxo do PodoDesk.
                 </p>
               ) : (
                 <>

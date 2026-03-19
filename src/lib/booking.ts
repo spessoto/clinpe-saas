@@ -12,6 +12,7 @@ import {
   getGoogleBusyRanges,
 } from "@/lib/google-calendar";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { hasTenantAccess } from "@/lib/tenant-access";
 
 type Professional = {
   id: string;
@@ -31,6 +32,8 @@ type Tenant = {
   booking_page_title: string | null;
   booking_page_description: string | null;
   trial_ends_at: string;
+  trial_extension_days: number;
+  is_permanent_free_plan: boolean;
   subscription_status: "trialing" | "active" | "past_due";
   subscription_expires_at: string | null;
 };
@@ -64,21 +67,6 @@ export type PublicProfessionalBookingDiagnostic =
   | { status: "booking_disabled"; tenantName: string }
   | { status: "subscription_inactive"; tenantName: string };
 
-function hasPublicTenantAccess(tenant: {
-  trial_ends_at: string;
-  subscription_status: "trialing" | "active" | "past_due";
-  subscription_expires_at: string | null;
-}) {
-  const now = Date.now();
-  const inTrialWindow = new Date(tenant.trial_ends_at).getTime() >= now;
-  const hasActiveSubscription =
-    tenant.subscription_status === "active" &&
-    (!tenant.subscription_expires_at ||
-      new Date(tenant.subscription_expires_at).getTime() >= now);
-
-  return inTrialWindow || hasActiveSubscription;
-}
-
 function slugifyName(value: string) {
   return value
     .normalize("NFD")
@@ -86,6 +74,11 @@ function slugifyName(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function getConfiguredAdminEmail() {
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  return adminEmail && adminEmail.length > 0 ? adminEmail : null;
 }
 
 function defaultSchedule(): ProfessionalSchedule {
@@ -184,26 +177,33 @@ async function getProfessionalSchedule(
 
 export async function getPublicBookingContext(tenantSlug: string) {
   const supabase = createAdminClient();
+  const adminEmail = getConfiguredAdminEmail();
 
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, subscription_status, subscription_expires_at",
+      "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
     )
     .eq("slug", tenantSlug)
     .single();
 
-  if (!tenant || !hasPublicTenantAccess(tenant as Tenant)) {
+  if (!tenant || !hasTenantAccess(tenant as Tenant)) {
     return null;
   }
 
-  const { data: professionals } = await supabase
+  let professionalsQuery = supabase
     .from("users")
     .select(
       "id, tenant_id, full_name, professional_register, profile_photo_url, booking_slug",
     )
     .eq("tenant_id", tenant.id)
     .order("full_name", { ascending: true });
+
+  if (adminEmail) {
+    professionalsQuery = professionalsQuery.neq("email", adminEmail);
+  }
+
+  const { data: professionals } = await professionalsQuery;
 
   return {
     tenant: tenant as Tenant,
@@ -215,16 +215,22 @@ export async function getPublicProfessionalBookingContext(
   professionalSlug: string,
 ) {
   const supabase = createAdminClient();
+  const adminEmail = getConfiguredAdminEmail();
 
   let professional: Professional | null = null;
 
-  const withAvatarResult = await supabase
+  let withAvatarQuery = supabase
     .from("users")
     .select(
       "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url, booking_slug",
     )
-    .eq("booking_slug", professionalSlug)
-    .maybeSingle();
+    .eq("booking_slug", professionalSlug);
+
+  if (adminEmail) {
+    withAvatarQuery = withAvatarQuery.neq("email", adminEmail);
+  }
+
+  const withAvatarResult = await withAvatarQuery.maybeSingle();
 
   if (withAvatarResult.data) {
     const row = withAvatarResult.data as Professional;
@@ -241,16 +247,18 @@ export async function getPublicProfessionalBookingContext(
       ? supabase
           .from("users")
           .select(
-            "id, tenant_id, full_name, professional_register, profile_photo_url",
+            "id, tenant_id, full_name, professional_register, profile_photo_url, email",
           )
       : supabase
           .from("users")
           .select(
-            "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url",
+            "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url, email",
           ));
 
     const found = (fallbackUsers.data ?? []).find(
-      (user) => slugifyName(user.full_name) === professionalSlug,
+      (user) =>
+        slugifyName(user.full_name) === professionalSlug &&
+        (!adminEmail || user.email?.toLowerCase() !== adminEmail),
     );
 
     if (found) {
@@ -275,7 +283,7 @@ export async function getPublicProfessionalBookingContext(
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, subscription_status, subscription_expires_at",
+      "id, name, slug, booking_enabled, booking_page_title, booking_page_description, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
     )
     .eq("id", professional.tenant_id)
     .single();
@@ -283,7 +291,7 @@ export async function getPublicProfessionalBookingContext(
   if (
     !tenant ||
     !tenant.booking_enabled ||
-    !hasPublicTenantAccess(tenant as Tenant)
+    !hasTenantAccess(tenant as Tenant)
   ) {
     return null;
   }
@@ -308,16 +316,22 @@ export async function diagnosePublicProfessionalBooking(
   professionalSlug: string,
 ): Promise<PublicProfessionalBookingDiagnostic> {
   const supabase = createAdminClient();
+  const adminEmail = getConfiguredAdminEmail();
 
   let professional: Professional | null = null;
 
-  const withAvatarResult = await supabase
+  let withAvatarQuery = supabase
     .from("users")
     .select(
       "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url, booking_slug",
     )
-    .eq("booking_slug", professionalSlug)
-    .maybeSingle();
+    .eq("booking_slug", professionalSlug);
+
+  if (adminEmail) {
+    withAvatarQuery = withAvatarQuery.neq("email", adminEmail);
+  }
+
+  const withAvatarResult = await withAvatarQuery.maybeSingle();
 
   if (withAvatarResult.data) {
     const row = withAvatarResult.data as Professional;
@@ -334,16 +348,18 @@ export async function diagnosePublicProfessionalBooking(
       ? supabase
           .from("users")
           .select(
-            "id, tenant_id, full_name, professional_register, profile_photo_url",
+            "id, tenant_id, full_name, professional_register, profile_photo_url, email",
           )
       : supabase
           .from("users")
           .select(
-            "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url",
+            "id, tenant_id, full_name, professional_register, avatar_url, profile_photo_url, email",
           ));
 
     const found = (fallbackUsers.data ?? []).find(
-      (user) => slugifyName(user.full_name) === professionalSlug,
+      (user) =>
+        slugifyName(user.full_name) === professionalSlug &&
+        (!adminEmail || user.email?.toLowerCase() !== adminEmail),
     );
 
     if (found) {
@@ -368,7 +384,7 @@ export async function diagnosePublicProfessionalBooking(
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "id, name, booking_enabled, trial_ends_at, subscription_status, subscription_expires_at",
+      "id, name, booking_enabled, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
     )
     .eq("id", professional.tenant_id)
     .maybeSingle();
@@ -384,7 +400,7 @@ export async function diagnosePublicProfessionalBooking(
     };
   }
 
-  if (!hasPublicTenantAccess(tenant as Tenant)) {
+  if (!hasTenantAccess(tenant as Tenant)) {
     return {
       status: "subscription_inactive",
       tenantName: tenant.name,
@@ -584,7 +600,7 @@ export async function createPublicBooking(input: {
       const googleEventId = await createGoogleCalendarEvent(
         integration as GoogleIntegration,
         {
-          summary: `Consulta PodoClin - ${input.patientName}`,
+          summary: `Consulta PodoDesk - ${input.patientName}`,
           description: `Agendamento público da clínica ${context.tenant.name}. Telefone: ${input.patientPhone}. E-mail: ${input.patientEmail}`,
           start: input.scheduledAt,
           end: addMinutes(

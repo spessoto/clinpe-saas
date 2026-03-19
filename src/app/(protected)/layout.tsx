@@ -1,20 +1,21 @@
 import Link from "next/link";
 
 import { signOutAction } from "@/app/auth-actions";
-import { BrandLogo } from "@/components/brand-logo";
+import { BrandLogoWhite } from "@/components/brand-logo";
 import { requireActiveTenant } from "@/lib/auth";
 
 export default async function ProtectedLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  await requireActiveTenant();
+  const { appUser } = await requireActiveTenant();
+  const canAccessAdmin =
+    process.env.ADMIN_EMAIL?.trim().toLowerCase() ===
+    appUser.email.trim().toLowerCase();
 
   return (
     <div className="min-h-screen bg-transparent md:flex">
       <aside className="w-full bg-[#0F766E] px-5 py-6 text-white md:sticky md:top-0 md:h-screen md:w-72 md:flex-shrink-0">
-        <div className="rounded-2xl bg-white/95 p-3">
-          <BrandLogo className="h-auto w-32" />
-        </div>
+        <BrandLogoWhite className="h-auto w-36" />
 
         <nav className="mt-6 flex flex-col gap-2 text-sm">
           <Link
@@ -53,6 +54,14 @@ export default async function ProtectedLayout({
           >
             POPs
           </Link>
+          {canAccessAdmin ? (
+            <Link
+              href="/admin"
+              className="rounded-xl bg-white/12 px-3 py-2 font-semibold text-white transition hover:bg-white/18"
+            >
+              Painel admin
+            </Link>
+          ) : null}
         </nav>
 
         <form action={signOutAction} className="mt-8">

@@ -1,11 +1,11 @@
-# PodoClin App
+# PodoDesk App
 
 SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuarios, autoagendamento e integracao com Google Calendar.
 
 ## Status do projeto
 
 - Versao publicada: `v0.7.2`
-- Rebranding aplicado: `ClinPe` -> `PodoClin`
+- Rebranding aplicado: `ClinPe` -> `PodoDesk`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
 ## Stack
@@ -53,6 +53,7 @@ Crie `.env.local` na raiz do projeto com:
 NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=xxxxxxxx
 SUPABASE_SERVICE_ROLE_KEY=xxxxxxxx
+ADMIN_EMAIL=admin@seudominio.com
 
 GOOGLE_CLIENT_ID=xxxxxxxx
 GOOGLE_CLIENT_SECRET=xxxxxxxx
@@ -74,6 +75,7 @@ SMTP_FROM="NomeClinica <seu-email@seudominio.com>"
 Observacoes:
 
 - `SUPABASE_SERVICE_ROLE_KEY` e obrigatoria para fluxos de booking publico.
+- `ADMIN_EMAIL` restringe o acesso ao novo painel administrativo em `/admin`.
 - `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` sao obrigatorias para conectar o Calendar.
 - `ASAAS_API_KEY` e `ASAAS_WEBHOOK_SECRET` sao obrigatorias para billing por assinatura recorrente.
 - `SMTP_*` sao obrigatorias para o envio de e-mail ao confirmar ou cancelar agendamentos. Funciona com Hostinger (porta 465), Gmail (porta 587 + senha de app) ou Resend.
@@ -89,6 +91,10 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260313000005_professional_booking_widget.sql`
 - `20260313000006_professional_settings_schedule.sql`
 - `20260316000007_appointment_confirmation_email.sql` — adiciona `confirmation_status` (pending/confirmed/rejected) e `google_event_id` na tabela `appointments`
+- `20260316000008_add_billing_alerts_profile.sql` — expande billing base, perfil do profissional e alertas clinicos
+- `20260318000009_add_mp_billing.sql` — legado da fase Mercado Pago
+- `20260318000010_asaas_transition_and_hard_lock.sql` — transicao para Asaas e endurecimento do hard lock por assinatura/trial
+- `20260318000011_admin_panel_foundation.sql` — fundacao do painel admin, free permanente, extensao manual de trial e audit log
 
 Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e Google.
 
@@ -198,4 +204,4 @@ npm run test:watch
 - `src/lib/google-calendar.ts`: OAuth e chamadas do Google Calendar (create + delete eventos)
 - `src/lib/email.ts`: utilitario SMTP para envio de notificacoes ao paciente
 - `src/lib/supabase`: clients server/browser/admin
-- `src/components/brand-logo.tsx`: logotipo da PodoClin
+- `src/components/brand-logo.tsx`: logotipo da PodoDesk

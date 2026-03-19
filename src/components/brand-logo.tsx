@@ -8,10 +8,26 @@ type BrandLogoProps = {
 export function BrandLogo({ className, priority = false }: BrandLogoProps) {
   return (
     <Image
-      src="/logo-podoclin.png"
-      alt="PodoClin"
+      src="/logo-pododesk.png"
+      alt="PodoDesk"
       width={1146}
-      height={768}
+      height={384}
+      priority={priority}
+      className={className}
+    />
+  );
+}
+
+export function BrandLogoWhite({
+  className,
+  priority = false,
+}: BrandLogoProps) {
+  return (
+    <Image
+      src="/logo-pododesk-white.png"
+      alt="PodoDesk"
+      width={1146}
+      height={384}
       priority={priority}
       className={className}
     />

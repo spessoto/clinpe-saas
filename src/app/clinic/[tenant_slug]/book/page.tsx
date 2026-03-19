@@ -65,7 +65,7 @@ export default async function PublicBookingPage({
       <section className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <article className="surface-card p-8">
           <span className="inline-flex rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
-            Autoagendamento PodoClin
+            Autoagendamento PodoDesk
           </span>
           <h1 className="mt-4 text-4xl font-bold text-secondary">
             {context.tenant.booking_page_title ??

@@ -25,9 +25,14 @@
 *.pem
 
 # debug
-npm-debug.log*
-yarn-debug.log*
 yarn-error.log*
+
+# Temporary scripts with secrets
+scripts/create-admin-user.mjs
+
+# Temporary SQL files
+check_orphaned_users.sql
+tmp_schema_dump.sql
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)

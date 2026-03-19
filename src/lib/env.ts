@@ -9,6 +9,10 @@ const adminEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
 });
 
+const panelAdminEnvSchema = z.object({
+  ADMIN_EMAIL: z.string().email(),
+});
+
 const googleEnvSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1),
   GOOGLE_CLIENT_SECRET: z.string().min(1),
@@ -66,6 +70,20 @@ export function getAdminEnv() {
   if (parsed.data.SUPABASE_SERVICE_ROLE_KEY.includes("REPLACE_WITH")) {
     throw new Error(
       "SUPABASE_SERVICE_ROLE_KEY está com valor placeholder no .env.local. Configure a chave real para habilitar as rotas públicas de agendamento.",
+    );
+  }
+
+  return parsed.data;
+}
+
+export function getPanelAdminEnv() {
+  const parsed = panelAdminEnvSchema.safeParse({
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  });
+
+  if (!parsed.success) {
+    throw new Error(
+      "Variável ausente ou inválida: ADMIN_EMAIL. Configure o e-mail administrativo no .env.local para habilitar o painel admin.",
     );
   }
 

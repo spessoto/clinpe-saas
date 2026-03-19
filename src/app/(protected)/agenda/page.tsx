@@ -119,7 +119,8 @@ export default async function AgendaPage({ searchParams }: Props) {
     appointmentsQuery = appointmentsQuery.eq("professional_id", appUser.id);
   }
 
-  const { data: appointments, error: appointmentsError } = await appointmentsQuery;
+  const { data: appointments, error: appointmentsError } =
+    await appointmentsQuery;
 
   const mapEvents = (
     rows: Array<{
@@ -245,7 +246,7 @@ export default async function AgendaPage({ searchParams }: Props) {
 
       if (events.length > 0) {
         warningBanner ??=
-          "Mostrando eventos do Google Calendar. Para confirmar/cancelar com e-mail, o agendamento precisa existir no PodoClin.";
+          "Mostrando eventos do Google Calendar. Para confirmar/cancelar com e-mail, o agendamento precisa existir no PodoDesk.";
       }
     } catch {
       // If Google API fails, we keep the database result (possibly empty).
@@ -315,10 +316,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         ) : null}
       </article>
 
-      <AgendaCalendar
-        monthKey={monthKey}
-        events={events}
-      />
+      <AgendaCalendar monthKey={monthKey} events={events} />
     </section>
   );
 }

@@ -1,3 +1,32 @@
+## [0.8.0] - 2026-03-19
+
+### Added
+
+- **Sistema de roles para administradores**
+  - Nova coluna `is_admin` na tabela `users` para gerenciar acesso administrativo dinamicamente
+  - Página `/admin/users` para listar e atribuir roles de admin
+  - Server actions `getAdminUsersList()` e `toggleAdminRoleAction()` para gerenciar admins
+  - Client component `ToggleAdminButton` para interações seguras com handlers
+  - RLS policies no banco para proteger coluna `is_admin`
+  - Fallback para `ADMIN_EMAIL` env var para compatibilidade
+  - Proteção: não permite revogar próprio admin status se único admin existir
+
+### Fixed
+
+- Erro "Conta autenticada sem perfil interno" para usuários órfãos
+  - Migration `20260319000017` removeu RLS policies quebradas
+  - Migration `20260319000018` reparou usuários órfãos criados quando trigger falhou
+- Erro de Server/Client Component na página de admin
+  - Refatorado com Client Component separado para interações de usuário
+
+### Changed
+
+- `requireAdminAccess()` em `src/lib/auth.ts` agora verifica `is_admin` do banco ao invés de apenas email
+- `AppUser` type agora inclui campo `is_admin: boolean`
+- Admin migration queries agora trazem `is_admin` do banco
+
+## [0.7.2] - 2026-03-18
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

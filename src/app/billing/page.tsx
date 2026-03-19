@@ -1,8 +1,10 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { CheckCircle, AlertCircle, Info, Check, Mail } from "lucide-react";
 
-import { requireAuthenticatedUser } from "@/lib/auth";
+import { isConfiguredAdminEmail, requireAuthenticatedUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { getEffectiveTrialEnd } from "@/lib/tenant-access";
 import { createCheckoutAction } from "./actions";
 import { BILLING_PLANS, type BillingPeriod, type BillingTier } from "./plans";
 import { PeriodToggle } from "./period-toggle";
@@ -21,9 +23,21 @@ function annualMonthly(annual: number) {
   return formatBRL(annual / 12);
 }
 
-function getTrialStatus(trialEndsAt: string, subscriptionStatus: string) {
-  if (subscriptionStatus === "active") return { type: "active" as const };
-  const trialEnd = new Date(trialEndsAt);
+function getTrialStatus(tenant: {
+  trial_ends_at: string;
+  trial_extension_days: number;
+  is_permanent_free_plan: boolean;
+  subscription_status: string;
+}) {
+  if (tenant.is_permanent_free_plan) {
+    return { type: "free_permanent" as const };
+  }
+
+  if (tenant.subscription_status === "active") {
+    return { type: "active" as const };
+  }
+
+  const trialEnd = getEffectiveTrialEnd(tenant);
   const now = new Date();
   const diffMs = trialEnd.getTime() - now.getTime();
   const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
@@ -50,7 +64,9 @@ export default async function BillingPage({
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("trial_ends_at, subscription_status, billing_tier")
+    .select(
+      "trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, billing_tier",
+    )
     .eq("id", appUser.tenant_id)
     .single();
 
@@ -59,9 +75,10 @@ export default async function BillingPage({
     params.period === "annual" ? "annual" : "monthly";
   const statusParam = params.status;
   const errorParam = params.error;
+  const canAccessAdmin = isConfiguredAdminEmail(appUser.email);
 
   const trialStatus = tenant
-    ? getTrialStatus(tenant.trial_ends_at, tenant.subscription_status)
+    ? getTrialStatus(tenant)
     : { type: "expired" as const, daysLeft: 0 };
 
   return (
@@ -104,6 +121,12 @@ export default async function BillingPage({
               restante{trialStatus.daysLeft !== 1 ? "s" : ""} no trial
             </span>
           )}
+          {trialStatus.type === "free_permanent" && (
+            <span className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
+              <CheckCircle className="size-3.5" />
+              Plano Free Permanente ativo
+            </span>
+          )}
           <h1 className="text-3xl font-bold text-foreground">
             {trialStatus.type === "expired"
               ? "Ative sua assinatura para continuar"
@@ -112,8 +135,17 @@ export default async function BillingPage({
           <p className="mt-2 text-muted">
             {trialStatus.type === "expired"
               ? "Seu período gratuito terminou. Selecione um plano para voltar a usar o ClinPé."
-              : "Acesso completo a prontuários, agenda e agendamento online."}
+              : trialStatus.type === "free_permanent"
+                ? "Seu tenant está operando em free permanente. Você ainda pode migrar para um plano pago a qualquer momento."
+                : "Acesso completo a prontuários, agenda e agendamento online."}
           </p>
+          {canAccessAdmin ? (
+            <div className="mt-4 flex justify-center">
+              <Link href="/admin" className="btn-outline-modern">
+                Abrir painel admin
+              </Link>
+            </div>
+          ) : null}
         </div>
 
         {/* Period toggle */}

@@ -14,7 +14,7 @@ export default function Home() {
           Ambiente local configurado
         </span>
         <h1 className="mt-6 text-4xl font-bold tracking-tight md:text-5xl">
-          PodoClin SaaS de Podologia
+          PodoDesk SaaS de Podologia
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-muted md:text-lg">
           Base Next.js pronta para iniciar os épicos de onboarding, pacientes,
