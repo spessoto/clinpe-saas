@@ -115,11 +115,20 @@ export async function POST(request: NextRequest) {
 
     let tenantId = parsedRef?.tenantId;
     if (!tenantId) {
-      const { data: tenantBySub } = await supabase
+      const { data: tenantBySub, error: tenantBySubError } = await supabase
         .from("tenants")
         .select("id")
         .eq("asaas_subscription_id", subscription.id)
         .maybeSingle();
+
+      if (tenantBySubError) {
+        console.error(
+          "[WEBHOOK][ASAAS] Falha ao buscar tenant por assinatura:",
+          tenantBySubError,
+        );
+        return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+      }
+
       tenantId = tenantBySub?.id;
     }
 
@@ -153,6 +162,7 @@ export async function POST(request: NextRequest) {
       .eq("id", tenantId);
 
     if (error) {
+      console.error("[WEBHOOK][ASAAS] Falha ao atualizar tenant:", error);
       return NextResponse.json({ error: "Erro interno" }, { status: 500 });
     }
   } catch (error) {

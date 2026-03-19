@@ -138,6 +138,21 @@ export default async function DashboardPage() {
             Abrir documentos
           </Link>
         </article>
+        <article className="surface-card p-5">
+          <h3 className="text-lg font-semibold text-secondary">
+            Pacientes para retorno
+          </h3>
+          <p className="mt-2 text-sm text-muted">
+            Acesse a régua de recall para pacientes com última consulta há mais
+            de 30 dias.
+          </p>
+          <Link
+            href="/patients/recall"
+            className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+          >
+            Abrir régua de recall
+          </Link>
+        </article>
       </div>
     </section>
   );

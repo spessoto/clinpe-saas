@@ -9,6 +9,19 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
+function normalizePhoneForWhatsApp(phone: string | null | undefined) {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  if (!digits) {
+    return null;
+  }
+
+  if (digits.length === 11 || digits.length === 10) {
+    return `55${digits}`;
+  }
+
+  return digits;
+}
+
 export default async function PatientDetailsPage({ params }: Props) {
   const { appUser } = await requireActiveTenant();
   const supabase = await createClient();
@@ -16,7 +29,7 @@ export default async function PatientDetailsPage({ params }: Props) {
 
   const { data: patient } = await supabase
     .from("patients")
-    .select("id, name, phone, birth_date")
+    .select("id, name, phone, birth_date, health_alerts, referral_source")
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id)
     .single();
@@ -25,26 +38,28 @@ export default async function PatientDetailsPage({ params }: Props) {
     notFound();
   }
 
-  const { data: records } = await supabase
-    .from("medical_records")
-    .select("id, created_at")
-    .eq("tenant_id", appUser.tenant_id)
-    .eq("patient_id", patient.id)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const [recordsResult, appointmentsResult] = await Promise.all([
+    supabase
+      .from("medical_records")
+      .select("id, created_at")
+      .eq("tenant_id", appUser.tenant_id)
+      .eq("patient_id", patient.id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase
+      .from("appointments")
+      .select("id, professional_id, scheduled_at, status")
+      .eq("tenant_id", appUser.tenant_id)
+      .eq("patient_id", patient.id)
+      .order("scheduled_at", { ascending: false })
+      .limit(6),
+  ]);
 
-  const { data: appointments } = await supabase
-    .from("appointments")
-    .select("id, professional_id, scheduled_at, status")
-    .eq("tenant_id", appUser.tenant_id)
-    .eq("patient_id", patient.id)
-    .order("scheduled_at", { ascending: false })
-    .limit(6);
+  const records = recordsResult.data ?? [];
+  const appointments = appointmentsResult.data ?? [];
 
   const professionalIds = Array.from(
-    new Set(
-      (appointments ?? []).map((appointment) => appointment.professional_id),
-    ),
+    new Set(appointments.map((appointment) => appointment.professional_id)),
   );
 
   const { data: professionals } = professionalIds.length
@@ -98,9 +113,34 @@ export default async function PatientDetailsPage({ params }: Props) {
     canceled: "Cancelada",
   };
 
+  const healthAlerts = Array.isArray(patient.health_alerts)
+    ? patient.health_alerts
+        .map((value) => String(value).trim())
+        .filter((value) => value.length > 0)
+    : [];
+
+  const whatsappPhone = normalizePhoneForWhatsApp(patient.phone);
+  const whatsappMessage = encodeURIComponent(
+    `Olá, ${patient.name}! Tudo bem? Aqui é da clínica. Gostaríamos de confirmar seu retorno.`,
+  );
+  const whatsappUrl = whatsappPhone
+    ? `https://wa.me/${whatsappPhone}?text=${whatsappMessage}`
+    : null;
+
   return (
     <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
       <article className="surface-card p-6">
+        {healthAlerts.length > 0 ? (
+          <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-destructive">
+              Alertas de risco
+            </p>
+            <p className="mt-1 text-sm text-destructive">
+              {healthAlerts.join(" • ")}
+            </p>
+          </div>
+        ) : null}
+
         <h2 className="text-2xl font-bold">{patient.name}</h2>
         <p className="mt-2 text-sm text-muted">Telefone: {patient.phone}</p>
         <p className="text-sm text-muted">
@@ -109,6 +149,11 @@ export default async function PatientDetailsPage({ params }: Props) {
             ? new Date(patient.birth_date).toLocaleDateString("pt-BR")
             : "Não informado"}
         </p>
+        {patient.referral_source ? (
+          <p className="text-sm text-muted">
+            Origem do paciente: {patient.referral_source}
+          </p>
+        ) : null}
 
         <div className="mt-5 flex flex-wrap gap-2">
           <Link
@@ -123,6 +168,16 @@ export default async function PatientDetailsPage({ params }: Props) {
           >
             Editar
           </Link>
+          {whatsappUrl ? (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-10 items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            >
+              WhatsApp
+            </a>
+          ) : null}
           <form action={deletePatientAction} className="inline-flex">
             <input type="hidden" name="id" value={patient.id} />
             <button
@@ -139,7 +194,7 @@ export default async function PatientDetailsPage({ params }: Props) {
             Histórico de prontuários
           </h3>
           <ul className="mt-4 space-y-2 text-sm text-muted">
-            {(records ?? []).map((record) => (
+            {records.map((record) => (
               <li key={record.id} className="rounded-md bg-slate-50 px-3 py-2">
                 <Link
                   href={`/medical-records/${record.id}`}
@@ -150,7 +205,7 @@ export default async function PatientDetailsPage({ params }: Props) {
                 </Link>
               </li>
             ))}
-            {records && records.length === 0 ? (
+            {records.length === 0 ? (
               <li>Nenhum prontuário cadastrado.</li>
             ) : null}
           </ul>
@@ -184,7 +239,7 @@ export default async function PatientDetailsPage({ params }: Props) {
           </div>
 
           <ul className="mt-4 space-y-2 text-sm text-muted">
-            {(appointments ?? []).map((appointment) => (
+            {appointments.map((appointment) => (
               <li
                 key={appointment.id}
                 className="rounded-xl bg-slate-50 px-3 py-2"
@@ -201,7 +256,7 @@ export default async function PatientDetailsPage({ params }: Props) {
                 </p>
               </li>
             ))}
-            {appointments && appointments.length === 0 ? (
+            {appointments.length === 0 ? (
               <li>Nenhuma consulta encontrada.</li>
             ) : null}
           </ul>

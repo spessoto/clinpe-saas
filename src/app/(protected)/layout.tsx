@@ -31,6 +31,12 @@ export default async function ProtectedLayout({
             Pacientes
           </Link>
           <Link
+            href="/patients/recall"
+            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
+          >
+            Pacientes para retorno
+          </Link>
+          <Link
             href="/agenda"
             className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
           >

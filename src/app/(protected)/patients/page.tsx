@@ -42,15 +42,21 @@ export default async function PatientsPage({ searchParams }: Props) {
           </p>
         </div>
 
-        {limitStatus.isLimitReached ? (
-          <Link href="/billing" className="btn-outline-modern">
-            Fazer Upgrade
+        <div className="flex flex-wrap gap-2">
+          <Link href="/patients/recall" className="btn-outline-modern">
+            Pacientes para retorno
           </Link>
-        ) : (
-          <Link href="/patients/new" className="btn-gradient">
-            Novo paciente
-          </Link>
-        )}
+
+          {limitStatus.isLimitReached ? (
+            <Link href="/billing" className="btn-outline-modern">
+              Fazer Upgrade
+            </Link>
+          ) : (
+            <Link href="/patients/new" className="btn-gradient">
+              Novo paciente
+            </Link>
+          )}
+        </div>
       </div>
 
       <form className="mb-4 flex gap-2" action="/patients" method="get">

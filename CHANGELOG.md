@@ -1,3 +1,19 @@
+## [0.9.2] - 2026-03-19
+
+### Added
+
+- Quick wins do Épico 9 (retenção)
+  - Banner de alertas clínicos em `/patients/[id]` com base em `health_alerts`
+  - Link dinâmico de WhatsApp no detalhe do paciente e na régua de recall
+  - Nova página `/patients/recall` com pacientes cuja última consulta foi há mais de 30 dias
+
+### Changed
+
+- Endurecimento de tratamento de erro em integrações externas
+  - Fluxo de checkout Asaas agora valida carregamento de tenant, ids retornados pela API e persistência da assinatura no banco
+  - Webhook Asaas agora valida e loga erros explícitos na resolução e atualização de tenant
+  - Processamento de fila de e-mails com validações adicionais de erro e correção de contagem de itens processados
+
 ## [0.9.1] - 2026-03-19
 
 ### Added

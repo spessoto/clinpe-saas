@@ -68,11 +68,17 @@ export async function createCheckoutAction(formData: FormData) {
 
   const pricing = plan[period];
 
-  const { data: tenant } = await supabase
+  const { data: tenant, error: tenantError } = await supabase
     .from("tenants")
     .select("id, asaas_customer_id")
     .eq("id", appUser.tenant_id)
     .single();
+
+  if (tenantError || !tenant) {
+    redirect(
+      `/billing?error=${encodeURIComponent("Erro ao carregar tenant para checkout")}`,
+    );
+  }
 
   const billingType = (formData.get("billing_method") ||
     "UNDEFINED") as AsaasBillingType;
@@ -98,6 +104,10 @@ export async function createCheckoutAction(formData: FormData) {
         env.ASAAS_API_KEY,
       );
       customerId = customer.id;
+
+      if (!customerId) {
+        throw new Error("Asaas não retornou customer.id");
+      }
     }
 
     const subscription = await asaasRequest<AsaasSubscriptionResponse>(
@@ -118,6 +128,10 @@ export async function createCheckoutAction(formData: FormData) {
       env.ASAAS_API_KEY,
     );
 
+    if (!subscription.id) {
+      throw new Error("Asaas não retornou subscription.id");
+    }
+
     const payments = await asaasRequest<{ data: AsaasPayment[] }>(
       `/subscriptions/${subscription.id}/payments?limit=1&offset=0`,
       { method: "GET" },
@@ -125,13 +139,19 @@ export async function createCheckoutAction(formData: FormData) {
       env.ASAAS_API_KEY,
     );
 
-    await supabase
+    const { error: tenantUpdateError } = await supabase
       .from("tenants")
       .update({
         asaas_customer_id: customerId,
         asaas_subscription_id: subscription.id,
       })
       .eq("id", appUser.tenant_id);
+
+    if (tenantUpdateError) {
+      throw new Error(
+        `Falha ao persistir assinatura no tenant: ${tenantUpdateError.message}`,
+      );
+    }
 
     const firstPayment = payments.data?.[0];
     const paymentUrl = firstPayment?.invoiceUrl || firstPayment?.bankSlipUrl;

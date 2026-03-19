@@ -65,7 +65,16 @@ async function claimQueueItem(rowId: string) {
     .select("id, payload, attempts, max_attempts")
     .single();
 
-  if (error || !data) {
+  if (error) {
+    // No row claimed is expected under race conditions.
+    if (error.code === "PGRST116") {
+      return null;
+    }
+
+    throw new Error(`Falha ao reservar item da fila: ${error.message}`);
+  }
+
+  if (!data) {
     return null;
   }
 
@@ -78,10 +87,14 @@ async function incrementAttemptForProcessing(
 ) {
   const adminClient = createAdminClient();
   const nextAttempts = currentAttempts + 1;
-  await adminClient
+  const { error } = await adminClient
     .from("email_queue")
     .update({ attempts: nextAttempts })
     .eq("id", rowId);
+
+  if (error) {
+    throw new Error(`Falha ao incrementar tentativa da fila: ${error.message}`);
+  }
 
   return nextAttempts;
 }
@@ -105,51 +118,66 @@ export async function processPendingEmailQueue(input?: { limit?: number }) {
     throw new Error(`Falha ao buscar fila de e-mail: ${error.message}`);
   }
 
+  let processedCount = 0;
   let sent = 0;
   let failed = 0;
 
   for (const row of rows ?? []) {
-    const claimed = await claimQueueItem(row.id);
-    if (!claimed) {
+    const claimedItem = await claimQueueItem(row.id);
+    if (!claimedItem) {
       continue;
     }
 
+    processedCount += 1;
+
     const attempts = await incrementAttemptForProcessing(
-      claimed.id,
-      claimed.attempts,
+      claimedItem.id,
+      claimedItem.attempts,
     );
 
     try {
-      await sendAppointmentDecisionEmail(claimed.payload);
+      await sendAppointmentDecisionEmail(claimedItem.payload);
 
-      await adminClient
+      const { error: markSentError } = await adminClient
         .from("email_queue")
         .update({
           status: "sent",
           sent_at: new Date().toISOString(),
           last_error: null,
         })
-        .eq("id", claimed.id);
+        .eq("id", claimedItem.id);
+
+      if (markSentError) {
+        throw new Error(
+          `Falha ao marcar item como enviado: ${markSentError.message}`,
+        );
+      }
 
       sent += 1;
     } catch (sendError) {
-      const canRetry = attempts < claimed.max_attempts;
+      const canRetry = attempts < claimedItem.max_attempts;
 
-      await adminClient
+      const { error: markFailedError } = await adminClient
         .from("email_queue")
         .update({
           status: "failed",
           last_error: normalizeQueueError(sendError),
           next_attempt_at: canRetry ? computeNextAttemptAt(attempts) : null,
         })
-        .eq("id", claimed.id);
+        .eq("id", claimedItem.id);
+
+      if (markFailedError) {
+        throw new Error(
+          `Falha ao marcar item como falho: ${markFailedError.message}`,
+        );
+      }
 
       failed += 1;
     }
   }
 
   return {
-    processed: (rows ?? []).length,
+    processed: processedCount,
     sent,
     failed,
   };
@@ -194,6 +222,19 @@ export async function getEmailQueueStats() {
       .limit(1)
       .maybeSingle(),
   ]);
+
+  const statsError =
+    pendingResult.error ??
+    processingResult.error ??
+    failedResult.error ??
+    sentResult.error ??
+    oldestResult.error;
+
+  if (statsError) {
+    throw new Error(
+      `Falha ao consultar estatisticas da fila: ${statsError.message}`,
+    );
+  }
 
   return {
     pending: pendingResult.count ?? 0,
