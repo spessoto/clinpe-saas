@@ -1,0 +1,61 @@
+name: Email Queue Processor
+
+on:
+  schedule:
+    # GitHub Actions does not support schedules more frequent than every 5 minutes.
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: email-queue-processor
+  cancel-in-progress: false
+
+jobs:
+  process-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APP_URL: ${{ secrets.APP_URL }}
+      EMAIL_QUEUE_CRON_SECRET: ${{ secrets.EMAIL_QUEUE_CRON_SECRET }}
+      EMAIL_QUEUE_BATCH_LIMIT: ${{ vars.EMAIL_QUEUE_BATCH_LIMIT || '20' }}
+    steps:
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${APP_URL:-}" ]; then
+            echo "APP_URL secret is missing"
+            exit 1
+          fi
+          if [ -z "${EMAIL_QUEUE_CRON_SECRET:-}" ]; then
+            echo "EMAIL_QUEUE_CRON_SECRET secret is missing"
+            exit 1
+          fi
+
+      - name: Queue status before
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer ${EMAIL_QUEUE_CRON_SECRET}" \
+            "${APP_URL%/}/api/internal/email-queue/process"
+          echo
+
+      - name: Process queue batch
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -X POST \
+            -H "Authorization: Bearer ${EMAIL_QUEUE_CRON_SECRET}" \
+            "${APP_URL%/}/api/internal/email-queue/process?limit=${EMAIL_QUEUE_BATCH_LIMIT}"
+          echo
+
+      - name: Queue status after
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer ${EMAIL_QUEUE_CRON_SECRET}" \
+            "${APP_URL%/}/api/internal/email-queue/process"
+          echo

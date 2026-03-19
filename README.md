@@ -23,7 +23,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - Epico 4: integracao com Google Calendar + autoagendamento publico por profissional em `/{professional_slug}`
 - Epico 5: POPs com templates e substituicao dinamica de placeholders
 - Agenda: calendario mensal de consultas lido do banco de dados, com pop-up de dados do paciente e acoes de confirmacao/cancelamento
-- Confirmacao e cancelamento de agendamento: profissional pode confirmar ou cancelar cada consulta diretamente na agenda, acionando automaticamente um e-mail HTML ao paciente com o resultado
+- Confirmacao e cancelamento de agendamento: profissional pode confirmar ou cancelar cada consulta diretamente na agenda, com notificacao por e-mail assíncrona (fila persistente)
 - Notificacao por e-mail: envio SMTP com template HTML responsivo (nodemailer) informando data, clinica, profissional e proximo passo
 - Cancelamento remove automaticamente o evento do Google Calendar do profissional
 - Configuracoes white-label: perfil, nome da clinica, e-mail/nome do usuario, dias e horarios de atendimento, duracao da consulta e integracao Google
@@ -70,6 +70,9 @@ SMTP_PORT=465
 SMTP_USER=seu-email@seudominio.com
 SMTP_PASS=sua-senha-smtp
 SMTP_FROM="NomeClinica <seu-email@seudominio.com>"
+
+# Fila de e-mail (processamento assíncrono via cron)
+EMAIL_QUEUE_CRON_SECRET=um-segredo-forte
 ```
 
 Observacoes:
@@ -79,6 +82,49 @@ Observacoes:
 - `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` sao obrigatorias para conectar o Calendar.
 - `ASAAS_API_KEY` e `ASAAS_WEBHOOK_SECRET` sao obrigatorias para billing por assinatura recorrente.
 - `SMTP_*` sao obrigatorias para o envio de e-mail ao confirmar ou cancelar agendamentos. Funciona com Hostinger (porta 465), Gmail (porta 587 + senha de app) ou Resend.
+- `EMAIL_QUEUE_CRON_SECRET` protege o endpoint interno `POST /api/internal/email-queue/process` para processamento da fila.
+
+### Operacao da fila de e-mail
+
+Endpoint interno protegido por secret:
+
+- `POST /api/internal/email-queue/process?limit=20` processa lote da fila
+- `GET /api/internal/email-queue/process` retorna status da fila (`pending`, `processing`, `failed`, `sent`)
+
+Exemplo manual (PowerShell):
+
+```bash
+$headers = @{ Authorization = "Bearer $env:EMAIL_QUEUE_CRON_SECRET" }
+Invoke-RestMethod -Method Get -Uri "https://seu-dominio.com/api/internal/email-queue/process" -Headers $headers
+Invoke-RestMethod -Method Post -Uri "https://seu-dominio.com/api/internal/email-queue/process?limit=20" -Headers $headers
+```
+
+Script local de apoio:
+
+```bash
+npm.cmd run email-queue:process
+```
+
+Variaveis opcionais para o script:
+
+- `EMAIL_QUEUE_BATCH_LIMIT` (default: 20, max: 100)
+- `NEXT_PUBLIC_APP_URL` (default local: `http://localhost:3000`)
+
+Cron recomendado em producao:
+
+- Frequencia: a cada 1 minuto
+- Metodo: `POST`
+- URL: `https://seu-dominio.com/api/internal/email-queue/process?limit=20`
+- Header: `Authorization: Bearer <EMAIL_QUEUE_CRON_SECRET>`
+
+Sem cron nativo no provedor (ex.: alguns planos Hostinger):
+
+- Use GitHub Actions com o workflow `/.github/workflows/email-queue-cron.yml`
+- Defina os secrets do repositorio:
+  - `APP_URL` (ex.: `https://pododesk.com.br`)
+  - `EMAIL_QUEUE_CRON_SECRET` (mesmo valor da variavel de ambiente da aplicacao)
+- Opcional: defina a repository variable `EMAIL_QUEUE_BATCH_LIMIT` (padrao: `20`)
+- O workflow roda em `*/5 * * * *` (limite minimo do scheduler do GitHub Actions) e tambem pode ser executado manualmente via `workflow_dispatch`
 
 ## Banco de dados e migrations
 
@@ -95,6 +141,7 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260318000009_add_mp_billing.sql` — legado da fase Mercado Pago
 - `20260318000010_asaas_transition_and_hard_lock.sql` — transicao para Asaas e endurecimento do hard lock por assinatura/trial
 - `20260318000011_admin_panel_foundation.sql` — fundacao do painel admin, free permanente, extensao manual de trial e audit log
+- `20260319000020_email_queue.sql` — fila assíncrona de notificacoes de e-mail com retries
 
 Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e Google.
 
