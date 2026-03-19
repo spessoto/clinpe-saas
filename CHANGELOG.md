@@ -1,3 +1,13 @@
+## [0.9.5] - 2026-03-19
+
+### Fixed
+
+- **Erro de schema cache `referral_source`** — mesma causa raiz do `health_alerts`: PostgREST não reconhece colunas da migration 8
+  - Diagnóstico via `select('*')` revelou que PostgREST conhece 25 de 27 colunas — faltam `health_alerts` e `referral_source` (ambas da m igration 8)
+  - Todas as queries de pacientes agora usam `select('*')` em vez de listar colunas explícitas, evitando erros de schema cache
+  - Removido `referral_source` dos payloads de `insert`/`update` (campo do formulário permanece para quando o cache atualizar)
+  - `medical-records/new/page.tsx`: select de saúde do paciente também migrado para `select('*')`
+
 ## [0.9.4] - 2026-03-19
 
 ### Fixed

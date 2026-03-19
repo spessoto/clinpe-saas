@@ -46,9 +46,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
       patientId
         ? supabase
             .from("patients")
-            .select(
-              "has_diabetes, diabetes_type, diabetes_on_insulin, has_vascular_issues, has_coagulation_disorders, has_oncological_history, continuous_meds, patient_allergies, is_smoker, predominant_footwear",
-            )
+            .select("*")
             .eq("id", patientId)
             .eq("tenant_id", appUser.tenant_id)
             .single()

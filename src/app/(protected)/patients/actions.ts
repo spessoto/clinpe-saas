@@ -74,7 +74,6 @@ export async function createPatientAction(formData: FormData) {
   const occupation = getField(formData, "occupation");
   const emergencyContactName = getField(formData, "emergency_contact_name");
   const emergencyContactPhone = getField(formData, "emergency_contact_phone");
-  const referralSource = getField(formData, "referral_source");
   // Saúde
   const hasDiabetes = getCheckbox(formData, "has_diabetes");
   const diabetesType = getField(formData, "diabetes_type") || null;
@@ -125,7 +124,6 @@ export async function createPatientAction(formData: FormData) {
     occupation: occupation || null,
     emergency_contact_name: emergencyContactName || null,
     emergency_contact_phone: emergencyContactPhone || null,
-    referral_source: referralSource || null,
     has_diabetes: hasDiabetes,
     diabetes_type: diabetesType,
     diabetes_on_insulin: diabetesOnInsulin,
@@ -164,7 +162,6 @@ export async function updatePatientAction(formData: FormData) {
   const occupation = getField(formData, "occupation");
   const emergencyContactName = getField(formData, "emergency_contact_name");
   const emergencyContactPhone = getField(formData, "emergency_contact_phone");
-  const referralSource = getField(formData, "referral_source");
   // Saúde
   const hasDiabetes = getCheckbox(formData, "has_diabetes");
   const diabetesType = getField(formData, "diabetes_type") || null;
@@ -208,7 +205,6 @@ export async function updatePatientAction(formData: FormData) {
       occupation: occupation || null,
       emergency_contact_name: emergencyContactName || null,
       emergency_contact_phone: emergencyContactPhone || null,
-      referral_source: referralSource || null,
       has_diabetes: hasDiabetes,
       diabetes_type: diabetesType,
       diabetes_on_insulin: diabetesOnInsulin,
