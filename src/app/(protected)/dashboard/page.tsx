@@ -7,7 +7,14 @@ function monthBoundaries() {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  return { start: start.toISOString(), end: end.toISOString() };
+  const startDate = start.toISOString().slice(0, 10);
+  const endDate = end.toISOString().slice(0, 10);
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+    startDate,
+    endDate,
+  };
 }
 
 function slugifyProfessionalName(name: string) {
@@ -24,9 +31,9 @@ export default async function DashboardPage() {
   const professionalSlug = slugifyProfessionalName(appUser.full_name);
   const bookingPath = professionalSlug ? `/${professionalSlug}` : null;
   const supabase = await createClient();
-  const { start, end } = monthBoundaries();
+  const { start, end, startDate, endDate } = monthBoundaries();
 
-  const [appointmentsResult, patientsResult, materialsResult] =
+  const [appointmentsResult, patientsResult, materialsResult, financialResult] =
     await Promise.all([
       supabase
         .from("appointments")
@@ -42,11 +49,40 @@ export default async function DashboardPage() {
         .from("materials")
         .select("id, quantity, minimum_stock")
         .eq("tenant_id", appUser.tenant_id),
+      supabase
+        .from("financial_transactions")
+        .select("type, amount")
+        .eq("tenant_id", appUser.tenant_id)
+        .gte("occurred_on", startDate)
+        .lt("occurred_on", endDate),
     ]);
 
   const lowStockCount =
     materialsResult.data?.filter((m) => m.quantity <= m.minimum_stock).length ??
     0;
+
+  const financialTotals = (financialResult.data ?? []).reduce(
+    (acc, transaction) => {
+      const amount = Number(transaction.amount ?? 0);
+
+      if (transaction.type === "income") {
+        acc.income += amount;
+      }
+
+      if (transaction.type === "expense") {
+        acc.expense += amount;
+      }
+
+      return acc;
+    },
+    { income: 0, expense: 0 },
+  );
+
+  const monthlyBalance = financialTotals.income - financialTotals.expense;
+  const formattedMonthlyBalance = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(monthlyBalance);
 
   const cards = [
     {
@@ -64,6 +100,14 @@ export default async function DashboardPage() {
       value: lowStockCount,
       tone: "bg-warning/10 text-warning",
     },
+    {
+      title: "Saldo do mês",
+      value: formattedMonthlyBalance,
+      tone:
+        monthlyBalance >= 0
+          ? "bg-success/10 text-success"
+          : "bg-destructive/10 text-destructive",
+    },
   ];
 
   return (
@@ -79,7 +123,7 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         {cards.map((card) => (
           <article key={card.title} className="soft-panel p-5">
             <p className="text-sm text-muted">{card.title}</p>
@@ -136,6 +180,18 @@ export default async function DashboardPage() {
             className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
           >
             Abrir documentos
+          </Link>
+        </article>
+        <article className="surface-card p-5">
+          <h3 className="text-lg font-semibold text-secondary">Financeiro</h3>
+          <p className="mt-2 text-sm text-muted">
+            Registre entradas e saídas e acompanhe o saldo operacional do mês.
+          </p>
+          <Link
+            href="/finance"
+            className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+          >
+            Abrir financeiro
           </Link>
         </article>
         <article className="surface-card p-5">

@@ -43,6 +43,18 @@ export default async function ProtectedLayout({
             Agenda
           </Link>
           <Link
+            href="/finance"
+            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
+          >
+            Financeiro
+          </Link>
+          <Link
+            href="/sterilization"
+            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
+          >
+            Esterilização
+          </Link>
+          <Link
             href="/medical-records/new"
             className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
           >
