@@ -56,14 +56,20 @@ function withFallback(
 }
 
 export async function getBillingPlans(): Promise<BillingPlanConfig> {
-  const adminClient = createAdminClient();
-  const { data, error } = await adminClient
-    .from("billing_plan_prices")
-    .select("tier, label, max_patients, monthly_amount, annual_amount");
+  try {
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient
+      .from("billing_plan_prices")
+      .select("tier, label, max_patients, monthly_amount, annual_amount");
 
-  if (error) {
+    if (error) {
+      return BILLING_PLANS;
+    }
+
+    return withFallback((data ?? []) as BillingPlanPriceRow[]);
+  } catch {
+    // If admin env is not available in runtime, keep the public landing page up
+    // by falling back to static plan defaults.
     return BILLING_PLANS;
   }
-
-  return withFallback((data ?? []) as BillingPlanPriceRow[]);
 }
