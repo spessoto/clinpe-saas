@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { createMedicalRecordAction } from "@/app/(protected)/medical-records/actions";
+import { PhotoPicker } from "./photo-picker";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -606,15 +607,9 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
               Imagens do procedimento
             </h3>
             <p className="mt-1 text-sm text-muted">
-              Envie fotos para comparação clínica e documentação de evolução.
+              Envie até 4 fotos — use a câmera diretamente ou escolha da galeria.
             </p>
-            <input
-              type="file"
-              name="photos"
-              multiple
-              accept="image/*"
-              className="mt-3 w-full rounded-md border border-dashed border-slate-300 bg-white px-3 py-4 text-sm"
-            />
+            <PhotoPicker />
           </article>
 
           {/* ── RASTREABILIDADE ───────────────────────────────────── */}

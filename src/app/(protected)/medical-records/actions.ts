@@ -119,6 +119,12 @@ export async function createMedicalRecordAction(formData: FormData) {
     .getAll("photos")
     .filter((value): value is File => value instanceof File && value.size > 0);
 
+  if (files.length > 4) {
+    redirect(
+      `/medical-records/new?patient_id=${patientId}&error=M%C3%A1ximo de 4 imagens por prontu%C3%A1rio`,
+    );
+  }
+
   if (sterilizationLotIds.length > 0) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 30);
