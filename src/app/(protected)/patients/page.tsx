@@ -115,7 +115,9 @@ export default async function PatientsPage({ searchParams }: Props) {
                     </p>
                     {patient.birth_date && (
                       <p className="text-xs text-muted">
-                        {new Date(patient.birth_date).toLocaleDateString("pt-BR")}
+                        {new Date(patient.birth_date).toLocaleDateString(
+                          "pt-BR",
+                        )}
                       </p>
                     )}
                   </div>

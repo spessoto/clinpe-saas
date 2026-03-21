@@ -607,7 +607,8 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
               Imagens do procedimento
             </h3>
             <p className="mt-1 text-sm text-muted">
-              Envie até 4 fotos — use a câmera diretamente ou escolha da galeria.
+              Envie até 4 fotos — use a câmera diretamente ou escolha da
+              galeria.
             </p>
             <PhotoPicker />
           </article>
