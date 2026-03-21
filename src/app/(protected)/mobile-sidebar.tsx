@@ -57,7 +57,7 @@ export function MobileSidebar({ canAccessAdmin }: MobileSidebarProps) {
   }, [mounted]);
 
   return (
-    <div className="relative z-40 md:hidden">
+    <div className="md:hidden">
       <div className="flex items-center justify-between bg-[#0F766E] px-5 py-4 text-white">
         <BrandLogoWhite className="h-auto w-32" />
         <button
@@ -77,21 +77,21 @@ export function MobileSidebar({ canAccessAdmin }: MobileSidebarProps) {
 
       {mounted ? (
         <>
-          {/* Overlay */}
+          {/* Overlay — z-40 no root stacking context, cobre o conteúdo da página */}
           <button
             type="button"
             aria-label="Fechar menu"
             onClick={closeMenu}
             className={[
-              "fixed inset-0 bg-slate-900/45 transition-opacity duration-300",
+              "fixed inset-0 z-40 bg-slate-900/45 transition-opacity duration-300",
               isOpen ? "opacity-100" : "opacity-0",
             ].join(" ")}
           />
 
-          {/* Sidebar panel */}
+          {/* Sidebar panel — z-50 fica acima do overlay */}
           <aside
             className={[
-              "fixed inset-y-0 left-0 w-72 overflow-y-auto bg-[#0F766E] px-5 py-6 text-white shadow-2xl transition-transform duration-300",
+              "fixed inset-y-0 left-0 z-50 w-72 overflow-y-auto bg-[#0F766E] px-5 py-6 text-white shadow-2xl transition-transform duration-300",
               isOpen ? "translate-x-0" : "-translate-x-full",
             ].join(" ")}
           >
