@@ -3,6 +3,7 @@ import Link from "next/link";
 import { signOutAction } from "@/app/auth-actions";
 import { BrandLogoWhite } from "@/components/brand-logo";
 import { requireActiveTenant, type Tenant } from "@/lib/auth";
+import { MobileSidebar } from "./mobile-sidebar";
 import { RenewalBanner } from "./renewal-banner";
 
 const RENEWAL_WARNING_DAYS = 5;
@@ -96,28 +97,7 @@ export default async function ProtectedLayout({
 
   return (
     <div className="min-h-screen bg-transparent">
-      <details className="group relative z-40 md:hidden">
-        <summary className="flex cursor-pointer list-none items-center justify-between bg-[#0F766E] px-5 py-4 text-white">
-          <BrandLogoWhite className="h-auto w-32" />
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/40 bg-white/10">
-            <span className="flex w-4 flex-col gap-1.5">
-              <span className="block h-0.5 w-full bg-white" />
-              <span className="block h-0.5 w-full bg-white" />
-              <span className="block h-0.5 w-full bg-white" />
-            </span>
-          </span>
-        </summary>
-
-        <div className="pointer-events-none fixed inset-0 bg-slate-900/45 opacity-0 transition-opacity duration-300 ease-out group-open:pointer-events-auto group-open:opacity-100" />
-
-        <aside className="fixed inset-y-0 left-0 w-72 -translate-x-full overflow-y-auto bg-[#0F766E] px-5 py-6 text-white shadow-2xl transition-transform duration-300 ease-out group-open:translate-x-0">
-          <div className="flex justify-center">
-            <BrandLogoWhite className="h-auto w-36" />
-          </div>
-
-          <SidebarContent canAccessAdmin={canAccessAdmin} />
-        </aside>
-      </details>
+      <MobileSidebar canAccessAdmin={canAccessAdmin} />
 
       <div className="md:flex">
         <aside className="hidden bg-[#0F766E] px-5 py-6 text-white md:sticky md:top-0 md:flex md:h-screen md:w-72 md:flex-shrink-0 md:flex-col">
