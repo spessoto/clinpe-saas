@@ -1,6 +1,10 @@
 import Image from "next/image";
 
 import { createPublicBookingAction } from "@/app/public-booking-actions";
+import {
+  RecaptchaForm,
+  RecaptchaSubmitButton,
+} from "@/app/(auth)/recaptcha-form";
 import { DatePicker } from "./date-picker";
 import {
   diagnosePublicProfessionalBooking,
@@ -149,9 +153,9 @@ export default async function ProfessionalBookingPage({
               </p>
             ) : null}
 
-            <form
-              id="public-booking-form"
-              action={createPublicBookingAction}
+            <RecaptchaForm
+              serverAction={createPublicBookingAction}
+              recaptchaAction="booking"
               className="space-y-6"
             >
               <input
@@ -306,15 +310,14 @@ export default async function ProfessionalBookingPage({
                   </label>
                 </div>
 
-                <button
-                  type="submit"
+                <RecaptchaSubmitButton
+                  label="Confirmar agendamento"
+                  pendingLabel="Aguardando..."
                   disabled={slots.length === 0}
                   className="btn-gradient mt-4 w-full py-3 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Confirmar agendamento
-                </button>
+                />
               </article>
-            </form>
+            </RecaptchaForm>
           </section>
 
           <aside className="hidden lg:sticky lg:top-8 lg:block lg:h-fit">

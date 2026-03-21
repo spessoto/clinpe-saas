@@ -21,6 +21,32 @@ function getMultiSelect(formData: FormData, key: string): string[] {
     .filter(Boolean);
 }
 
+function withOtherReasonInArray(
+  items: string[],
+  otherValue: string,
+  reason: string,
+) {
+  if (!items.includes(otherValue)) {
+    return items;
+  }
+
+  if (!reason) {
+    return items;
+  }
+
+  return items.map((item) =>
+    item === otherValue ? `${otherValue}: ${reason}` : item,
+  );
+}
+
+function withOtherReasonInSingle(value: string | null, reason: string) {
+  if (value !== "Outro" || !reason) {
+    return value;
+  }
+
+  return `Outro: ${reason}`;
+}
+
 export type PatientLimitStatus = {
   current: number;
   max: number;
@@ -97,6 +123,42 @@ export async function createPatientAction(formData: FormData) {
   const isSmoker = getCheckbox(formData, "is_smoker");
   const predominantFootwear =
     getField(formData, "predominant_footwear") || null;
+  const referralSource = getField(formData, "referral_source") || null;
+  const continuousMedsOtherReason = getField(
+    formData,
+    "continuous_meds_other_reason",
+  );
+  const patientAllergiesOtherReason = getField(
+    formData,
+    "patient_allergies_other_reason",
+  );
+  const predominantFootwearOtherReason = getField(
+    formData,
+    "predominant_footwear_other_reason",
+  );
+  const referralSourceOtherReason = getField(
+    formData,
+    "referral_source_other_reason",
+  );
+
+  const continuousMedsResolved = withOtherReasonInArray(
+    continuousMeds,
+    "Outro",
+    continuousMedsOtherReason,
+  );
+  const patientAllergiesResolved = withOtherReasonInArray(
+    patientAllergies,
+    "Outra",
+    patientAllergiesOtherReason,
+  );
+  const predominantFootwearResolved = withOtherReasonInSingle(
+    predominantFootwear,
+    predominantFootwearOtherReason,
+  );
+  const referralSourceResolved = withOtherReasonInSingle(
+    referralSource,
+    referralSourceOtherReason,
+  );
 
   if (!name || !phone) {
     redirect("/patients/new?error=Nome e telefone sao obrigatorios");
@@ -130,10 +192,11 @@ export async function createPatientAction(formData: FormData) {
     has_vascular_issues: hasVascularIssues,
     has_coagulation_disorders: hasCoagulationDisorders,
     has_oncological_history: hasOncologicalHistory,
-    continuous_meds: continuousMeds,
-    patient_allergies: patientAllergies,
+    continuous_meds: continuousMedsResolved,
+    patient_allergies: patientAllergiesResolved,
     is_smoker: isSmoker,
-    predominant_footwear: predominantFootwear,
+    predominant_footwear: predominantFootwearResolved,
+    referral_source: referralSourceResolved,
   });
 
   if (error) {
@@ -185,6 +248,42 @@ export async function updatePatientAction(formData: FormData) {
   const isSmoker = getCheckbox(formData, "is_smoker");
   const predominantFootwear =
     getField(formData, "predominant_footwear") || null;
+  const referralSource = getField(formData, "referral_source") || null;
+  const continuousMedsOtherReason = getField(
+    formData,
+    "continuous_meds_other_reason",
+  );
+  const patientAllergiesOtherReason = getField(
+    formData,
+    "patient_allergies_other_reason",
+  );
+  const predominantFootwearOtherReason = getField(
+    formData,
+    "predominant_footwear_other_reason",
+  );
+  const referralSourceOtherReason = getField(
+    formData,
+    "referral_source_other_reason",
+  );
+
+  const continuousMedsResolved = withOtherReasonInArray(
+    continuousMeds,
+    "Outro",
+    continuousMedsOtherReason,
+  );
+  const patientAllergiesResolved = withOtherReasonInArray(
+    patientAllergies,
+    "Outra",
+    patientAllergiesOtherReason,
+  );
+  const predominantFootwearResolved = withOtherReasonInSingle(
+    predominantFootwear,
+    predominantFootwearOtherReason,
+  );
+  const referralSourceResolved = withOtherReasonInSingle(
+    referralSource,
+    referralSourceOtherReason,
+  );
 
   if (!id || !name || !phone) {
     redirect(`/patients/${id || ""}/edit?error=Campos invalidos`);
@@ -211,10 +310,11 @@ export async function updatePatientAction(formData: FormData) {
       has_vascular_issues: hasVascularIssues,
       has_coagulation_disorders: hasCoagulationDisorders,
       has_oncological_history: hasOncologicalHistory,
-      continuous_meds: continuousMeds,
-      patient_allergies: patientAllergies,
+      continuous_meds: continuousMedsResolved,
+      patient_allergies: patientAllergiesResolved,
       is_smoker: isSmoker,
-      predominant_footwear: predominantFootwear,
+      predominant_footwear: predominantFootwearResolved,
+      referral_source: referralSourceResolved,
     })
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id);

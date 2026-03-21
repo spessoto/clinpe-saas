@@ -2,7 +2,32 @@ import Link from "next/link";
 
 import { signOutAction } from "@/app/auth-actions";
 import { BrandLogoWhite } from "@/components/brand-logo";
-import { requireActiveTenant } from "@/lib/auth";
+import { requireActiveTenant, type Tenant } from "@/lib/auth";
+import { RenewalBanner } from "./renewal-banner";
+
+const RENEWAL_WARNING_DAYS = 5;
+
+function computeRenewalBanner(tenant: Tenant) {
+  if (
+    tenant.subscription_status !== "active" ||
+    !tenant.subscription_expires_at ||
+    tenant.subscription_billing_method === "CREDIT_CARD"
+  ) {
+    return null;
+  }
+
+  const expiresMs = new Date(tenant.subscription_expires_at).getTime();
+  const nowMs = new Date().getTime();
+  const daysUntilRenewal = Math.ceil(
+    (expiresMs - nowMs) / (1000 * 60 * 60 * 24),
+  );
+
+  if (daysUntilRenewal < 0 || daysUntilRenewal > RENEWAL_WARNING_DAYS) {
+    return null;
+  }
+
+  return { daysUntilRenewal, expiresAt: tenant.subscription_expires_at };
+}
 
 function SidebarContent({ canAccessAdmin }: { canAccessAdmin: boolean }) {
   const linkClass =
@@ -60,10 +85,14 @@ function SidebarContent({ canAccessAdmin }: { canAccessAdmin: boolean }) {
 export default async function ProtectedLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const { appUser } = await requireActiveTenant();
+  const { appUser, tenant } = await requireActiveTenant();
   const canAccessAdmin =
     process.env.ADMIN_EMAIL?.trim().toLowerCase() ===
     appUser.email.trim().toLowerCase();
+
+  // Compute renewal banner: show when subscription expires within RENEWAL_WARNING_DAYS
+  // and the billing method is not CREDIT_CARD (credit card has auto-debit, no action needed).
+  const renewalBanner = computeRenewalBanner(tenant);
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -101,6 +130,13 @@ export default async function ProtectedLayout({
 
         <main className="w-full px-6 py-8 md:px-8">{children}</main>
       </div>
+
+      {renewalBanner && (
+        <RenewalBanner
+          daysUntilRenewal={renewalBanner.daysUntilRenewal}
+          subscriptionExpiresAt={renewalBanner.expiresAt}
+        />
+      )}
     </div>
   );
 }

@@ -37,6 +37,18 @@ export default async function AdminLayout({
           >
             Usuários
           </Link>
+          <Link
+            href="/admin/coupons"
+            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
+          >
+            Cupons
+          </Link>
+          <Link
+            href="/admin/pricing"
+            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
+          >
+            Preços
+          </Link>
         </nav>
 
         <form action={signOutAction} className="mt-8">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { saveSettingsAction } from "@/app/(protected)/settings/actions";
 import { ImageUpload } from "@/components/image-upload";
 import { requireActiveTenant } from "@/lib/auth";
+import { formatBrazilTaxId } from "@/lib/brazil-tax-id";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = {
@@ -53,12 +54,13 @@ export default async function SettingsPage({ searchParams }: Props) {
 
   const { data: tenantBranding } = await supabase
     .from("tenants")
-    .select("name, logo_url")
+    .select("name, logo_url, cpf_cnpj")
     .eq("id", tenant.id)
     .maybeSingle();
 
   const clinicName = tenantBranding?.name ?? tenant.name;
   const clinicLogoUrl = tenantBranding?.logo_url ?? tenant.logo_url;
+  const billingDocument = tenantBranding?.cpf_cnpj ?? tenant.cpf_cnpj;
 
   const withSettings = await supabase
     .from("users")
@@ -192,6 +194,21 @@ export default async function SettingsPage({ searchParams }: Props) {
                   defaultValue={appUser.email}
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
                 />
+              </label>
+
+              <label className="block text-sm mt-4">
+                <span className="mb-1 block text-foreground">
+                  CPF ou CNPJ para faturamento
+                </span>
+                <input
+                  name="cpf_cnpj"
+                  defaultValue={formatBrazilTaxId(billingDocument)}
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+                <p className="mt-1 text-xs text-muted">
+                  Obrigatório para gerar cobranças e assinaturas no Asaas.
+                </p>
               </label>
             </div>
           </div>

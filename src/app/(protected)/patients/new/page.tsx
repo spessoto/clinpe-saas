@@ -4,6 +4,7 @@ import {
   createPatientAction,
   getPatientCountStatus,
 } from "@/app/(protected)/patients/actions";
+import { OtherReasonInput } from "@/app/(protected)/patients/new/other-reason-input";
 import { requireActiveTenant } from "@/lib/auth";
 
 type Props = {
@@ -56,7 +57,7 @@ export default async function NewPatientPage({ searchParams }: Props) {
   }
 
   return (
-    <section className="surface-card max-w-xl p-6">
+    <section className="surface-card mx-auto max-w-5xl p-6 md:p-8">
       <h2 className="text-2xl font-bold">Novo paciente</h2>
       <p className="mt-1 text-sm text-muted">
         Cadastre o paciente para iniciar o historico clinico.
@@ -85,10 +86,10 @@ export default async function NewPatientPage({ searchParams }: Props) {
         </p>
       ) : null}
 
-      <form action={createPatientAction} className="mt-6 space-y-8">
+      <form action={createPatientAction} className="mt-6 space-y-8 pb-24">
         {/* Identificação */}
-        <fieldset className="space-y-4">
-          <legend className="text-base font-semibold text-foreground">
+        <fieldset className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 md:p-5">
+          <legend className="px-2 text-sm font-bold uppercase tracking-wide text-foreground">
             Identificação
           </legend>
           <label className="block text-sm">
@@ -132,8 +133,8 @@ export default async function NewPatientPage({ searchParams }: Props) {
         </fieldset>
 
         {/* Contato e Localização */}
-        <fieldset className="space-y-4">
-          <legend className="text-base font-semibold text-foreground">
+        <fieldset className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+          <legend className="px-2 text-sm font-bold uppercase tracking-wide text-foreground">
             Contato e Localização
           </legend>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -187,8 +188,8 @@ export default async function NewPatientPage({ searchParams }: Props) {
         </fieldset>
 
         {/* Perfil Social */}
-        <fieldset className="space-y-4">
-          <legend className="text-base font-semibold text-foreground">
+        <fieldset className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+          <legend className="px-2 text-sm font-bold uppercase tracking-wide text-foreground">
             Perfil Social e Segurança
           </legend>
           <label className="block text-sm">
@@ -319,6 +320,12 @@ export default async function NewPatientPage({ searchParams }: Props) {
                 </label>
               ))}
             </div>
+            <OtherReasonInput
+              triggerSelector="input[name='continuous_meds'][value='Outro']"
+              inputName="continuous_meds_other_reason"
+              label="Motivo de Outros (medicamentos)"
+              placeholder="Descreva o medicamento de uso contínuo"
+            />
           </div>
 
           {/* Alergias */}
@@ -347,6 +354,12 @@ export default async function NewPatientPage({ searchParams }: Props) {
                 </label>
               ))}
             </div>
+            <OtherReasonInput
+              triggerSelector="input[name='patient_allergies'][value='Outra']"
+              inputName="patient_allergies_other_reason"
+              label="Motivo de Outros (alergias)"
+              placeholder="Descreva a alergia"
+            />
           </div>
 
           {/* Hábitos base */}
@@ -392,12 +405,18 @@ export default async function NewPatientPage({ searchParams }: Props) {
                 </label>
               ))}
             </div>
+            <OtherReasonInput
+              triggerSelector="input[name='predominant_footwear'][value='Outro']"
+              inputName="predominant_footwear_other_reason"
+              label="Motivo de Outros (calçado)"
+              placeholder="Descreva o calçado predominante"
+            />
           </div>
         </fieldset>
 
         {/* Origem (Marketing) */}
-        <fieldset className="space-y-3">
-          <legend className="text-base font-semibold text-foreground">
+        <fieldset className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:p-5">
+          <legend className="px-2 text-sm font-bold uppercase tracking-wide text-foreground">
             Origem
           </legend>
           <label className="block text-sm">
@@ -405,6 +424,7 @@ export default async function NewPatientPage({ searchParams }: Props) {
               Como nos conheceu?
             </span>
             <select
+              id="referral_source"
               name="referral_source"
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
             >
@@ -416,9 +436,15 @@ export default async function NewPatientPage({ searchParams }: Props) {
               </option>
               <option value="Google">Pesquisa no Google</option>
               <option value="Facebook">Facebook</option>
-              <option value="Outro">Outro</option>
+              <option value="Outro">Outros</option>
             </select>
           </label>
+          <OtherReasonInput
+            triggerSelector="#referral_source"
+            inputName="referral_source_other_reason"
+            label="Motivo de Outros (origem)"
+            placeholder="Descreva como conheceu a clínica"
+          />
         </fieldset>
 
         <div className="flex gap-2">

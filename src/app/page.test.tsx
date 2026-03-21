@@ -8,7 +8,7 @@ describe("Home", () => {
     render(<Home />);
 
     expect(
-      screen.getByRole("heading", { name: /clinpé saas de podologia/i }),
+      screen.getByRole("heading", { name: /foque nos seus pacientes/i }),
     ).toBeInTheDocument();
   });
 });

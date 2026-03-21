@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { updateAccountBillingProfile } from "@/lib/account-billing-profile";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -56,6 +57,7 @@ export async function saveSettingsAction(formData: FormData) {
   const clinicName = getField(formData, "clinic_name");
   const fullName = getField(formData, "full_name");
   const email = getField(formData, "email");
+  const billingDocument = getField(formData, "cpf_cnpj");
   const currentLogoUrl = getField(formData, "current_logo_url");
 
   if (!clinicName || !fullName || !email) {
@@ -141,62 +143,39 @@ export async function saveSettingsAction(formData: FormData) {
   }
 
   let bookingSlug = appUser.booking_slug;
-  if (fullName !== appUser.full_name) {
-    const { data: generatedSlug } = await supabase.rpc(
-      "generate_unique_professional_slug",
-      {
-        base_name: fullName,
-        p_user_id: appUser.id,
-      },
-    );
+  let emailChanged = false;
 
-    if (typeof generatedSlug === "string" && generatedSlug.length > 0) {
-      bookingSlug = generatedSlug;
-    }
-  }
-
-  const { error: userError } = await supabase
-    .from("users")
-    .update({
-      full_name: fullName,
+  try {
+    const result = await updateAccountBillingProfile({
+      supabase,
+      appUser,
+      fullName,
       email,
-      booking_slug: bookingSlug,
-      profile_photo_url: profilePhotoUrl,
-      working_days: workingDays,
-      working_start_time: workingStart,
-      working_end_time: workingEnd,
-      appointment_duration_minutes: appointmentDurationMinutes,
-    })
-    .eq("id", appUser.id)
-    .eq("tenant_id", appUser.tenant_id);
-
-  if (userError) {
-    redirect(`/settings?error=${encodeURIComponent(userError.message)}`);
-  }
-
-  if (clinicName !== tenant.name || logoUrl !== tenant.logo_url) {
-    const { error: tenantError } = await supabase
-      .from("tenants")
-      .update({
+      billingDocument,
+      userFields: {
+        profile_photo_url: profilePhotoUrl,
+        working_days: workingDays,
+        working_start_time: workingStart,
+        working_end_time: workingEnd,
+        appointment_duration_minutes: appointmentDurationMinutes,
+      },
+      tenantFields: {
         name: clinicName,
         logo_url: logoUrl,
-      })
-      .eq("id", tenant.id);
+      },
+    });
 
-    if (tenantError) {
-      redirect(`/settings?error=${encodeURIComponent(tenantError.message)}`);
-    }
+    bookingSlug = result.bookingSlug;
+    emailChanged = result.emailChanged;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Falha ao salvar configurações.";
+    redirect(`/settings?error=${encodeURIComponent(message)}`);
   }
 
   let successMessage = "Configurações atualizadas com sucesso.";
 
-  if (email !== appUser.email) {
-    const { error: authError } = await supabase.auth.updateUser({ email });
-
-    if (authError) {
-      redirect(`/settings?error=${encodeURIComponent(authError.message)}`);
-    }
-
+  if (emailChanged) {
     successMessage =
       "Configurações atualizadas. Confirme o novo e-mail na sua caixa de entrada.";
   }
@@ -204,6 +183,7 @@ export async function saveSettingsAction(formData: FormData) {
   revalidatePath("/settings");
   revalidatePath("/dashboard");
   revalidatePath("/agenda");
+  revalidatePath("/billing");
   revalidatePath(`/${bookingSlug ?? ""}`);
 
   redirect(`/settings?success=${encodeURIComponent(successMessage)}`);

@@ -1,8 +1,10 @@
-import { AlertCircle, CheckCircle2, Shield } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
+import { DeleteUserButton } from "@/app/admin/users/delete-user-button";
 import { getAdminUsersList } from "@/app/admin/users/actions";
 import { ToggleAdminButton } from "@/app/admin/users/toggle-admin-button";
+import { UserDetailsDialog } from "@/app/admin/users/user-details-dialog";
 import { requireAdminAccess } from "@/lib/auth";
 
 export const revalidate = 300;
@@ -95,12 +97,11 @@ export default async function AdminUsersPage(props: {
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left font-semibold">E-mail</th>
-                <th className="px-6 py-3 text-left font-semibold">Nome</th>
+                <th className="px-6 py-3 text-left font-semibold">Usuário</th>
+                <th className="px-6 py-3 text-left font-semibold">Cliente</th>
+                <th className="px-6 py-3 text-left font-semibold">Plano</th>
+                <th className="px-6 py-3 text-left font-semibold">Renovação</th>
                 <th className="px-6 py-3 text-left font-semibold">Admin</th>
-                <th className="px-6 py-3 text-left font-semibold">
-                  Data de Cadastro
-                </th>
                 <th className="px-6 py-3 text-left font-semibold">Ação</th>
               </tr>
             </thead>
@@ -108,7 +109,7 @@ export default async function AdminUsersPage(props: {
               {users.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-6 py-8 text-center text-muted-foreground"
                   >
                     Nenhum usuário cadastrado
@@ -120,35 +121,59 @@ export default async function AdminUsersPage(props: {
                     key={user.id}
                     className="border-b border-border hover:bg-muted/50"
                   >
-                    <td className="px-6 py-4 font-medium">{user.email}</td>
-                    <td className="px-6 py-4">{user.full_name}</td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {user.is_admin && (
-                          <>
-                            <Shield className="h-4 w-4 text-blue-600" />
-                            <span className="text-xs font-semibold text-blue-600">
-                              Admin
-                            </span>
-                          </>
-                        )}
-                        {!user.is_admin && (
-                          <span className="text-xs text-muted-foreground">
-                            Usuário
-                          </span>
-                        )}
-                      </div>
+                      <p className="font-semibold text-foreground">
+                        {user.full_name}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {user.email}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Cadastro: {formatDate(user.created_at)}
+                      </p>
                     </td>
-                    <td className="px-6 py-4 text-xs text-muted-foreground">
-                      {formatDate(user.created_at)}
+                    <td className="px-6 py-4">
+                      <p className="font-medium">
+                        {user.client?.name ?? "Sem cliente"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        /{user.client?.slug ?? "-"}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 text-sm">{user.plan_label}</td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm">
+                        {user.renewal_date === "Sem vencimento"
+                          ? "Sem vencimento"
+                          : formatDate(user.renewal_date)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.renewal_days_left === null
+                          ? "-"
+                          : `${user.renewal_days_left} dia(s)`}
+                      </p>
                     </td>
                     <td className="px-6 py-4">
                       <ToggleAdminButton
                         userId={user.id}
-                        userEmail={user.email}
                         isAdmin={user.is_admin}
                         currentPage={page}
                       />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <UserDetailsDialog
+                          user={user}
+                          currentPage={page}
+                          triggerVariant="icon"
+                        />
+                        <DeleteUserButton
+                          userId={user.id}
+                          userEmail={user.email}
+                          isAdmin={user.is_admin}
+                          currentPage={page}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -5,6 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-03-21
+
+### Added
+
+- **Sistema de cupons completo**
+  - Painel admin de cupons em `/admin/coupons` para criar e editar regras de desconto
+  - Regras suportadas: validade, limite total de uso, ciclos com desconto, escopo mensal/anual e tipo fixo/percentual
+  - Novas tabelas `coupons` e `coupon_redemptions` com rastreabilidade por usuário/tenant
+  - Uso único por usuário garantido por constraints e validações no fluxo
+
+- **Admin pricing dinâmico**
+  - Nova área `/admin/pricing` para gestão de preços e limites de pacientes por plano
+  - Tabela `billing_plan_prices` como fonte de verdade para landing e billing
+
+- **Upgrade do painel admin de usuários**
+  - Coluna de admin com switch dedicado
+  - Coluna de ações com ícones de editar e excluir
+  - Exclusão protegida: admins não podem ser excluídos sem revogar função antes
+
+- **Camada de segurança com reCAPTCHA v3**
+  - Proteção em login, cadastro e booking público
+  - Componentes reutilizáveis para formulário com token server-side
+
+- **Fluxo de assinatura com dados de faturamento**
+  - Novo fluxo de checkout com validação de CPF/CNPJ e seleção de método de cobrança
+  - Persistência de perfil de faturamento e método de assinatura por tenant
+
+### Changed
+
+- **Página `/billing` remodelada**
+  - Grid de planos desacoplado e preparado para preços dinâmicos
+  - Exibição de prévia de cupom aplicado por ciclo
+  - Ajustes de feedback de sucesso/erro no fluxo de assinatura
+
+- **Dashboard `/admin` com KPIs mais precisos**
+  - Métricas com atualização dinâmica (sem cache estático de 30 minutos)
+  - Contagem de profissionais excluindo admins
+  - Trials vencendo considera apenas clientes em `trialing`
+  - Consultas do mês excluem canceladas
+  - Pacientes e consultas contabilizados por clientes com acesso ativo
+
+- **Formulário `/patients/new` redesenhado**
+  - Layout alinhado ao padrão visual de `/medical-records/new`
+  - Campos dinâmicos para opções "Outros" com detalhamento de motivo
+
+### Fixed
+
+- **Erro de criação de cupom em produção**
+  - Aplicação da migration pendente `20260321000029_coupon_system.sql`
+  - Correção do erro `Could not find the table 'public.coupons' in the schema cache`
+
+- **Correções de consistência no onboarding e billing**
+  - Persistência de `signup_coupon_code` no tenant
+  - Vínculo de resgate de cupom ao ciclo de assinatura e baixa por webhook de pagamento
+
 ## [0.10.0] - 2026-03-19
 
 ### Added

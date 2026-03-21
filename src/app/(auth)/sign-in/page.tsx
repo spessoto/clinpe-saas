@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { signInAction } from "@/app/auth-actions";
 import { BrandLogo } from "@/components/brand-logo";
+import { RecaptchaForm } from "../recaptcha-form";
+import { SignInSubmitButton } from "./sign-in-submit-button";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -13,11 +15,19 @@ export default async function SignInPage({ searchParams }: Props) {
   const message = typeof params.message === "string" ? params.message : null;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-14">
-      <section className="surface-card w-full p-7">
+    <main className="relative isolate flex min-h-screen items-center overflow-hidden px-6 py-14">
+      <div
+        className="pointer-events-none absolute inset-0 -z-10"
+        aria-hidden="true"
+      >
+        <div className="absolute -left-24 top-[-120px] h-80 w-80 rounded-full bg-gradient-to-br from-primary/45 to-secondary/25 blur-3xl" />
+        <div className="absolute -right-28 bottom-[-120px] h-96 w-96 rounded-full bg-gradient-to-tl from-secondary/35 to-primary/20 blur-3xl" />
+      </div>
+
+      <section className="surface-card mx-auto w-full max-w-md p-7">
         <BrandLogo className="mx-auto h-auto w-44" priority />
         <h1 className="mt-4 text-2xl font-bold">Entrar</h1>
-        <p className="mt-1 text-sm text-muted">Acesse sua conta do ClinPé.</p>
+        <p className="mt-1 text-sm text-muted">Acesse sua conta do PodoDesk.</p>
 
         {message ? (
           <p className="mt-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
@@ -31,7 +41,11 @@ export default async function SignInPage({ searchParams }: Props) {
           </p>
         ) : null}
 
-        <form action={signInAction} className="mt-6 space-y-4">
+        <RecaptchaForm
+          serverAction={signInAction}
+          recaptchaAction="login"
+          className="mt-6 space-y-4"
+        >
           <label className="block text-sm">
             <span className="mb-1 block text-foreground">E-mail</span>
             <input
@@ -52,10 +66,8 @@ export default async function SignInPage({ searchParams }: Props) {
             />
           </label>
 
-          <button type="submit" className="btn-gradient w-full py-2.5">
-            Entrar
-          </button>
-        </form>
+          <SignInSubmitButton />
+        </RecaptchaForm>
 
         <p className="mt-4 text-sm text-muted">
           Ainda não tem conta?{" "}

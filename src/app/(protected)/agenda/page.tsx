@@ -257,7 +257,7 @@ export default async function AgendaPage({ searchParams }: Props) {
 
       if (events.length > 0) {
         warningBanner ??=
-          "Mostrando eventos do Google Calendar. Para confirmar/cancelar com e-mail, o agendamento precisa existir no ClinPé.";
+          "Mostrando eventos do Google Calendar. Para confirmar/cancelar com e-mail, o agendamento precisa existir no PodoDesk.";
       }
     } catch {
       // If Google API fails, we keep the database result (possibly empty).

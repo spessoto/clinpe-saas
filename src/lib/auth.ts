@@ -21,11 +21,18 @@ export type Tenant = {
   id: string;
   name: string;
   slug: string;
+  cpf_cnpj: string | null;
   trial_ends_at: string;
   trial_extension_days: number;
   is_permanent_free_plan: boolean;
   subscription_expires_at: string | null;
   subscription_status: "trialing" | "active" | "past_due";
+  subscription_billing_method:
+    | "BOLETO"
+    | "CREDIT_CARD"
+    | "PIX"
+    | "UNDEFINED"
+    | null;
   billing_tier: "free_trial" | "tier_1" | "tier_2" | "tier_3";
   max_patients_allowed: number;
   logo_url: string | null;
@@ -136,7 +143,7 @@ export async function requireActiveTenant() {
   const withSlugResult = await supabase
     .from("tenants")
     .select(
-      "id, name, slug, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_expires_at, subscription_status, billing_tier, max_patients_allowed, logo_url",
+      "id, name, slug, cpf_cnpj, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_expires_at, subscription_status, subscription_billing_method, billing_tier, max_patients_allowed, logo_url",
     )
     .eq("id", appUser.tenant_id)
     .single();
@@ -146,7 +153,7 @@ export async function requireActiveTenant() {
   if (!tenant && withSlugResult.error) {
     const fallbackResult = await supabase
       .from("tenants")
-      .select("id, name, slug, trial_ends_at, subscription_status")
+      .select("id, name, slug, cpf_cnpj, trial_ends_at, subscription_status")
       .eq("id", appUser.tenant_id)
       .single();
 
@@ -154,6 +161,7 @@ export async function requireActiveTenant() {
       tenant = {
         ...(fallbackResult.data as Omit<
           Tenant,
+          | "cpf_cnpj"
           | "trial_extension_days"
           | "is_permanent_free_plan"
           | "subscription_expires_at"
@@ -161,9 +169,11 @@ export async function requireActiveTenant() {
           | "max_patients_allowed"
           | "logo_url"
         >),
+        cpf_cnpj: null,
         trial_extension_days: 0,
         is_permanent_free_plan: false,
         subscription_expires_at: null,
+        subscription_billing_method: null,
         billing_tier: "free_trial",
         max_patients_allowed: 10,
         logo_url: null,
@@ -171,7 +181,7 @@ export async function requireActiveTenant() {
     } else {
       const fallback2Result = await supabase
         .from("tenants")
-        .select("id, name, trial_ends_at, subscription_status")
+        .select("id, name, cpf_cnpj, trial_ends_at, subscription_status")
         .eq("id", appUser.tenant_id)
         .single();
 
@@ -180,6 +190,7 @@ export async function requireActiveTenant() {
           ...(fallback2Result.data as Omit<
             Tenant,
             | "slug"
+            | "cpf_cnpj"
             | "trial_extension_days"
             | "is_permanent_free_plan"
             | "subscription_expires_at"
@@ -188,9 +199,11 @@ export async function requireActiveTenant() {
             | "logo_url"
           >),
           slug: "",
+          cpf_cnpj: null,
           trial_extension_days: 0,
           is_permanent_free_plan: false,
           subscription_expires_at: null,
+          subscription_billing_method: null,
           billing_tier: "free_trial",
           max_patients_allowed: 10,
           logo_url: null,

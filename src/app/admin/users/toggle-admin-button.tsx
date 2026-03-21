@@ -1,43 +1,40 @@
 "use client";
 
+import { useRef } from "react";
+
 import { toggleAdminRoleAction } from "@/app/admin/users/actions";
 
 interface ToggleAdminButtonProps {
   userId: string;
-  userEmail: string;
   isAdmin: boolean;
   currentPage: number;
 }
 
 export function ToggleAdminButton({
   userId,
-  userEmail,
   isAdmin,
   currentPage,
 }: ToggleAdminButtonProps) {
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const action = isAdmin ? "revogar" : "dar";
-    const msg = `Tem certeza que quer ${action} acesso admin a ${userEmail}?`;
-    if (!confirm(msg)) {
-      e.preventDefault();
-    }
-  };
+  const formRef = useRef<HTMLFormElement>(null);
 
   return (
-    <form action={toggleAdminRoleAction} className="inline">
+    <form action={toggleAdminRoleAction} className="inline" ref={formRef}>
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="page" value={String(currentPage)} />
-      <button
-        type="submit"
-        onClick={handleClick}
-        className={`rounded px-3 py-1 text-xs font-medium transition ${
-          isAdmin
-            ? "border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
-            : "border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
-        }`}
+      <label
+        className="inline-flex cursor-pointer items-center"
+        title="Alternar acesso admin"
       >
-        {isAdmin ? "Revogar Admin" : "Promover Admin"}
-      </button>
+        <input
+          type="checkbox"
+          className="peer sr-only"
+          defaultChecked={isAdmin}
+          onChange={() => formRef.current?.requestSubmit()}
+          aria-label="Alternar acesso admin"
+        />
+        <span className="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-blue-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300" />
+        <span className="-ml-10 h-5 w-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+      </label>
     </form>
   );
 }

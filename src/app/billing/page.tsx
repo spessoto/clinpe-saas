@@ -1,14 +1,18 @@
 import { Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle, AlertCircle, Info, Check, Mail } from "lucide-react";
+import { CheckCircle, AlertCircle, Info, Mail } from "lucide-react";
 
 import { isConfiguredAdminEmail, requireAuthenticatedUser } from "@/lib/auth";
+import { couponSupportsPeriod, formatCouponValue } from "@/lib/coupons";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { TenantBillingStatus } from "@/lib/tenant-access";
 import { getEffectiveTrialEnd } from "@/lib/tenant-access";
-import { createCheckoutAction } from "./actions";
-import { BILLING_PLANS, type BillingPeriod, type BillingTier } from "./plans";
+import { type BillingPeriod } from "./plans";
+import { getBillingPlans } from "./plans-server";
 import { PeriodToggle } from "./period-toggle";
+import { BillingPlansGrid } from "./billing-plans-grid";
 
 type SearchParams = Promise<{
   period?: string;
@@ -16,12 +20,35 @@ type SearchParams = Promise<{
   error?: string;
 }>;
 
-function formatBRL(value: number) {
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+function statusFeedback(status: string | undefined) {
+  if (status === "success") {
+    return {
+      tone: "success" as const,
+      title: "Pagamento recebido!",
+      description:
+        "Sua assinatura está sendo processada. Em instantes seu acesso será liberado — recarregue a página se necessário.",
+    };
+  }
 
-function annualMonthly(annual: number) {
-  return formatBRL(annual / 12);
+  if (status === "billing-profile-saved") {
+    return {
+      tone: "success" as const,
+      title: "Dados de faturamento salvos",
+      description:
+        "Agora você já pode seguir com a assinatura do plano desejado.",
+    };
+  }
+
+  if (status === "billing-profile-email-updated") {
+    return {
+      tone: "success" as const,
+      title: "Dados salvos e e-mail atualizado",
+      description:
+        "Confirme o novo e-mail na sua caixa de entrada e depois continue com a assinatura.",
+    };
+  }
+
+  return null;
 }
 
 function getTrialStatus(tenant: {
@@ -46,15 +73,6 @@ function getTrialStatus(tenant: {
   return { type: "trial" as const, daysLeft };
 }
 
-const PLAN_FEATURES = [
-  "Prontuários ilimitados",
-  "Agenda integrada",
-  "Agendamento público online",
-  "Integração Google Calendar",
-  "Notificações por e-mail",
-  "Suporte por e-mail",
-];
-
 export default async function BillingPage({
   searchParams,
 }: {
@@ -66,10 +84,23 @@ export default async function BillingPage({
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, billing_tier",
+      "trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, billing_tier, cpf_cnpj",
     )
     .eq("id", appUser.tenant_id)
     .single();
+
+  const adminClient = createAdminClient();
+  const { data: couponRedemption } = await adminClient
+    .from("coupon_redemptions")
+    .select(
+      "discounted_cycles_remaining, discounted_cycles_total, status, coupon:coupons(code, discount_type, discount_value, applies_to_period)",
+    )
+    .eq("tenant_id", appUser.tenant_id)
+    .eq("user_id", appUser.id)
+    .in("status", ["reserved", "linked", "active"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   const params = await searchParams;
   const period: BillingPeriod =
@@ -77,6 +108,19 @@ export default async function BillingPage({
   const statusParam = params.status;
   const errorParam = params.error;
   const canAccessAdmin = isConfiguredAdminEmail(appUser.email);
+  const feedback = statusFeedback(statusParam);
+  const plans = await getBillingPlans();
+  const couponPreview = couponRedemption
+    ? {
+        code: couponRedemption.coupon?.code ?? "",
+        discount_type: couponRedemption.coupon?.discount_type ?? "percentage",
+        discount_value: Number(couponRedemption.coupon?.discount_value ?? 0),
+        applies_to_period: couponRedemption.coupon?.applies_to_period ?? "both",
+        discounted_cycles_remaining:
+          couponRedemption.discounted_cycles_remaining ?? 0,
+        discounted_cycles_total: couponRedemption.discounted_cycles_total ?? 0,
+      }
+    : null;
 
   const trialStatus = tenant
     ? getTrialStatus(tenant)
@@ -85,15 +129,26 @@ export default async function BillingPage({
   return (
     <main className="min-h-screen bg-background px-4 py-12">
       <div className="mx-auto max-w-5xl">
+        {/* Logo */}
+        <div className="mb-8">
+          <Image
+            src="/logo-pododesk.png"
+            alt="PodoDesk"
+            width={180}
+            height={60}
+            priority
+            className="h-auto w-44"
+          />
+        </div>
+
         {/* Status feedback */}
-        {statusParam === "success" && (
+        {feedback && (
           <div className="mb-8 flex items-start gap-3 rounded-xl border border-success/30 bg-success/10 p-4">
             <CheckCircle className="mt-0.5 size-5 shrink-0 text-success" />
             <div>
-              <p className="font-semibold text-success">Pagamento recebido!</p>
+              <p className="font-semibold text-success">{feedback.title}</p>
               <p className="mt-0.5 text-sm text-muted">
-                Sua assinatura está sendo processada. Em instantes seu acesso
-                será liberado — recarregue a página se necessário.
+                {feedback.description}
               </p>
             </div>
           </div>
@@ -106,6 +161,23 @@ export default async function BillingPage({
             </p>
           </div>
         )}
+        {couponPreview?.code ? (
+          <div className="mb-8 flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/10 p-4">
+            <CheckCircle className="mt-0.5 size-5 shrink-0 text-primary" />
+            <div>
+              <p className="font-semibold text-primary">
+                Cupom {couponPreview.code} vinculado à sua conta
+              </p>
+              <p className="mt-0.5 text-sm text-muted">
+                Desconto de {formatCouponValue(couponPreview)} por até{" "}
+                {couponPreview.discounted_cycles_total} ciclo(s)
+                {couponSupportsPeriod(couponPreview, period)
+                  ? ` neste período ${period === "annual" ? "anual" : "mensal"}.`
+                  : `. Este cupom só vale para o período ${couponPreview.applies_to_period}.`}
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         {/* Header */}
         <div className="mb-10 text-center">
@@ -135,7 +207,7 @@ export default async function BillingPage({
           </h1>
           <p className="mt-2 text-muted">
             {trialStatus.type === "expired"
-              ? "Seu período gratuito terminou. Selecione um plano para voltar a usar o ClinPé."
+              ? "Seu período gratuito terminou. Selecione um plano para voltar a usar o PodoDesk."
               : trialStatus.type === "free_permanent"
                 ? "Seu tenant está operando em free permanente. Você ainda pode migrar para um plano pago a qualquer momento."
                 : "Acesso completo a prontuários, agenda e agendamento online."}
@@ -156,103 +228,15 @@ export default async function BillingPage({
           </Suspense>
         </div>
 
-        {/* Plan cards */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {(
-            Object.entries(BILLING_PLANS) as [
-              BillingTier,
-              (typeof BILLING_PLANS)[BillingTier],
-            ][]
-          ).map(([tier, plan], idx) => {
-            const isHighlighted = idx === 1;
-            const pricing = plan[period];
-            const isCurrent =
-              trialStatus.type === "active" && tenant?.billing_tier === tier;
-
-            return (
-              <div
-                key={tier}
-                className={`relative flex flex-col rounded-2xl border p-6 ${
-                  isHighlighted
-                    ? "border-primary bg-primary/5 shadow-lg"
-                    : "border-gray-200 bg-surface"
-                }`}
-              >
-                {isHighlighted && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-0.5 text-xs font-bold text-white">
-                    Mais popular
-                  </span>
-                )}
-                {isCurrent && (
-                  <span className="absolute -top-3 right-4 rounded-full bg-success px-3 py-0.5 text-xs font-bold text-white">
-                    Plano atual
-                  </span>
-                )}
-
-                <div className="mb-4">
-                  <h2 className="text-lg font-bold text-foreground">
-                    {plan.label}
-                  </h2>
-                  <p className="text-sm text-muted">
-                    Até {plan.maxPatients} pacientes
-                  </p>
-                </div>
-
-                <div className="mb-1">
-                  {period === "annual" ? (
-                    <>
-                      <span className="text-3xl font-extrabold text-foreground">
-                        {annualMonthly(pricing.amount)}
-                      </span>
-                      <span className="text-sm text-muted">/mês</span>
-                      <p className="mt-0.5 text-xs text-muted">
-                        Cobrado anualmente —{" "}
-                        <span className="font-medium text-foreground">
-                          {formatBRL(pricing.amount)}
-                        </span>
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-3xl font-extrabold text-foreground">
-                        {formatBRL(pricing.amount)}
-                      </span>
-                      <span className="text-sm text-muted">/mês</span>
-                    </>
-                  )}
-                </div>
-
-                <ul className="my-6 flex-1 space-y-2">
-                  {PLAN_FEATURES.map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-center gap-2 text-sm text-muted"
-                    >
-                      <Check className="size-4 shrink-0 text-success" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <form action={createCheckoutAction}>
-                  <input type="hidden" name="tier" value={tier} />
-                  <input type="hidden" name="period" value={period} />
-                  <button
-                    type="submit"
-                    disabled={isCurrent}
-                    className={`w-full rounded-xl py-2.5 text-sm font-semibold transition-colors ${
-                      isHighlighted
-                        ? "bg-primary text-white hover:bg-primary-hover disabled:opacity-50"
-                        : "border border-primary text-primary hover:bg-primary/5 disabled:opacity-50"
-                    }`}
-                  >
-                    {isCurrent ? "Plano ativo" : "Assinar com Asaas"}
-                  </button>
-                </form>
-              </div>
-            );
-          })}
-        </div>
+        {/* Plan cards grid with modal */}
+        <BillingPlansGrid
+          appUser={appUser}
+          tenant={tenant}
+          couponPreview={couponPreview}
+          period={period}
+          trialStatus={trialStatus}
+          plans={plans}
+        />
 
         {/* Enterprise CTA */}
         <div className="mt-8 flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-surface p-5 text-center">
@@ -263,7 +247,7 @@ export default async function BillingPage({
             Entre em contato para um plano personalizado.
           </p>
           <a
-            href="mailto:contato@clinpe.com.br"
+            href="mailto:contato@pododesk.com.br"
             className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-foreground hover:bg-gray-50"
           >
             <Mail className="size-4" />

@@ -603,7 +603,7 @@ export async function createPublicBooking(input: {
       const googleEventId = await createGoogleCalendarEvent(
         integration as GoogleIntegration,
         {
-          summary: `Consulta ClinPé - ${input.patientName}`,
+          summary: `Consulta PodoDesk - ${input.patientName}`,
           description: `Agendamento público da clínica ${context.tenant.name}. Telefone: ${input.patientPhone}. E-mail: ${input.patientEmail}`,
           start: input.scheduledAt,
           end: addMinutes(

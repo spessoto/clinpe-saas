@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { signUpAction } from "@/app/auth-actions";
 import { BrandLogo } from "@/components/brand-logo";
+import { RecaptchaForm, RecaptchaSubmitButton } from "../recaptcha-form";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -12,12 +13,20 @@ export default async function SignUpPage({ searchParams }: Props) {
   const error = typeof params.error === "string" ? params.error : null;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-14">
-      <section className="surface-card w-full p-7">
+    <main className="relative isolate flex min-h-screen items-center overflow-hidden px-6 py-14">
+      <div
+        className="pointer-events-none absolute inset-0 -z-10"
+        aria-hidden="true"
+      >
+        <div className="absolute -left-24 top-[-120px] h-80 w-80 rounded-full bg-gradient-to-br from-primary/45 to-secondary/25 blur-3xl" />
+        <div className="absolute -right-28 bottom-[-120px] h-96 w-96 rounded-full bg-gradient-to-tl from-secondary/35 to-primary/20 blur-3xl" />
+      </div>
+
+      <section className="surface-card mx-auto w-full max-w-md p-7">
         <BrandLogo className="mx-auto h-auto w-44" priority />
         <h1 className="mt-4 text-2xl font-bold">Criar conta</h1>
         <p className="mt-1 text-sm text-muted">
-          Comece seu trial de 7 dias no ClinPé.
+          Comece seu trial de 7 dias no PodoDesk.
         </p>
 
         {error ? (
@@ -26,7 +35,11 @@ export default async function SignUpPage({ searchParams }: Props) {
           </p>
         ) : null}
 
-        <form action={signUpAction} className="mt-6 space-y-4">
+        <RecaptchaForm
+          serverAction={signUpAction}
+          recaptchaAction="signup"
+          className="mt-6 space-y-4"
+        >
           <label className="block text-sm">
             <span className="mb-1 block text-foreground">Nome completo</span>
             <input
@@ -46,8 +59,33 @@ export default async function SignUpPage({ searchParams }: Props) {
           </label>
 
           <label className="block text-sm">
+            <span className="mb-1 block text-foreground">CPF / CNPJ</span>
+            <input
+              name="cpf_cnpj"
+              required
+              placeholder="000.000.000-00 ou 00.000.000/0001-00"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+
+          <label className="block text-sm">
             <span className="mb-1 block text-foreground">
-              Registro profissional
+              Cupom de desconto
+            </span>
+            <input
+              name="coupon_code"
+              placeholder="Opcional"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+            <span className="mt-1 block text-xs text-muted">
+              Se válido, o cupom fica vinculado à sua conta e poderá ser usado
+              na assinatura paga.
+            </span>
+          </label>
+
+          <label className="block text-sm">
+            <span className="mb-1 block text-foreground">
+              Registro Profissional / Número de Diploma
             </span>
             <input
               name="professional_register"
@@ -76,10 +114,8 @@ export default async function SignUpPage({ searchParams }: Props) {
             />
           </label>
 
-          <button type="submit" className="btn-gradient w-full py-2.5">
-            Criar conta
-          </button>
-        </form>
+          <RecaptchaSubmitButton label="Criar conta" />
+        </RecaptchaForm>
 
         <p className="mt-4 text-sm text-muted">
           Já tem conta?{" "}
