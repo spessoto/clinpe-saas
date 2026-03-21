@@ -4,44 +4,35 @@ import { useEffect, useRef, useState } from "react";
 
 const MAX_PHOTOS = 4;
 
-/**
- * Renderiza um <input type="file" name="photos"> invisível e popula seus
- * `files` via DataTransfer para que o arquivo acumulado seja enviado
- * junto ao FormData do formulário parent.
- */
-function PhotoInput({ file }: { file: File }) {
-  const ref = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    ref.current.files = dt.files;
-  }, [file]);
-
-  return (
-    <input
-      type="file"
-      name="photos"
-      ref={ref}
-      className="sr-only"
-      aria-hidden="true"
-      tabIndex={-1}
-    />
-  );
-}
-
 export function PhotoPicker() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
 
-  // Mantém previews sincronizados e revoga URLs antigas para evitar leak
+  // Mantém previews sincronizados e revoga object URLs antigas para evitar leak
   useEffect(() => {
     const urls = files.map((f) => URL.createObjectURL(f));
     setPreviews(urls);
     return () => urls.forEach(URL.revokeObjectURL);
+  }, [files]);
+
+  // Injeta os arquivos no FormData via evento nativo 'formdata' do form pai.
+  // Funciona em todos os browsers modernos incluindo iOS Safari 15+, ao
+  // contrário da técnica de atribuir input.files via DataTransfer.
+  useEffect(() => {
+    const form = wrapperRef.current?.closest("form");
+    if (!form) return;
+
+    const handleFormData = (e: FormDataEvent) => {
+      for (const file of files) {
+        e.formData.append("photos", file);
+      }
+    };
+
+    form.addEventListener("formdata", handleFormData);
+    return () => form.removeEventListener("formdata", handleFormData);
   }, [files]);
 
   function addFiles(incoming: FileList | null) {
@@ -57,12 +48,7 @@ export function PhotoPicker() {
   const canAdd = files.length < MAX_PHOTOS;
 
   return (
-    <div className="mt-3 space-y-3">
-      {/* Inputs invisíveis que carregam os arquivos no FormData */}
-      {files.map((file, i) => (
-        <PhotoInput key={i} file={file} />
-      ))}
-
+    <div ref={wrapperRef} className="mt-3 space-y-3">
       {/* Trigger oculto — galeria (multi) */}
       <input
         ref={galleryRef}
