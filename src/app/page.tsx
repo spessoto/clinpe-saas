@@ -11,6 +11,10 @@ import {
 import { getBillingPlans } from "@/app/billing/plans-server";
 import { PricingSection, type PlanCard } from "@/app/pricing-section";
 
+// Force server-side rendering on every request so the HTML always
+// references the correct chunk hashes from the current build.
+export const dynamic = "force-dynamic";
+
 const featureCards = [
   {
     title: "Evolução Fotográfica",
