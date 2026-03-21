@@ -110,12 +110,17 @@ export default async function BillingPage({
   const canAccessAdmin = isConfiguredAdminEmail(appUser.email);
   const feedback = statusFeedback(statusParam);
   const plans = await getBillingPlans();
+  const couponRelation = couponRedemption
+    ? Array.isArray(couponRedemption.coupon)
+      ? (couponRedemption.coupon[0] ?? null)
+      : couponRedemption.coupon
+    : null;
   const couponPreview = couponRedemption
     ? {
-        code: couponRedemption.coupon?.code ?? "",
-        discount_type: couponRedemption.coupon?.discount_type ?? "percentage",
-        discount_value: Number(couponRedemption.coupon?.discount_value ?? 0),
-        applies_to_period: couponRedemption.coupon?.applies_to_period ?? "both",
+        code: couponRelation?.code ?? "",
+        discount_type: couponRelation?.discount_type ?? "percentage",
+        discount_value: Number(couponRelation?.discount_value ?? 0),
+        applies_to_period: couponRelation?.applies_to_period ?? "both",
         discounted_cycles_remaining:
           couponRedemption.discounted_cycles_remaining ?? 0,
         discounted_cycles_total: couponRedemption.discounted_cycles_total ?? 0,
@@ -125,6 +130,14 @@ export default async function BillingPage({
   const trialStatus = tenant
     ? getTrialStatus(tenant)
     : { type: "expired" as const, daysLeft: 0 };
+  const resolvedTenant = tenant ?? {
+    trial_ends_at: new Date(0).toISOString(),
+    trial_extension_days: 0,
+    is_permanent_free_plan: false,
+    subscription_status: "past_due" as const,
+    billing_tier: null,
+    cpf_cnpj: null,
+  };
 
   return (
     <main className="min-h-screen bg-background px-4 py-12">
@@ -231,7 +244,7 @@ export default async function BillingPage({
         {/* Plan cards grid with modal */}
         <BillingPlansGrid
           appUser={appUser}
-          tenant={tenant}
+          tenant={resolvedTenant}
           couponPreview={couponPreview}
           period={period}
           trialStatus={trialStatus}

@@ -13,11 +13,34 @@ import {
 } from "@/lib/coupons";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-type CouponUsageRow = CouponRedemptionRow & {
+type CouponUsageRow = Omit<CouponRedemptionRow, "coupon"> & {
   coupon?: Pick<CouponRow, "code"> | null;
   tenant?: { name: string } | null;
   user?: { full_name: string } | null;
 };
+
+type RawCouponUsageRow = Omit<CouponRedemptionRow, "coupon"> & {
+  coupon?: Array<Pick<CouponRow, "code">> | Pick<CouponRow, "code"> | null;
+  tenant?: Array<{ name: string }> | { name: string } | null;
+  user?: Array<{ full_name: string }> | { full_name: string } | null;
+};
+
+function normalizeSingleRelation<T>(value: T | T[] | null | undefined) {
+  if (Array.isArray(value)) {
+    return value[0] ?? null;
+  }
+
+  return value ?? null;
+}
+
+function normalizeCouponUsageRows(rows: RawCouponUsageRow[]): CouponUsageRow[] {
+  return rows.map((row) => ({
+    ...row,
+    coupon: normalizeSingleRelation(row.coupon),
+    tenant: normalizeSingleRelation(row.tenant),
+    user: normalizeSingleRelation(row.user),
+  }));
+}
 
 function parseCouponType(formData: FormData): CouponDiscountType {
   const value = String(formData.get("discount_type") ?? "").trim();
@@ -126,7 +149,9 @@ export async function getAdminCouponsData() {
 
   return {
     coupons: (couponsResult.data ?? []) as CouponRow[],
-    redemptions: (redemptionsResult.data ?? []) as CouponUsageRow[],
+    redemptions: normalizeCouponUsageRows(
+      (redemptionsResult.data ?? []) as RawCouponUsageRow[],
+    ),
   };
 }
 

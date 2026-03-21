@@ -149,22 +149,25 @@ async function getReservedCouponCheckoutData(input: {
     return null;
   }
 
-  const redemption = data as CouponRedemptionRow & { coupon: CouponRow | null };
-  if (!redemption.coupon || redemption.discounted_cycles_remaining <= 0) {
+  const redemption = data as CouponRedemptionRow & {
+    coupon: CouponRow[] | CouponRow | null;
+  };
+  const coupon = Array.isArray(redemption.coupon)
+    ? (redemption.coupon[0] ?? null)
+    : redemption.coupon;
+
+  if (!coupon || redemption.discounted_cycles_remaining <= 0) {
     return null;
   }
 
-  if (!couponSupportsPeriod(redemption.coupon, input.period)) {
+  if (!couponSupportsPeriod(coupon, input.period)) {
     return null;
   }
 
   return {
     redemptionId: redemption.id,
-    code: redemption.coupon.code,
-    discountedAmount: applyCouponDiscount(
-      input.originalAmount,
-      redemption.coupon,
-    ),
+    code: coupon.code,
+    discountedAmount: applyCouponDiscount(input.originalAmount, coupon),
     originalAmount: input.originalAmount,
     discountedCyclesRemaining: redemption.discounted_cycles_remaining,
   } satisfies CouponCheckoutData;
