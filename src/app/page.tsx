@@ -1,18 +1,15 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   CalendarDays,
   Camera,
-  CheckCircle2,
   ClipboardCheck,
   FileSignature,
   TrendingUp,
 } from "lucide-react";
-import { BILLING_PLANS, type BillingPlanConfig } from "@/app/billing/plans";
+import { getBillingPlans } from "@/app/billing/plans-server";
+import { PricingSection, type PlanCard } from "@/app/pricing-section";
 
 const featureCards = [
   {
@@ -47,17 +44,6 @@ const featureCards = [
   },
 ];
 
-type PlanCard = {
-  name: string;
-  monthly: string;
-  annual: string;
-  limit: string;
-  featured: boolean;
-  ctaLabel: string;
-  ctaHref: string;
-  features: string[];
-};
-
 function formatMoney(value: number) {
   return value.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
@@ -65,8 +51,10 @@ function formatMoney(value: number) {
   });
 }
 
-function buildPlanCards(plans: BillingPlanConfig): PlanCard[] {
-  return [
+export default async function Home() {
+  const plans = await getBillingPlans();
+
+  const planCards: PlanCard[] = [
     {
       name: plans.tier_1.label,
       monthly: formatMoney(plans.tier_1.monthly.amount),
@@ -134,36 +122,6 @@ function buildPlanCards(plans: BillingPlanConfig): PlanCard[] {
       ],
     },
   ];
-}
-
-export default function Home() {
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
-    "monthly",
-  );
-  const [planCards, setPlanCards] = useState<PlanCard[]>(() =>
-    buildPlanCards(BILLING_PLANS),
-  );
-
-  useEffect(() => {
-    let isMounted = true;
-
-    fetch("/api/public/pricing", { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((payload) => {
-        if (!isMounted || !payload?.plans) {
-          return;
-        }
-
-        setPlanCards(buildPlanCards(payload.plans as BillingPlanConfig));
-      })
-      .catch(() => {
-        // Keep fallback defaults when API is unavailable.
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   return (
     <main className="bg-[radial-gradient(circle_at_10%_0%,rgba(15,143,135,0.14),transparent_34%),radial-gradient(circle_at_100%_0%,rgba(33,66,166,0.14),transparent_28%),linear-gradient(180deg,#f4fbfb_0%,#f9fbff_44%,#f6fafc_100%)] text-slate-700 selection:bg-primary/20 selection:text-primary">
@@ -416,146 +374,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section
-        id="precos"
-        className="bg-[radial-gradient(circle_at_15%_10%,rgba(15,143,135,0.13),transparent_30%),radial-gradient(circle_at_90%_15%,rgba(33,66,166,0.13),transparent_28%),linear-gradient(180deg,#f6fbff_0%,#f5fcfb_100%)] px-6 py-24 md:px-8 md:py-28"
-      >
-        <div className="mx-auto flex max-w-7xl flex-col items-center">
-          <div className="mb-14 max-w-2xl text-center">
-            <h2 className="mb-5 text-3xl font-extrabold tracking-tight text-secondary sm:text-4xl">
-              Um sistema que cresce no mesmo ritmo que a sua clínica.
-            </h2>
-            <p className="text-lg text-slate-600">
-              Escolha transparência. Sem taxas de instalação, sem fidelidade,
-              apenas resultados clínicos superiores.
-            </p>
-
-            <div className="mt-8 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setBillingCycle("monthly")}
-                className={[
-                  "rounded-lg px-4 py-2 text-sm font-bold transition",
-                  billingCycle === "monthly"
-                    ? "bg-primary text-white"
-                    : "text-slate-600 hover:bg-slate-100",
-                ].join(" ")}
-              >
-                Mensal
-              </button>
-              <button
-                type="button"
-                onClick={() => setBillingCycle("annual")}
-                className={[
-                  "rounded-lg px-4 py-2 text-sm font-bold transition",
-                  billingCycle === "annual"
-                    ? "bg-primary text-white"
-                    : "text-slate-600 hover:bg-slate-100",
-                ].join(" ")}
-              >
-                Anual
-              </button>
-            </div>
-          </div>
-
-          <div className="grid w-full max-w-7xl grid-cols-1 gap-6 lg:grid-cols-4">
-            {planCards.map((plan) => (
-              <article
-                key={plan.name}
-                className={[
-                  "relative flex h-full flex-col rounded-3xl border bg-gradient-to-b p-7 shadow-[0_24px_48px_-32px_rgba(15,23,42,0.4)] sm:p-8",
-                  plan.featured
-                    ? "border-2 border-primary/30 from-white to-primary/5"
-                    : "border-slate-200/80 from-white to-slate-50/70",
-                ].join(" ")}
-              >
-                {plan.featured ? (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white">
-                    Mais escolhido
-                  </div>
-                ) : null}
-
-                <div className="mb-6 text-center">
-                  <h3 className="text-2xl font-bold text-secondary">
-                    {plan.name}
-                  </h3>
-                  <p className="mt-1 text-sm font-semibold text-slate-600">
-                    {plan.limit}
-                  </p>
-                  <div className="mt-4 flex items-end justify-center gap-1">
-                    {plan.monthly === "Sob consulta" ? (
-                      <span className="text-3xl font-black tracking-tight text-secondary">
-                        Sob consulta
-                      </span>
-                    ) : (
-                      <>
-                        <span className="text-base text-slate-600">R$</span>
-                        <span className="text-5xl font-black tracking-tighter text-secondary">
-                          {billingCycle === "monthly"
-                            ? plan.monthly
-                            : plan.annual}
-                        </span>
-                        <span className="pb-1 text-slate-600">
-                          {billingCycle === "monthly" ? "/mês" : "/ano"}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    {plan.monthly === "Sob consulta"
-                      ? "Condições personalizadas"
-                      : billingCycle === "monthly"
-                        ? `Anual: R$ ${plan.annual} (10% de economia)`
-                        : "Pagamento anual com 10% de economia"}
-                  </p>
-                </div>
-
-                <ul className="mb-7 flex-1 space-y-4">
-                  {plan.features.map((item) => (
-                    <li
-                      key={`${plan.name}-${item}`}
-                      className="flex items-start gap-3 text-slate-800"
-                    >
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                      <span className="text-sm font-medium">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {plan.ctaHref.startsWith("mailto:") ? (
-                  <a
-                    href={plan.ctaHref}
-                    className={[
-                      "inline-flex w-full justify-center rounded-xl px-4 py-3 text-base font-bold transition",
-                      plan.featured
-                        ? "btn-gradient"
-                        : "bg-slate-200/80 text-secondary hover:bg-slate-200",
-                    ].join(" ")}
-                  >
-                    {plan.ctaLabel}
-                  </a>
-                ) : (
-                  <Link
-                    href={plan.ctaHref}
-                    className={[
-                      "inline-flex w-full justify-center rounded-xl px-4 py-3 text-base font-bold transition",
-                      plan.featured
-                        ? "btn-gradient"
-                        : "bg-slate-200/80 text-secondary hover:bg-slate-200",
-                    ].join(" ")}
-                  >
-                    {plan.ctaLabel}
-                  </Link>
-                )}
-              </article>
-            ))}
-          </div>
-
-          <p className="mt-8 text-center text-sm text-slate-500">
-            Sem fidelidade. Cancele quando quiser.
-          </p>
-        </div>
-      </section>
+      <PricingSection planCards={planCards} />
 
       <footer className="bg-slate-900 px-6 pb-12 pt-20 md:px-8 md:pt-24">
         <div className="mx-auto max-w-7xl">
