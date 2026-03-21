@@ -267,22 +267,22 @@ export default async function AgendaPage({ searchParams }: Props) {
   return (
     <section className="space-y-6">
       <article className="surface-card p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-2xl font-bold">Agenda</h2>
 
-          <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-2 py-1">
+          <div className="grid w-full grid-cols-1 gap-2 rounded-2xl border border-slate-200 bg-white p-2 sm:flex sm:w-auto sm:items-center sm:gap-2 sm:rounded-full sm:px-2 sm:py-1">
             <Link
               href={`/agenda?month=${toMonthKey(prevMonth)}`}
-              className="rounded-full px-3 py-1.5 text-sm font-semibold text-foreground transition hover:bg-slate-100"
+              className="rounded-full px-3 py-1.5 text-center text-sm font-semibold text-foreground transition hover:bg-slate-100"
             >
               Mês anterior
             </Link>
-            <p className="rounded-full bg-secondary/10 px-3 py-1 text-sm font-semibold text-secondary">
+            <p className="rounded-full bg-secondary/10 px-3 py-1 text-center text-sm font-semibold text-secondary">
               {formatMonthLabel(monthDate)}
             </p>
             <Link
               href={`/agenda?month=${toMonthKey(nextMonth)}`}
-              className="rounded-full px-3 py-1.5 text-sm font-semibold text-foreground transition hover:bg-slate-100"
+              className="rounded-full px-3 py-1.5 text-center text-sm font-semibold text-foreground transition hover:bg-slate-100"
             >
               Próximo mês
             </Link>

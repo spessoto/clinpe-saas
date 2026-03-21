@@ -207,7 +207,48 @@ export default async function FinancePage({ searchParams }: Props) {
           </h3>
         </div>
 
-        <table className="w-full text-left text-sm">
+        <div className="space-y-3 p-4 sm:hidden">
+          {transactions.length === 0 ? (
+            <p className="rounded-lg border border-slate-100 bg-white px-4 py-6 text-sm text-muted">
+              Nenhuma transação registrada ainda.
+            </p>
+          ) : (
+            transactions.map((transaction) => (
+              <article
+                key={transaction.id}
+                className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs text-muted">
+                    {new Date(
+                      `${transaction.occurred_on}T00:00:00`,
+                    ).toLocaleDateString("pt-BR")}
+                  </p>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                      transaction.type === "income"
+                        ? "bg-success/10 text-success"
+                        : "bg-destructive/10 text-destructive"
+                    }`}
+                  >
+                    {transaction.type === "income" ? "Entrada" : "Saída"}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm font-semibold text-foreground">
+                  {transaction.category ?? "Sem categoria"}
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  {transaction.description ?? "-"}
+                </p>
+                <p className="mt-2 text-base font-bold text-foreground">
+                  {formatCurrency(Number(transaction.amount ?? 0))}
+                </p>
+              </article>
+            ))
+          )}
+        </div>
+
+        <table className="hidden w-full text-left text-sm sm:table">
           <thead className="bg-secondary/10 text-secondary">
             <tr>
               <th className="px-4 py-3">Data</th>

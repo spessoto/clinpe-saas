@@ -35,11 +35,13 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Configurações de branding mais robustas**: upload e persistência de logotipo da clínica reforçados no `/settings`
 - **Autoagendamento com identidade visual da clínica**: páginas públicas exibem logo da clínica no topo
 - **UX mobile aprimorada**: menu drawer com overlay na área protegida e menu hambúrguer na landing page
+- **UX mobile ampliada em módulos operacionais**: `/patients`, `/patients/recall`, `/agenda`, `/finance` e `/sterilization` com layouts mobile-first (cards/listas e navegação mais tocável)
 - **Landing page comercial atualizada**: seção de planos completa (Starter, Pro, Clínica, Enterprise) com toggle mensal/anual
 - **Gestão de cupons no admin**: criação e edição de cupons com validade, limite, ciclos e escopo mensal/anual em `/admin/coupons`
 - **Preços dinâmicos no admin**: gestão de planos em `/admin/pricing`, refletindo em landing e billing
 - **Billing com cupom e dados de faturamento**: checkout com CPF/CNPJ validado, método de pagamento e prévia de desconto por ciclo
 - **Segurança reforçada com reCAPTCHA v3**: aplicado em login, cadastro e agendamento público
+- **Registro fotográfico mobile no prontuário**: captura direta da câmera, seleção por galeria, preview com remoção e limite de até 4 imagens por prontuário
 - **Admin users evoluído**: switch de admin, ações por ícone (editar/excluir) e bloqueio seguro de exclusão para admins
 - **KPIs de admin com precisão operacional**: métricas atualizadas em tempo real, excluindo canceladas e considerando apenas base ativa quando aplicável
 

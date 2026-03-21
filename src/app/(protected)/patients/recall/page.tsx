@@ -117,7 +117,48 @@ export default async function PatientsRecallPage() {
         </Link>
       </div>
 
-      <div className="surface-card overflow-hidden">
+      <div className="sm:hidden">
+        {recallCandidates.length === 0 ? (
+          <p className="rounded-xl border border-slate-100 bg-white px-4 py-6 text-sm text-muted">
+            Nenhum paciente com retorno pendente no momento.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {recallCandidates.map((patient) => (
+              <li
+                key={patient.id}
+                className="rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
+              >
+                <p className="font-semibold text-foreground">{patient.name}</p>
+                <p className="mt-0.5 text-sm text-muted">{patient.phone}</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  Ultima consulta: {formatDateTime(patient.lastAppointmentAt)}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link
+                    href={`/patients/${patient.id}`}
+                    className="btn-outline-modern px-3 py-1.5 text-xs"
+                  >
+                    Ver paciente
+                  </Link>
+                  {patient.whatsappUrl ? (
+                    <a
+                      href={patient.whatsappUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700"
+                    >
+                      WhatsApp
+                    </a>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="surface-card hidden overflow-hidden sm:block">
         <table className="w-full text-left text-sm">
           <thead className="bg-secondary/10 text-secondary">
             <tr>

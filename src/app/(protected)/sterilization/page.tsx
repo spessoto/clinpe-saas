@@ -157,17 +157,17 @@ export default async function SterilizationPage({ searchParams }: Props) {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <form
             action="/sterilization"
             method="get"
-            className="flex items-center gap-2"
+            className="flex w-full items-center gap-2 sm:w-auto"
           >
             <input
               type="month"
               name="month"
               defaultValue={monthKey}
-              className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2 sm:w-auto"
             />
             <button type="submit" className="btn-outline-modern">
               Filtrar
@@ -175,7 +175,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
           </form>
           <Link
             href={`/sterilization/report?month=${monthKey}`}
-            className="btn-outline-modern"
+            className="btn-outline-modern w-full text-center sm:w-auto"
             target="_blank"
           >
             Exportar PDF (modo fiscalização)
@@ -426,7 +426,49 @@ export default async function SterilizationPage({ searchParams }: Props) {
           </h3>
         </div>
 
-        <table className="w-full text-left text-sm">
+        <div className="space-y-3 p-4 sm:hidden">
+          {cycles.length === 0 ? (
+            <p className="rounded-lg border border-slate-100 bg-white px-4 py-6 text-sm text-muted">
+              Nenhum ciclo registrado para o período selecionado.
+            </p>
+          ) : (
+            cycles.map((cycle) => (
+              <article
+                key={cycle.id}
+                className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <Link
+                    href={`/sterilization/${cycle.id}`}
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    {cycle.batch_number}
+                  </Link>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${indicatorBadge(cycle.chemical_indicator_status)}`}
+                  >
+                    {cycle.chemical_indicator_status === "approved"
+                      ? "Aprovado"
+                      : "Reprovado"}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-muted">{cycle.material_name}</p>
+                <p className="mt-1 text-xs text-muted">
+                  {formatDateTime(cycle.sterilized_at)}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {cycle.temperature_celsius
+                    ? `${cycle.temperature_celsius} °C`
+                    : "-"}
+                  {" • "}
+                  {cycle.pressure_bar ? `${cycle.pressure_bar} bar` : "-"}
+                </p>
+              </article>
+            ))
+          )}
+        </div>
+
+        <table className="hidden w-full text-left text-sm sm:table">
           <thead className="bg-secondary/10 text-secondary">
             <tr>
               <th className="px-4 py-3">Data/Hora</th>
@@ -490,7 +532,52 @@ export default async function SterilizationPage({ searchParams }: Props) {
           </h3>
         </div>
 
-        <table className="w-full text-left text-sm">
+        <div className="space-y-3 p-4 sm:hidden">
+          {tests.length === 0 ? (
+            <p className="rounded-lg border border-slate-100 bg-white px-4 py-6 text-sm text-muted">
+              Nenhum teste biológico registrado ainda.
+            </p>
+          ) : (
+            tests.map((test) => {
+              const cycle = Array.isArray(test.cycle)
+                ? test.cycle[0]
+                : test.cycle;
+              return (
+                <article
+                  key={test.id}
+                  className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      {cycle?.batch_number ?? "-"}
+                    </p>
+                    <span
+                      className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${statusBadge(test.status)}`}
+                    >
+                      {test.status === "pending"
+                        ? "Pendente"
+                        : test.status === "approved"
+                          ? "Aprovado"
+                          : "Reprovado"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted">
+                    Ampola: {test.ampoule_lot}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">
+                    Início: {formatDateTime(test.incubation_started_at)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">
+                    Leitura:{" "}
+                    {test.read_at ? formatDateTime(test.read_at) : "Pendente"}
+                  </p>
+                </article>
+              );
+            })
+          )}
+        </div>
+
+        <table className="hidden w-full text-left text-sm sm:table">
           <thead className="bg-secondary/10 text-secondary">
             <tr>
               <th className="px-4 py-3">Lote</th>

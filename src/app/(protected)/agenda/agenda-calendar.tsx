@@ -230,7 +230,62 @@ export function AgendaCalendar({ monthKey, events }: Props) {
 
   return (
     <>
-      <article className="surface-card p-4 md:p-6">
+      <article className="surface-card p-4 md:hidden">
+        <h3 className="text-sm font-semibold text-secondary">
+          Consultas do mês
+        </h3>
+        <p className="mt-1 text-xs text-muted">
+          Toque em um dia para ver as consultas.
+        </p>
+
+        <div className="mt-3 space-y-2">
+          {calendarDays
+            .filter((day) => day.getMonth() === monthDate.getMonth())
+            .map((day) => {
+              const dayKey = toLocalDateKey(day);
+              const dayEvents = eventsMap.get(dayKey) ?? [];
+              if (dayEvents.length === 0) {
+                return null;
+              }
+
+              return (
+                <button
+                  key={dayKey}
+                  type="button"
+                  onClick={() => setSelectedDayKey(dayKey)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-left transition hover:border-primary/40"
+                >
+                  <p className="text-sm font-semibold text-foreground">
+                    {formatDayLabel(day)}
+                  </p>
+                  <p className="mt-1 text-xs text-muted">
+                    {dayEvents.length} consulta(s)
+                  </p>
+                  <div className="mt-2 space-y-1">
+                    {dayEvents.slice(0, 2).map((event) => (
+                      <p key={event.id} className="truncate text-xs text-muted">
+                        {formatHourLabel(event.start)} - {event.summary}
+                      </p>
+                    ))}
+                    {dayEvents.length > 2 ? (
+                      <p className="text-xs font-semibold text-primary">
+                        +{dayEvents.length - 2} consulta(s)
+                      </p>
+                    ) : null}
+                  </div>
+                </button>
+              );
+            })}
+
+          {visibleEvents.length === 0 ? (
+            <p className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-muted">
+              Nenhuma consulta cadastrada para este mês.
+            </p>
+          ) : null}
+        </div>
+      </article>
+
+      <article className="surface-card hidden p-4 md:block md:p-6">
         <div className="grid grid-cols-7 gap-2">
           {weekDays.map((weekDay) => (
             <div

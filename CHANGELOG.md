@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-03-21
+
+### Changed
+
+- **Experiencia mobile ampliada em paginas operacionais**
+  - `/patients`: listagem em cards no mobile para facilitar leitura e toque
+  - `/patients/recall`: cards com acoes de "Ver paciente" e WhatsApp mais acessiveis
+  - `/agenda`: navegacao de mes otimizada para telas pequenas e visao mobile em lista de dias com consultas
+  - `/finance`: transacoes em cards no mobile, mantendo tabela no desktop
+  - `/sterilization`: filtros e acoes ajustados para mobile e historicos convertidos em cards no celular
+
+### Added
+
+- **Captura de imagens no prontuario com foco em celular**
+  - Novo fluxo com botao de camera (`capture="environment"`) e galeria na tela `/medical-records/new`
+  - Preview das imagens selecionadas com remocao individual
+  - Limite de ate 4 imagens por prontuario com feedback visual no formulario
+
+### Fixed
+
+- **Upload de fotos tiradas pela camera em mobile (iOS/Android)**
+  - Substituida a tecnica baseada em `input.files = DataTransfer` por injecao no evento nativo `formdata`
+  - Correção garante que as fotos mostradas no preview sejam realmente enviadas ao server action
+
 ## [1.0.0] - 2026-03-21
 
 ### Added
