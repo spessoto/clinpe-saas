@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-03-21
+
+### Added
+
+- **CTA comercial de billing na sidebar**
+  - Novo botão destacado com degradê laranja em `/billing` nas sidebars desktop e mobile
+  - Texto muda entre `Faça sua assinatura` durante trial e `Faça Upgrade` quando já existe plano ativo pago
+
+### Changed
+
+- **Sidebar da área protegida refinada por altura da tela**
+  - Navegação principal passa a ficar alinhada no topo e o bloco de assinatura/logout no rodapé em telas altas
+  - Em telas mais baixas, fontes, paddings, gaps e logotipo são compactados automaticamente para preservar visibilidade
+  - O item `Pacientes para retorno` ganha versão curta `Retornos` em alturas críticas
+
 ## [1.0.5] - 2026-03-21
 
 ### Added

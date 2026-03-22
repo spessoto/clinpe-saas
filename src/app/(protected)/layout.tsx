@@ -30,13 +30,33 @@ function computeRenewalBanner(tenant: Tenant) {
   return { daysUntilRenewal, expiresAt: tenant.subscription_expires_at };
 }
 
-function SidebarContent({ canAccessAdmin }: { canAccessAdmin: boolean }) {
+function getBillingCtaLabel(tenant: Tenant) {
+  const hasActivePaidPlan =
+    tenant.subscription_status === "active" &&
+    tenant.billing_tier !== "free_trial";
+
+  return hasActivePaidPlan ? "Faça Upgrade" : "Faça sua assinatura";
+}
+
+function SidebarContent({
+  canAccessAdmin,
+  billingCtaLabel,
+}: {
+  canAccessAdmin: boolean;
+  billingCtaLabel: string;
+}) {
   const linkClass =
-    "rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18";
+    "rounded-xl px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/18 [@media(max-height:860px)]:px-2.5 [@media(max-height:860px)]:py-1.5 [@media(max-height:860px)]:text-[13px] [@media(max-height:720px)]:px-2 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:text-xs";
+  const billingLinkClass =
+    "block rounded-2xl bg-gradient-to-r from-[#F97316] to-[#FB923C] px-4 py-4 text-center text-sm font-semibold text-white shadow-lg shadow-orange-950/20 transition hover:-translate-y-0.5 hover:brightness-105 [@media(max-height:860px)]:px-3 [@media(max-height:860px)]:py-3 [@media(max-height:860px)]:text-[13px] [@media(max-height:720px)]:px-3 [@media(max-height:720px)]:py-2.5 [@media(max-height:720px)]:text-xs";
+  const adminLinkClass =
+    "rounded-xl bg-white/12 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/18 [@media(max-height:860px)]:px-2.5 [@media(max-height:860px)]:py-1.5 [@media(max-height:860px)]:text-[13px] [@media(max-height:720px)]:px-2 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:text-xs";
+  const signOutButtonClass =
+    "w-full rounded-xl border border-white/40 bg-transparent px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/20 [@media(max-height:860px)]:px-2.5 [@media(max-height:860px)]:py-1.5 [@media(max-height:860px)]:text-[13px] [@media(max-height:720px)]:px-2 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:text-xs";
 
   return (
-    <>
-      <nav className="mt-6 flex flex-col gap-2 text-sm">
+    <div className="mt-4 flex min-h-0 flex-1 flex-col [@media(max-height:860px)]:mt-3 [@media(max-height:720px)]:mt-2">
+      <nav className="flex flex-col gap-2 [@media(max-height:860px)]:gap-1.5 [@media(max-height:720px)]:gap-1">
         <Link href="/dashboard" className={linkClass}>
           Dashboard
         </Link>
@@ -44,7 +64,12 @@ function SidebarContent({ canAccessAdmin }: { canAccessAdmin: boolean }) {
           Pacientes
         </Link>
         <Link href="/patients/recall" className={linkClass}>
-          Pacientes para retorno
+          <span className="[@media(max-height:720px)]:hidden">
+            Pacientes para retorno
+          </span>
+          <span className="hidden [@media(max-height:720px)]:inline">
+            Retornos
+          </span>
         </Link>
         <Link href="/agenda" className={linkClass}>
           Agenda
@@ -62,24 +87,32 @@ function SidebarContent({ canAccessAdmin }: { canAccessAdmin: boolean }) {
           POPs
         </Link>
         {canAccessAdmin ? (
-          <Link
-            href="/admin"
-            className="rounded-xl bg-white/12 px-3 py-2 font-semibold text-white transition hover:bg-white/18"
-          >
+          <Link href="/admin" className={adminLinkClass}>
             Painel admin
           </Link>
         ) : null}
       </nav>
 
-      <form action={signOutAction} className="mt-8">
-        <button
-          type="submit"
-          className="w-full rounded-xl border border-white/40 bg-transparent px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+      <div className="mt-auto pt-6 [@media(max-height:860px)]:pt-4 [@media(max-height:720px)]:pt-3">
+        <div className="rounded-2xl border border-white/15 bg-white/10 p-2 backdrop-blur-sm [@media(max-height:860px)]:p-1.5 [@media(max-height:720px)]:p-1">
+          <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/75 [@media(max-height:860px)]:px-1.5 [@media(max-height:860px)]:pb-1.5 [@media(max-height:860px)]:text-[11px] [@media(max-height:720px)]:px-1 [@media(max-height:720px)]:pb-1 [@media(max-height:720px)]:text-[10px]">
+            Assinatura
+          </p>
+          <Link href="/billing" className={billingLinkClass}>
+            {billingCtaLabel}
+          </Link>
+        </div>
+
+        <form
+          action={signOutAction}
+          className="mt-4 [@media(max-height:860px)]:mt-3 [@media(max-height:720px)]:mt-2"
         >
-          Sair
-        </button>
-      </form>
-    </>
+          <button type="submit" className={signOutButtonClass}>
+            Sair
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -94,18 +127,25 @@ export default async function ProtectedLayout({
   // Compute renewal banner: show when subscription expires within RENEWAL_WARNING_DAYS
   // and the billing method is not CREDIT_CARD (credit card has auto-debit, no action needed).
   const renewalBanner = computeRenewalBanner(tenant);
+  const billingCtaLabel = getBillingCtaLabel(tenant);
 
   return (
     <div className="min-h-screen bg-transparent">
-      <MobileSidebar canAccessAdmin={canAccessAdmin} />
+      <MobileSidebar
+        canAccessAdmin={canAccessAdmin}
+        billingCtaLabel={billingCtaLabel}
+      />
 
       <div className="md:flex">
-        <aside className="hidden bg-[#0F766E] px-5 py-6 text-white print:hidden md:sticky md:top-0 md:flex md:h-screen md:w-72 md:flex-shrink-0 md:flex-col">
+        <aside className="hidden bg-[#0F766E] px-5 py-6 text-white print:hidden md:sticky md:top-0 md:flex md:h-dvh md:max-h-dvh md:w-72 md:flex-shrink-0 md:flex-col md:overflow-y-auto [@media(max-height:860px)]:px-4 [@media(max-height:860px)]:py-4 [@media(max-height:720px)]:px-3 [@media(max-height:720px)]:py-3">
           <div className="flex justify-center">
-            <BrandLogoWhite className="h-auto w-36" />
+            <BrandLogoWhite className="h-auto w-36 [@media(max-height:860px)]:w-32 [@media(max-height:720px)]:w-28" />
           </div>
 
-          <SidebarContent canAccessAdmin={canAccessAdmin} />
+          <SidebarContent
+            canAccessAdmin={canAccessAdmin}
+            billingCtaLabel={billingCtaLabel}
+          />
         </aside>
 
         <main className="w-full px-6 py-8 md:px-8">{children}</main>
