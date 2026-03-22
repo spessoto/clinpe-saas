@@ -131,6 +131,57 @@ export async function createSterilizationCycleAction(formData: FormData) {
   );
 }
 
+export async function createSterilizationMaterialAction(formData: FormData) {
+  const { appUser } = await requireActiveTenant();
+  const supabase = await createClient();
+
+  const month = getField(formData, "month");
+  const name = getField(formData, "name");
+
+  if (!name) {
+    redirect(
+      getSterilizationPath({
+        month,
+        error: "Informe o nome do material.",
+      }),
+    );
+  }
+
+  const { data: existing } = await supabase
+    .from("materials")
+    .select("id")
+    .eq("tenant_id", appUser.tenant_id)
+    .eq("name", name)
+    .maybeSingle();
+
+  if (existing) {
+    redirect(
+      getSterilizationPath({
+        month,
+        success: "Material já cadastrado.",
+      }),
+    );
+  }
+
+  const { error } = await supabase.from("materials").insert({
+    tenant_id: appUser.tenant_id,
+    name,
+  });
+
+  if (error) {
+    redirect(getSterilizationPath({ month, error: error.message }));
+  }
+
+  revalidatePath("/sterilization");
+  revalidatePath("/dashboard");
+  redirect(
+    getSterilizationPath({
+      month,
+      success: `Material ${name} cadastrado com sucesso.`,
+    }),
+  );
+}
+
 export async function createBiologicalTestAction(formData: FormData) {
   const { appUser } = await requireActiveTenant();
   const supabase = await createClient();

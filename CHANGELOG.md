@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-03-21
+
+### Added
+
+- **Cadastro de materiais na Central de Esterilização**
+  - Novo botão "Cadastrar material" em `/sterilization`
+  - Ação abre popup com formulário para cadastrar material pelo nome
+  - Materiais são persistidos em `materials` por tenant
+
+- **Seleção de múltiplos materiais no módulo "Novo ciclo"**
+  - Campo "Material esterilizado" agora exibe lista de materiais cadastrados com botão de "Adicionar"
+  - Cada material adicionado aparece em uma lista abaixo do campo
+  - Itens da lista podem ser removidos por botão de "Excluir"
+
+### Changed
+
+- **Layout do formulário "Novo ciclo" refinado**
+  - Campo "Data e hora" em 1 coluna
+  - Campo "Número do ciclo/lote" em 2 colunas
+  - Campo "Material esterilizado" em 1 coluna
+  - Estrutura melhora a leitura e o preenchimento no desktop e mantém responsividade no mobile
+
 ## [1.0.2] - 2026-03-21
 
 ### Added

@@ -2,11 +2,14 @@ import Link from "next/link";
 
 import {
   createBiologicalTestAction,
+  createSterilizationMaterialAction,
   createSterilizationCycleAction,
   updateBiologicalTestResultAction,
 } from "@/app/(protected)/sterilization/actions";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { MaterialsDialog } from "./materials-dialog";
+import { SterilizedMaterialsField } from "./sterilized-materials-field";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -89,7 +92,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
 
   const { monthKey, startIso, endIso } = getMonthBounds(monthParam);
 
-  const [cyclesResult, testsResult] = await Promise.all([
+  const [cyclesResult, testsResult, materialsResult] = await Promise.all([
     supabase
       .from("sterilization_logs")
       .select(
@@ -107,6 +110,11 @@ export default async function SterilizationPage({ searchParams }: Props) {
       .eq("tenant_id", appUser.tenant_id)
       .order("incubation_started_at", { ascending: false })
       .limit(100),
+    supabase
+      .from("materials")
+      .select("id, name")
+      .eq("tenant_id", appUser.tenant_id)
+      .order("name", { ascending: true }),
   ]);
 
   const cycles =
@@ -132,6 +140,11 @@ export default async function SterilizationPage({ searchParams }: Props) {
       result_notes: string | null;
       cycle: { batch_number: string } | { batch_number: string }[] | null;
     }> | null) ?? [];
+
+  const materialNames =
+    (materialsResult.data as Array<{ id: string; name: string }> | null)?.map(
+      (material) => material.name,
+    ) ?? [];
 
   const pendingTests = tests.filter((test) => test.status === "pending");
   const currentTimeMs = Date.parse(new Date().toISOString());
@@ -180,6 +193,11 @@ export default async function SterilizationPage({ searchParams }: Props) {
           >
             Exportar PDF (modo fiscalização)
           </Link>
+          <MaterialsDialog
+            monthKey={monthKey}
+            action={createSterilizationMaterialAction}
+            existingNames={materialNames}
+          />
         </div>
       </div>
 
@@ -218,19 +236,21 @@ export default async function SterilizationPage({ searchParams }: Props) {
           >
             <input type="hidden" name="month" value={monthKey} />
 
-            <label className="grid gap-1 text-sm">
-              <span className="font-semibold text-foreground">Data e hora</span>
-              <input
-                type="datetime-local"
-                name="sterilized_at"
-                required
-                defaultValue={localDateTimeInputValue()}
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-              />
-            </label>
+            <div className="grid gap-4 md:grid-cols-4">
+              <label className="grid gap-1 text-sm md:col-span-1">
+                <span className="font-semibold text-foreground">
+                  Data e hora
+                </span>
+                <input
+                  type="datetime-local"
+                  name="sterilized_at"
+                  required
+                  defaultValue={localDateTimeInputValue()}
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+              </label>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="grid gap-1 text-sm">
+              <label className="grid gap-1 text-sm md:col-span-2">
                 <span className="font-semibold text-foreground">
                   Número do ciclo/lote
                 </span>
@@ -242,17 +262,9 @@ export default async function SterilizationPage({ searchParams }: Props) {
                 />
               </label>
 
-              <label className="grid gap-1 text-sm">
-                <span className="font-semibold text-foreground">
-                  Material esterilizado
-                </span>
-                <input
-                  name="material_name"
-                  required
-                  placeholder="Ex.: Kit de alicates"
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-                />
-              </label>
+              <div className="md:col-span-1">
+                <SterilizedMaterialsField options={materialNames} />
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
