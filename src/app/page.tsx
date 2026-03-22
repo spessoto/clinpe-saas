@@ -487,6 +487,10 @@ export default async function Home() {
                 </a>
               </div>
             </div>
+
+            <p className="text-center text-xs text-slate-500">
+              CNPJ 26.730.764/0001-26 | Nº 366 | CEP 12.908-540
+            </p>
           </div>
         </div>
       </footer>

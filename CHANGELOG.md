@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-03-22
+
+### Changed
+
+- **Rodapé da página inicial com identificação discreta da empresa**
+  - Inclusão de `CNPJ`, `Nº` e `CEP` no footer de `/`
+  - Conteúdo alinhado ao padrão já aplicado em `/politica-de-privacidade` e `/termos-de-uso`
+
 ## [1.0.7] - 2026-03-21
 
 ### Added
