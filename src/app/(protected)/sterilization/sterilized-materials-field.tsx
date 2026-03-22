@@ -1,21 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
   options: string[];
 };
 
 export function SterilizedMaterialsField({ options }: Props) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [draft, setDraft] = useState("");
   const [items, setItems] = useState<string[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
 
-  function addItem() {
-    const value = draft.trim();
+  const filteredOptions = useMemo(() => {
+    const query = draft.trim().toLowerCase();
+    if (!query) {
+      return options;
+    }
+
+    return options.filter((option) => option.toLowerCase().includes(query));
+  }, [draft, options]);
+
+  useEffect(() => {
+    function handleDocumentClick(event: MouseEvent) {
+      if (!wrapperRef.current) return;
+      if (!wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleDocumentClick);
+    return () => {
+      document.removeEventListener("mousedown", handleDocumentClick);
+    };
+  }, []);
+
+  function addItem(rawValue?: string) {
+    const value = (rawValue ?? draft).trim();
     if (!value) return;
 
     setItems((prev) => [...prev, value]);
     setDraft("");
+    setIsOpen(false);
   }
 
   function removeItem(index: number) {
@@ -23,55 +49,82 @@ export function SterilizedMaterialsField({ options }: Props) {
   }
 
   return (
-    <div className="grid gap-1 text-sm">
+    <div ref={wrapperRef} className="grid w-full min-w-0 gap-1 text-sm">
       <span className="font-semibold text-foreground">
         Material esterilizado
       </span>
 
       <input type="hidden" name="material_name" value={items.join(" | ")} />
 
-      <div className="flex items-stretch gap-2">
-        <input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              addItem();
-            }
-          }}
-          list="sterilization-materials"
-          placeholder="Ex.: Kit de alicates"
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-        />
-        <button
-          type="button"
-          onClick={addItem}
-          aria-label="Adicionar material"
-          className="inline-flex min-h-[42px] items-center justify-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-3 text-xs font-semibold text-primary transition hover:bg-primary/15"
-        >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Adicionar
-        </button>
-      </div>
+      <div className="relative">
+        <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row">
+          <input
+            value={draft}
+            onChange={(event) => {
+              setDraft(event.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+            onClick={() => setIsOpen(true)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addItem();
+                return;
+              }
 
-      <datalist id="sterilization-materials">
-        {options.map((name) => (
-          <option key={name} value={name} />
-        ))}
-      </datalist>
+              if (event.key === "Escape") {
+                setIsOpen(false);
+              }
+            }}
+            placeholder="Ex.: Kit de alicates"
+            className="w-full min-w-0 rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+          />
+          <button
+            type="button"
+            onClick={() => addItem()}
+            aria-label="Adicionar material"
+            className="inline-flex min-h-[42px] w-full shrink-0 items-center justify-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-3 text-xs font-semibold text-primary transition hover:bg-primary/15 sm:w-auto"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Adicionar
+          </button>
+        </div>
+
+        {isOpen ? (
+          <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-slate-200 bg-white p-1 shadow-lg">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => addItem(name)}
+                  className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-foreground transition hover:bg-slate-100"
+                >
+                  {name}
+                </button>
+              ))
+            ) : (
+              <p className="px-2 py-2 text-sm text-muted">
+                Nenhum material encontrado.
+              </p>
+            )}
+          </div>
+        ) : null}
+      </div>
 
       {items.length > 0 ? (
         <ul className="mt-2 grid gap-2">

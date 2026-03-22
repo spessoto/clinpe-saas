@@ -7,6 +7,7 @@ type OtherReasonInputProps = {
   inputName: string;
   label: string;
   placeholder: string;
+  defaultValue?: string;
 };
 
 export function OtherReasonInput({
@@ -14,6 +15,7 @@ export function OtherReasonInput({
   inputName,
   label,
   placeholder,
+  defaultValue,
 }: OtherReasonInputProps) {
   const [isOpen, setIsOpen] = useState(() => {
     if (typeof document === "undefined") {
@@ -77,6 +79,7 @@ export function OtherReasonInput({
       <span className="mb-1 block text-muted">{label}</span>
       <input
         name={inputName}
+        defaultValue={defaultValue ?? ""}
         placeholder={placeholder}
         className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
       />

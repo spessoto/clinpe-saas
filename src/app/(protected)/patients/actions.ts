@@ -47,6 +47,25 @@ function withOtherReasonInSingle(value: string | null, reason: string) {
   return `Outro: ${reason}`;
 }
 
+function isMissingReferralSourceColumnError(
+  error: { message?: string } | null,
+) {
+  if (!error?.message) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+
+  return (
+    message.includes("referral_source") &&
+    (message.includes("schema cache") ||
+      message.includes("column") ||
+      message.includes("not found") ||
+      message.includes("does not exist") ||
+      message.includes("pgrst204"))
+  );
+}
+
 export type PatientLimitStatus = {
   current: number;
   max: number;
@@ -172,7 +191,7 @@ export async function createPatientAction(formData: FormData) {
     );
   }
 
-  const { error } = await supabase.from("patients").insert({
+  const insertPayload = {
     tenant_id: appUser.tenant_id,
     name,
     phone,
@@ -197,7 +216,15 @@ export async function createPatientAction(formData: FormData) {
     is_smoker: isSmoker,
     predominant_footwear: predominantFootwearResolved,
     referral_source: referralSourceResolved,
-  });
+  };
+
+  let { error } = await supabase.from("patients").insert(insertPayload);
+
+  if (isMissingReferralSourceColumnError(error)) {
+    const { referral_source: _, ...legacyPayload } = insertPayload;
+    const legacyInsert = await supabase.from("patients").insert(legacyPayload);
+    error = legacyInsert.error;
+  }
 
   if (error) {
     redirect(`/patients/new?error=${encodeURIComponent(error.message)}`);
@@ -289,35 +316,50 @@ export async function updatePatientAction(formData: FormData) {
     redirect(`/patients/${id || ""}/edit?error=Campos invalidos`);
   }
 
-  const { error } = await supabase
+  const updatePayload = {
+    name,
+    phone,
+    birth_date: birthDate || null,
+    cpf: cpf || null,
+    rg: rg || null,
+    email: email || null,
+    address_street: addressStreet || null,
+    address_neighborhood: addressNeighborhood || null,
+    address_zipcode: addressZipcode || null,
+    occupation: occupation || null,
+    emergency_contact_name: emergencyContactName || null,
+    emergency_contact_phone: emergencyContactPhone || null,
+    has_diabetes: hasDiabetes,
+    diabetes_type: diabetesType,
+    diabetes_on_insulin: diabetesOnInsulin,
+    has_vascular_issues: hasVascularIssues,
+    has_coagulation_disorders: hasCoagulationDisorders,
+    has_oncological_history: hasOncologicalHistory,
+    continuous_meds: continuousMedsResolved,
+    patient_allergies: patientAllergiesResolved,
+    is_smoker: isSmoker,
+    predominant_footwear: predominantFootwearResolved,
+    referral_source: referralSourceResolved,
+  };
+
+  let updateQuery = supabase
     .from("patients")
-    .update({
-      name,
-      phone,
-      birth_date: birthDate || null,
-      cpf: cpf || null,
-      rg: rg || null,
-      email: email || null,
-      address_street: addressStreet || null,
-      address_neighborhood: addressNeighborhood || null,
-      address_zipcode: addressZipcode || null,
-      occupation: occupation || null,
-      emergency_contact_name: emergencyContactName || null,
-      emergency_contact_phone: emergencyContactPhone || null,
-      has_diabetes: hasDiabetes,
-      diabetes_type: diabetesType,
-      diabetes_on_insulin: diabetesOnInsulin,
-      has_vascular_issues: hasVascularIssues,
-      has_coagulation_disorders: hasCoagulationDisorders,
-      has_oncological_history: hasOncologicalHistory,
-      continuous_meds: continuousMedsResolved,
-      patient_allergies: patientAllergiesResolved,
-      is_smoker: isSmoker,
-      predominant_footwear: predominantFootwearResolved,
-      referral_source: referralSourceResolved,
-    })
+    .update(updatePayload)
     .eq("id", id)
     .eq("tenant_id", appUser.tenant_id);
+
+  let { error } = await updateQuery;
+
+  if (isMissingReferralSourceColumnError(error)) {
+    const { referral_source: _, ...legacyPayload } = updatePayload;
+    const legacyUpdate = await supabase
+      .from("patients")
+      .update(legacyPayload)
+      .eq("id", id)
+      .eq("tenant_id", appUser.tenant_id);
+
+    error = legacyUpdate.error;
+  }
 
   if (error) {
     redirect(`/patients/${id}/edit?error=${encodeURIComponent(error.message)}`);

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { updatePatientAction } from "@/app/(protected)/patients/actions";
+import { OtherReasonInput } from "@/app/(protected)/patients/new/other-reason-input";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,6 +10,54 @@ type Props = {
   params: Promise<{ id: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+function hasOtherSelectedInArray(values: unknown, baseLabel: string) {
+  if (!Array.isArray(values)) {
+    return false;
+  }
+
+  return values.some(
+    (value) =>
+      value === baseLabel ||
+      (typeof value === "string" && value.startsWith(`${baseLabel}:`)),
+  );
+}
+
+function extractOtherReasonInArray(values: unknown, baseLabel: string) {
+  if (!Array.isArray(values)) {
+    return "";
+  }
+
+  const found = values.find(
+    (value) => typeof value === "string" && value.startsWith(`${baseLabel}:`),
+  );
+
+  if (!found || typeof found !== "string") {
+    return "";
+  }
+
+  return found.replace(`${baseLabel}:`, "").trim();
+}
+
+function isOtherSelectedInSingle(value: unknown) {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  return value === "Outro" || value.startsWith("Outro:");
+}
+
+function extractOtherReasonInSingle(value: unknown) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  if (!value.startsWith("Outro:")) {
+    return "";
+  }
+
+  return value.replace("Outro:", "").trim();
+}
 
 export default async function EditPatientPage({ params, searchParams }: Props) {
   const { appUser } = await requireActiveTenant();
@@ -30,6 +79,49 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
       `/patients?error=${encodeURIComponent("Paciente não encontrado para edição neste usuário.")}`,
     );
   }
+
+  const continuousMeds = Array.isArray(patient.continuous_meds)
+    ? patient.continuous_meds
+    : [];
+  const patientAllergies = Array.isArray(patient.patient_allergies)
+    ? patient.patient_allergies
+    : [];
+
+  const hasContinuousMedsOther = hasOtherSelectedInArray(
+    continuousMeds,
+    "Outro",
+  );
+  const hasAllergiesOther = hasOtherSelectedInArray(patientAllergies, "Outra");
+  const continuousMedsOtherReason = extractOtherReasonInArray(
+    continuousMeds,
+    "Outro",
+  );
+  const patientAllergiesOtherReason = extractOtherReasonInArray(
+    patientAllergies,
+    "Outra",
+  );
+
+  const predominantFootwearRaw =
+    typeof patient.predominant_footwear === "string"
+      ? patient.predominant_footwear
+      : "";
+  const referralSourceRaw =
+    typeof patient.referral_source === "string" ? patient.referral_source : "";
+
+  const predominantFootwearValue = isOtherSelectedInSingle(
+    predominantFootwearRaw,
+  )
+    ? "Outro"
+    : predominantFootwearRaw;
+  const referralSourceValue = isOtherSelectedInSingle(referralSourceRaw)
+    ? "Outro"
+    : referralSourceRaw;
+
+  const predominantFootwearOtherReason = extractOtherReasonInSingle(
+    predominantFootwearRaw,
+  );
+  const referralSourceOtherReason =
+    extractOtherReasonInSingle(referralSourceRaw);
 
   return (
     <section className="surface-card max-w-xl p-6">
@@ -290,9 +382,11 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
                     type="checkbox"
                     name="continuous_meds"
                     value={med}
-                    defaultChecked={(patient.continuous_meds ?? []).includes(
-                      med,
-                    )}
+                    defaultChecked={
+                      med === "Outro"
+                        ? hasContinuousMedsOther
+                        : continuousMeds.includes(med)
+                    }
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-amber-400/60 bg-white px-4 text-sm font-medium text-amber-700 transition peer-checked:border-amber-500 peer-checked:bg-amber-500 peer-checked:text-white">
@@ -301,6 +395,13 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
                 </label>
               ))}
             </div>
+            <OtherReasonInput
+              triggerSelector="input[name='continuous_meds'][value='Outro']"
+              inputName="continuous_meds_other_reason"
+              label="Motivo de Outros (medicamentos)"
+              placeholder="Descreva o medicamento de uso contínuo"
+              defaultValue={continuousMedsOtherReason}
+            />
           </div>
 
           {/* Alergias */}
@@ -321,9 +422,11 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
                     type="checkbox"
                     name="patient_allergies"
                     value={allergy}
-                    defaultChecked={(patient.patient_allergies ?? []).includes(
-                      allergy,
-                    )}
+                    defaultChecked={
+                      allergy === "Outra"
+                        ? hasAllergiesOther
+                        : patientAllergies.includes(allergy)
+                    }
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-orange-400/60 bg-white px-4 text-sm font-medium text-orange-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-500 peer-checked:text-white">
@@ -332,6 +435,13 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
                 </label>
               ))}
             </div>
+            <OtherReasonInput
+              triggerSelector="input[name='patient_allergies'][value='Outra']"
+              inputName="patient_allergies_other_reason"
+              label="Motivo de Outros (alergias)"
+              placeholder="Descreva a alergia"
+              defaultValue={patientAllergiesOtherReason}
+            />
           </div>
 
           {/* Hábitos base */}
@@ -370,7 +480,7 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
                     type="radio"
                     name="predominant_footwear"
                     value={shoe}
-                    defaultChecked={patient.predominant_footwear === shoe}
+                    defaultChecked={predominantFootwearValue === shoe}
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
@@ -379,6 +489,13 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
                 </label>
               ))}
             </div>
+            <OtherReasonInput
+              triggerSelector="input[name='predominant_footwear'][value='Outro']"
+              inputName="predominant_footwear_other_reason"
+              label="Motivo de Outros (calçado)"
+              placeholder="Descreva o calçado predominante"
+              defaultValue={predominantFootwearOtherReason}
+            />
           </div>
         </fieldset>
 
@@ -393,7 +510,7 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
             </span>
             <select
               name="referral_source"
-              defaultValue={patient.referral_source ?? ""}
+              defaultValue={referralSourceValue}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
             >
               <option value="">Não informado</option>
@@ -407,6 +524,13 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
               <option value="Outro">Outro</option>
             </select>
           </label>
+          <OtherReasonInput
+            triggerSelector="select[name='referral_source']"
+            inputName="referral_source_other_reason"
+            label="Motivo de Outros (origem)"
+            placeholder="Descreva como o paciente conheceu a clínica"
+            defaultValue={referralSourceOtherReason}
+          />
         </fieldset>
 
         <div className="flex gap-2">

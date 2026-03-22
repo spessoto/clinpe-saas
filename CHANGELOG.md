@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-03-21
+
+### Added
+
+- **Rastreabilidade por material no prontuário**
+  - Novo seletor em `/medical-records/new` para vincular individualmente material e lote esterilizado
+  - Persistência de `sterilization_materials_used` no snapshot da anamnese
+  - Exibição no detalhe do prontuário em linhas no formato `Lote | Material Utilizado`
+
+- **Recuperação de valores personalizados de "Outro" no novo prontuário**
+  - `/medical-records/new` agora lista valores já salvos como `Outro: ...` em medicamentos, alergias e calçado predominante
+  - Os valores recuperados ficam visíveis e pré-selecionados para o profissional
+
+- **Novo status de indicador químico `not_measured`**
+  - Migration `20260321000030_add_not_measured_chemical_indicator_status.sql`
+  - O status passa a ficar disponível na Central de Esterilização e nos relatórios
+
+### Changed
+
+- **Fluxo de esterilização refinado para operação e auditoria**
+  - Diário e relatório agora discriminam materiais por linha quando um ciclo possui múltiplos itens
+  - Relatório mensal de esterilização recebeu cabeçalho com branding da clínica, indicadores-resumo e layout otimizado para PDF
+  - O detalhe do ciclo passou a exibir corretamente `Aprovado`, `Reprovado` e `Não aferido`
+
+- **Persistência de "Outro" expandida no cadastro e no prontuário**
+  - Edição de paciente em `/patients/[id]/edit` agora reabre e pré-preenche os motivos de `Outro: ...`
+  - O componente compartilhado `OtherReasonInput` passou a aceitar valor inicial
+  - O novo prontuário continua sincronizando esses valores com o dado mestre do paciente
+
+- **Formulário de novo prontuário simplificado**
+  - Campo `Avaliação clínica geral / observações` removido de `/medical-records/new`
+  - O backend deixou de exigir `clinical_assessment` como obrigatório
+
+- **Ajustes de impressão na área protegida**
+  - Sidebar desktop e menu mobile deixam de aparecer em impressão/PDF
+
+### Fixed
+
+- **Fallback para schema cache em `referral_source`**
+  - `patients/actions.ts` voltou a tolerar ambientes onde a coluna ainda não está visível no PostgREST
+  - Em caso de erro de schema cache, create/update repetem a operação sem `referral_source`
+
 ## [1.0.4] - 2026-03-21
 
 ### Changed

@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versão publicada: `v1.0.3`
+- Versão publicada: `v1.0.5`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -45,6 +45,10 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Billing com cupom e dados de faturamento**: checkout com CPF/CNPJ validado, método de pagamento e prévia de desconto por ciclo
 - **Segurança reforçada com reCAPTCHA v3**: aplicado em login, cadastro e agendamento público
 - **Registro fotográfico mobile no prontuário**: captura direta da câmera, seleção por galeria, preview com remoção e limite de até 4 imagens por prontuário
+- **Rastreabilidade por material no prontuário**: seleção individual de lote + material em `/medical-records/new` com exibição detalhada no prontuário salvo
+- **Recuperação de valores personalizados de "Outro"**: o novo prontuário reapresenta opções já cadastradas como `Outro: ...` para acelerar o atendimento
+- **Central de Esterilização com status "Não aferido"**: ciclos e relatórios aceitam e exibem `not_measured`, mantendo compatibilidade operacional
+- **Relatório de esterilização com branding para PDF**: cabeçalho com identidade da clínica, indicadores-resumo e tabela pronta para impressão
 - **Admin users evoluído**: switch de admin, ações por ícone (editar/excluir) e bloqueio seguro de exclusão para admins
 - **KPIs de admin com precisão operacional**: métricas atualizadas em tempo real, excluindo canceladas e considerando apenas base ativa quando aplicável
 
@@ -166,6 +170,7 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260319000022_sterilization_traceability_v2.sql` — rastreabilidade de esterilização v2
 - `20260319000023_patient_extended_fields.sql` — campos administrativos do paciente: CPF, RG, e-mail, endereço, ocupação, contato de emergência, origem
 - `20260319000024_patient_health_columns.sql` — colunas estruturadas de saúde no cadastro do paciente (modelo híbrido) com índices GIN em arrays
+- `20260321000030_add_not_measured_chemical_indicator_status.sql` — adiciona o status `not_measured` ao enum de indicador químico da esterilização
   Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e Google.
 
 > **Atencao:** O nome dos arquivos de migration usa o formato `YYYYMMDDNNNNNN` (14 digitos sem underscore entre data e sequencia). Arquivos com o formato antigo `YYYYMMDD_NNNNNN` causam conflito de versao na CLI do Supabase.

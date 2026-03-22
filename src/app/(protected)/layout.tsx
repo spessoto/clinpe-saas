@@ -100,7 +100,7 @@ export default async function ProtectedLayout({
       <MobileSidebar canAccessAdmin={canAccessAdmin} />
 
       <div className="md:flex">
-        <aside className="hidden bg-[#0F766E] px-5 py-6 text-white md:sticky md:top-0 md:flex md:h-screen md:w-72 md:flex-shrink-0 md:flex-col">
+        <aside className="hidden bg-[#0F766E] px-5 py-6 text-white print:hidden md:sticky md:top-0 md:flex md:h-screen md:w-72 md:flex-shrink-0 md:flex-col">
           <div className="flex justify-center">
             <BrandLogoWhite className="h-auto w-36" />
           </div>

@@ -90,7 +90,8 @@ export async function createSterilizationCycleAction(formData: FormData) {
 
   if (
     chemicalIndicatorStatus !== "approved" &&
-    chemicalIndicatorStatus !== "rejected"
+    chemicalIndicatorStatus !== "rejected" &&
+    chemicalIndicatorStatus !== "not_measured"
   ) {
     redirect(
       getSterilizationPath({

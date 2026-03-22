@@ -15,6 +15,30 @@ function formatDateTime(value: string) {
   });
 }
 
+function indicatorLabel(status: string) {
+  if (status === "approved") {
+    return "Aprovado";
+  }
+
+  if (status === "rejected") {
+    return "Reprovado";
+  }
+
+  return "Não aferido";
+}
+
+function indicatorClassName(status: string) {
+  if (status === "approved") {
+    return "text-success";
+  }
+
+  if (status === "rejected") {
+    return "text-destructive";
+  }
+
+  return "text-slate-700";
+}
+
 export default async function SterilizationCycleDetailsPage({ params }: Props) {
   const { appUser } = await requireActiveTenant();
   const supabase = await createClient();
@@ -89,15 +113,9 @@ export default async function SterilizationCycleDetailsPage({ params }: Props) {
           <div className="rounded-lg bg-slate-50 p-3 text-sm md:col-span-2">
             <p className="text-muted">Indicador químico</p>
             <p
-              className={`font-semibold ${
-                cycle.chemical_indicator_status === "approved"
-                  ? "text-success"
-                  : "text-destructive"
-              }`}
+              className={`font-semibold ${indicatorClassName(cycle.chemical_indicator_status)}`}
             >
-              {cycle.chemical_indicator_status === "approved"
-                ? "Aprovado"
-                : "Reprovado"}
+              {indicatorLabel(cycle.chemical_indicator_status)}
             </p>
           </div>
         </div>

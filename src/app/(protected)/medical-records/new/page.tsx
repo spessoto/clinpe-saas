@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { createMedicalRecordAction } from "@/app/(protected)/medical-records/actions";
 import { PhotoPicker } from "./photo-picker";
+import { TraceabilityMaterialsPicker } from "./traceability-materials-picker";
 import { OtherReasonInput } from "../../patients/new/other-reason-input";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -9,6 +10,62 @@ import { createClient } from "@/lib/supabase/server";
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+function splitCycleMaterials(materialName: string) {
+  return materialName
+    .split("|")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getArrayValues(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function getOtherValuesFromArray(
+  values: string[],
+  baseLabel: string,
+): string[] {
+  const prefix = `${baseLabel}:`;
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of values) {
+    if (!value.startsWith(prefix)) {
+      continue;
+    }
+
+    const normalized = value.trim();
+    if (!normalized || seen.has(normalized)) {
+      continue;
+    }
+
+    seen.add(normalized);
+    result.push(normalized);
+  }
+
+  return result;
+}
+
+function getReasonFromOtherValue(
+  value: string | null | undefined,
+  baseLabel: string,
+) {
+  if (!value) {
+    return "";
+  }
+
+  const prefix = `${baseLabel}:`;
+  if (!value.startsWith(prefix)) {
+    return "";
+  }
+
+  return value.replace(prefix, "").trim();
+}
 
 export default async function NewMedicalRecordPage({ searchParams }: Props) {
   const { appUser } = await requireActiveTenant();
@@ -37,7 +94,7 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
           "id, batch_number, material_name, sterilized_at, chemical_indicator_status",
         )
         .eq("tenant_id", appUser.tenant_id)
-        .eq("chemical_indicator_status", "approved")
+        .in("chemical_indicator_status", ["approved", "not_measured"])
         .gte("sterilized_at", cutoff.toISOString())
         .order("sterilized_at", { ascending: false }),
       supabase
@@ -69,6 +126,70 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
   const validLots = (lotsResult.data ?? []).filter(
     (lot) => !rejectedLotIdSet.has(lot.id),
   );
+
+  const validLotEntries = validLots.flatMap((lot) => {
+    const materials = splitCycleMaterials(lot.material_name);
+    if (materials.length === 0) {
+      return [
+        {
+          entryId: `${lot.id}-0`,
+          lotId: lot.id,
+          batchNumber: lot.batch_number,
+          material: "-",
+        },
+      ];
+    }
+
+    return materials.map((material, index) => ({
+      entryId: `${lot.id}-${index}`,
+      lotId: lot.id,
+      batchNumber: lot.batch_number,
+      material,
+    }));
+  });
+
+  const continuousMedsValues = getArrayValues(patientHealth?.continuous_meds);
+  const allergiesValues = getArrayValues(patientHealth?.patient_allergies);
+  const continuousMedsOtherValues = getOtherValuesFromArray(
+    continuousMedsValues,
+    "Outro",
+  );
+  const allergiesOtherValues = getOtherValuesFromArray(
+    allergiesValues,
+    "Outra",
+  );
+  const predominantFootwearValue =
+    typeof patientHealth?.predominant_footwear === "string"
+      ? patientHealth.predominant_footwear
+      : "";
+
+  const continuousMedsOptions = [
+    "AAS / Anticoagulante",
+    "Imunossupressor",
+    "Corticoide",
+    "Outro",
+    ...continuousMedsOtherValues,
+  ];
+  const allergiesOptions = [
+    "Iodo",
+    "Látex (luvas)",
+    "Anestésico tópico",
+    "Cosméticos",
+    "Outra",
+    ...allergiesOtherValues,
+  ];
+  const footwearOptions = [
+    "Salto alto",
+    "Bico fino",
+    "Sapatilha",
+    "Bota EPI",
+    "Tênis",
+    "Chinelo",
+    "Outro",
+    ...(predominantFootwearValue.startsWith("Outro:")
+      ? [predominantFootwearValue]
+      : []),
+  ];
 
   return (
     <section className="surface-card mx-auto max-w-5xl p-6 md:p-8">
@@ -242,22 +363,13 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
               Medicamentos de uso contínuo
             </p>
             <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  "AAS / Anticoagulante",
-                  "Imunossupressor",
-                  "Corticoide",
-                  "Outro (ver obs.)",
-                ] as string[]
-              ).map((med) => (
+              {(continuousMedsOptions as string[]).map((med) => (
                 <label key={med} className="cursor-pointer">
                   <input
                     type="checkbox"
                     name="continuous_meds"
                     value={med}
-                    defaultChecked={(
-                      patientHealth?.continuous_meds ?? []
-                    ).includes(med)}
+                    defaultChecked={continuousMedsValues.includes(med)}
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-amber-400/60 bg-white px-4 text-sm font-medium text-amber-700 transition peer-checked:border-amber-500 peer-checked:bg-amber-500 peer-checked:text-white">
@@ -267,12 +379,14 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
               ))}
             </div>
             <OtherReasonInput
-              triggerSelector={
-                'input[name="continuous_meds"][value="Outro (ver obs.)"]'
-              }
+              triggerSelector={'input[name="continuous_meds"][value="Outro"]'}
               inputName="continuous_meds_other_reason"
               label="Qual medicamento?"
               placeholder="Descreva o medicamento de uso contínuo"
+              defaultValue={getReasonFromOtherValue(
+                continuousMedsOtherValues[0],
+                "Outro",
+              )}
             />
           </div>
 
@@ -282,23 +396,13 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
               Alergias conhecidas
             </p>
             <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  "Iodo",
-                  "Látex (luvas)",
-                  "Anestésico tópico",
-                  "Cosméticos",
-                  "Outra (ver obs.)",
-                ] as string[]
-              ).map((allergy) => (
+              {(allergiesOptions as string[]).map((allergy) => (
                 <label key={allergy} className="cursor-pointer">
                   <input
                     type="checkbox"
                     name="allergies"
                     value={allergy}
-                    defaultChecked={(
-                      patientHealth?.patient_allergies ?? []
-                    ).includes(allergy)}
+                    defaultChecked={allergiesValues.includes(allergy)}
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-orange-400/60 bg-white px-4 text-sm font-medium text-orange-700 transition peer-checked:border-orange-500 peer-checked:bg-orange-500 peer-checked:text-white">
@@ -308,12 +412,14 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
               ))}
             </div>
             <OtherReasonInput
-              triggerSelector={
-                'input[name="allergies"][value="Outra (ver obs.)"]'
-              }
+              triggerSelector={'input[name="allergies"][value="Outra"]'}
               inputName="allergies_other_reason"
               label="Qual alergia?"
               placeholder="Descreva a alergia informada"
+              defaultValue={getReasonFromOtherValue(
+                allergiesOtherValues[0],
+                "Outra",
+              )}
             />
           </div>
         </fieldset>
@@ -367,25 +473,13 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
               Calçado predominante
             </p>
             <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  "Salto alto",
-                  "Bico fino",
-                  "Sapatilha",
-                  "Bota EPI",
-                  "Tênis",
-                  "Chinelo",
-                  "Outro",
-                ] as string[]
-              ).map((shoe) => (
+              {(footwearOptions as string[]).map((shoe) => (
                 <label key={shoe} className="cursor-pointer">
                   <input
                     type="radio"
                     name="predominant_footwear"
                     value={shoe}
-                    defaultChecked={
-                      patientHealth?.predominant_footwear === shoe
-                    }
+                    defaultChecked={predominantFootwearValue === shoe}
                     className="peer sr-only"
                   />
                   <span className="inline-flex min-h-[44px] items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white">
@@ -401,6 +495,10 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
               inputName="predominant_footwear_other_reason"
               label="Qual calçado?"
               placeholder="Descreva o calçado predominante"
+              defaultValue={getReasonFromOtherValue(
+                predominantFootwearValue,
+                "Outro",
+              )}
             />
           </div>
         </fieldset>
@@ -579,18 +677,6 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
             Desfecho da Consulta
           </legend>
 
-          <label className="block text-sm">
-            <span className="mb-1 block text-foreground">
-              Avaliação clínica geral / observações *
-            </span>
-            <textarea
-              name="clinical_assessment"
-              required
-              rows={3}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-            />
-          </label>
-
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
               <span className="mb-1 block text-foreground">
@@ -644,37 +730,17 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
               Rastreabilidade de materiais
             </h3>
             <p className="mt-1 text-sm text-muted">
-              Adicione os lotes utilizados (somente lotes válidos dos últimos 30
-              dias).
+              Selecione individualmente cada material e o lote utilizado
+              (somente lotes válidos dos últimos 30 dias).
             </p>
 
-            {validLots.length === 0 ? (
+            {validLotEntries.length === 0 ? (
               <p className="mt-3 rounded-md bg-warning/10 px-3 py-2 text-sm text-warning">
                 Nenhum lote válido disponível. Registre os ciclos na Central de
                 Esterilização.
               </p>
             ) : (
-              <div className="mt-3 grid max-h-56 gap-2 overflow-y-auto pr-1">
-                {validLots.map((lot) => (
-                  <label
-                    key={lot.id}
-                    className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      name="sterilization_lot_ids"
-                      value={lot.id}
-                    />
-                    <span className="font-semibold text-foreground">
-                      {lot.batch_number}
-                    </span>
-                    <span className="text-muted">• {lot.material_name}</span>
-                    <span className="text-muted">
-                      • {new Date(lot.sterilized_at).toLocaleString("pt-BR")}
-                    </span>
-                  </label>
-                ))}
-              </div>
+              <TraceabilityMaterialsPicker entries={validLotEntries} />
             )}
           </article>
         </div>

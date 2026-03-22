@@ -50,6 +50,11 @@ type AnamnesisData = {
   procedure_performed?: string;
   recommendations?: string;
   evolution_notes?: string;
+  sterilization_materials_used?: Array<{
+    lot_id?: string;
+    batch_number?: string;
+    material?: string;
+  }>;
 };
 
 export default async function MedicalRecordDetailsPage({ params }: Props) {
@@ -100,6 +105,21 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
 
   const anamnesis = (record.anamnesis_data ?? {}) as AnamnesisData;
   const photos = Array.isArray(record.photos) ? record.photos : [];
+  const selectedTraceabilityMaterials = Array.isArray(
+    anamnesis.sterilization_materials_used,
+  )
+    ? anamnesis.sterilization_materials_used
+        .map((item) => ({
+          lotId: String(item.lot_id ?? "").trim(),
+          batchNumber: String(item.batch_number ?? "").trim(),
+          material: String(item.material ?? "").trim(),
+        }))
+        .filter((item) => item.batchNumber && item.material)
+    : [];
+
+  const lotLinkByLotId = new Map(
+    lotLinks.map((link) => [link.sterilization_log_id, link]),
+  );
 
   // Tags de risco para exibir em destaque
   const riskTags: string[] = [];
@@ -413,33 +433,59 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
           Rastreabilidade de materiais
         </h3>
 
-        {lotLinks.length === 0 ? (
+        {lotLinks.length === 0 && selectedTraceabilityMaterials.length === 0 ? (
           <p className="mt-2 text-sm text-muted">
             Nenhum lote de esterilização vinculado a este prontuário.
           </p>
         ) : (
           <div className="mt-3 space-y-2">
-            {lotLinks.map((link) => {
-              const lot = Array.isArray(link.lot) ? link.lot[0] : link.lot;
+            {selectedTraceabilityMaterials.length > 0
+              ? selectedTraceabilityMaterials.map((item, index) => {
+                  const linkedLot = lotLinkByLotId.get(item.lotId);
 
-              return (
-                <Link
-                  key={link.id}
-                  href={`/sterilization/${link.sterilization_log_id}`}
-                  className="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 hover:border-primary/40"
-                >
-                  <p className="font-semibold text-primary">
-                    Materiais utilizados: {lot?.batch_number ?? "Lote"}
-                  </p>
-                  <p className="text-sm text-muted">
-                    {lot?.material_name ?? "Material não informado"} •{" "}
-                    {lot?.sterilized_at
-                      ? new Date(lot.sterilized_at).toLocaleString("pt-BR")
-                      : "Data não informada"}
-                  </p>
-                </Link>
-              );
-            })}
+                  if (!linkedLot) {
+                    return (
+                      <div
+                        key={`${item.batchNumber}-${item.material}-${index}`}
+                        className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
+                      >
+                        <p className="text-sm text-muted">
+                          Lote {item.batchNumber} | Material Utilizado:{" "}
+                          {item.material}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={`${linkedLot.id}-${item.material}-${index}`}
+                      href={`/sterilization/${linkedLot.sterilization_log_id}`}
+                      className="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 hover:border-primary/40"
+                    >
+                      <p className="text-sm text-muted">
+                        Lote {item.batchNumber} | Material Utilizado:{" "}
+                        {item.material}
+                      </p>
+                    </Link>
+                  );
+                })
+              : lotLinks.map((link) => {
+                  const lot = Array.isArray(link.lot) ? link.lot[0] : link.lot;
+
+                  return (
+                    <Link
+                      key={link.id}
+                      href={`/sterilization/${link.sterilization_log_id}`}
+                      className="block rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 hover:border-primary/40"
+                    >
+                      <p className="text-sm text-muted">
+                        Lote {lot?.batch_number ?? "-"} | Material Utilizado:
+                        não discriminado
+                      </p>
+                    </Link>
+                  );
+                })}
           </div>
         )}
       </article>

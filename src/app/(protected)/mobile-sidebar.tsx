@@ -57,7 +57,7 @@ export function MobileSidebar({ canAccessAdmin }: MobileSidebarProps) {
   }, [mounted]);
 
   return (
-    <div className="md:hidden">
+    <div className="print:hidden md:hidden">
       <div className="flex items-center justify-between bg-[#0F766E] px-5 py-4 text-white">
         <BrandLogoWhite className="h-auto w-32" />
         <button

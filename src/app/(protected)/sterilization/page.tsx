@@ -17,7 +17,7 @@ type Props = {
 
 type BiologicalTestStatus = "pending" | "approved" | "rejected";
 
-type ChemicalIndicatorStatus = "approved" | "rejected";
+type ChemicalIndicatorStatus = "approved" | "rejected" | "not_measured";
 
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString("pt-BR", {
@@ -75,9 +75,34 @@ function statusBadge(status: BiologicalTestStatus) {
 }
 
 function indicatorBadge(status: ChemicalIndicatorStatus) {
-  return status === "approved"
-    ? "bg-success/10 text-success"
-    : "bg-destructive/10 text-destructive";
+  if (status === "approved") {
+    return "bg-success/10 text-success";
+  }
+
+  if (status === "rejected") {
+    return "bg-destructive/10 text-destructive";
+  }
+
+  return "bg-slate-200 text-slate-700";
+}
+
+function indicatorLabel(status: ChemicalIndicatorStatus) {
+  if (status === "approved") {
+    return "Aprovado";
+  }
+
+  if (status === "rejected") {
+    return "Reprovado";
+  }
+
+  return "Não aferido";
+}
+
+function splitCycleMaterials(materialName: string) {
+  return materialName
+    .split("|")
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 export default async function SterilizationPage({ searchParams }: Props) {
@@ -155,9 +180,16 @@ export default async function SterilizationPage({ searchParams }: Props) {
     return hours >= 24;
   });
 
-  const cycleOptions = cycles.filter(
-    (cycle) => cycle.chemical_indicator_status === "approved",
-  );
+  const cycleOptions = cycles;
+
+  const diaryRows = cycles.flatMap((cycle) => {
+    const materials = splitCycleMaterials(cycle.material_name);
+    if (materials.length === 0) {
+      return [{ cycle, material: cycle.material_name }];
+    }
+
+    return materials.map((material) => ({ cycle, material }));
+  });
 
   return (
     <section className="space-y-6">
@@ -236,8 +268,8 @@ export default async function SterilizationPage({ searchParams }: Props) {
           >
             <input type="hidden" name="month" value={monthKey} />
 
-            <div className="grid gap-4 lg:grid-cols-4">
-              <label className="grid gap-1 text-sm lg:col-span-1">
+            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+              <label className="grid gap-1 text-sm md:col-span-1 2xl:col-span-1">
                 <span className="font-semibold text-foreground">
                   Data e hora
                 </span>
@@ -250,7 +282,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
                 />
               </label>
 
-              <label className="grid gap-1 text-sm lg:col-span-2">
+              <label className="grid gap-1 text-sm md:col-span-1 2xl:col-span-2">
                 <span className="font-semibold text-foreground">
                   Número do ciclo/lote
                 </span>
@@ -262,12 +294,12 @@ export default async function SterilizationPage({ searchParams }: Props) {
                 />
               </label>
 
-              <div className="lg:col-span-1 lg:self-end">
+              <div className="md:col-span-2 2xl:col-span-1 2xl:self-end">
                 <SterilizedMaterialsField options={materialNames} />
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
               <label className="grid gap-1 text-sm">
                 <span className="font-semibold text-foreground">
                   Temperatura (°C)
@@ -294,7 +326,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
                 />
               </label>
 
-              <label className="grid gap-1 text-sm">
+              <label className="grid gap-1 text-sm sm:col-span-2 2xl:col-span-1">
                 <span className="font-semibold text-foreground">
                   Indicador químico
                 </span>
@@ -306,6 +338,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
                 >
                   <option value="approved">Aprovado</option>
                   <option value="rejected">Reprovado</option>
+                  <option value="not_measured">Não aferido</option>
                 </select>
               </label>
             </div>
@@ -352,8 +385,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
                 <option value="">Selecione...</option>
                 {cycleOptions.map((cycle) => (
                   <option key={cycle.id} value={cycle.id}>
-                    {cycle.batch_number} • {cycle.material_name} •{" "}
-                    {formatDateTime(cycle.sterilized_at)}
+                    {cycle.batch_number} • {formatDateTime(cycle.sterilized_at)}
                   </option>
                 ))}
               </select>
@@ -439,14 +471,14 @@ export default async function SterilizationPage({ searchParams }: Props) {
         </div>
 
         <div className="space-y-3 p-4 sm:hidden">
-          {cycles.length === 0 ? (
+          {diaryRows.length === 0 ? (
             <p className="rounded-lg border border-slate-100 bg-white px-4 py-6 text-sm text-muted">
               Nenhum ciclo registrado para o período selecionado.
             </p>
           ) : (
-            cycles.map((cycle) => (
+            diaryRows.map(({ cycle, material }, index) => (
               <article
-                key={cycle.id}
+                key={`${cycle.id}-${index}`}
                 className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
               >
                 <div className="flex items-start justify-between gap-2">
@@ -459,12 +491,10 @@ export default async function SterilizationPage({ searchParams }: Props) {
                   <span
                     className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${indicatorBadge(cycle.chemical_indicator_status)}`}
                   >
-                    {cycle.chemical_indicator_status === "approved"
-                      ? "Aprovado"
-                      : "Reprovado"}
+                    {indicatorLabel(cycle.chemical_indicator_status)}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-muted">{cycle.material_name}</p>
+                <p className="mt-1 text-sm text-muted">{material}</p>
                 <p className="mt-1 text-xs text-muted">
                   {formatDateTime(cycle.sterilized_at)}
                 </p>
@@ -492,8 +522,11 @@ export default async function SterilizationPage({ searchParams }: Props) {
             </tr>
           </thead>
           <tbody>
-            {cycles.map((cycle) => (
-              <tr key={cycle.id} className="border-t border-slate-100">
+            {diaryRows.map(({ cycle, material }, index) => (
+              <tr
+                key={`${cycle.id}-${index}`}
+                className="border-t border-slate-100"
+              >
                 <td className="px-4 py-3 text-muted">
                   {formatDateTime(cycle.sterilized_at)}
                 </td>
@@ -505,7 +538,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
                     {cycle.batch_number}
                   </Link>
                 </td>
-                <td className="px-4 py-3 text-muted">{cycle.material_name}</td>
+                <td className="px-4 py-3 text-muted">{material}</td>
                 <td className="px-4 py-3 text-muted">
                   {cycle.temperature_celsius
                     ? `${cycle.temperature_celsius} °C`
@@ -518,15 +551,13 @@ export default async function SterilizationPage({ searchParams }: Props) {
                   <span
                     className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${indicatorBadge(cycle.chemical_indicator_status)}`}
                   >
-                    {cycle.chemical_indicator_status === "approved"
-                      ? "Aprovado"
-                      : "Reprovado"}
+                    {indicatorLabel(cycle.chemical_indicator_status)}
                   </span>
                 </td>
               </tr>
             ))}
 
-            {cycles.length === 0 ? (
+            {diaryRows.length === 0 ? (
               <tr>
                 <td className="px-4 py-6 text-muted" colSpan={6}>
                   Nenhum ciclo registrado para o período selecionado.

@@ -21,6 +21,39 @@ function toSafeFileName(fileName: string) {
     .toLowerCase();
 }
 
+function splitCycleMaterials(materialName: string) {
+  return materialName
+    .split("|")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function withOtherReasonInArray(
+  items: string[],
+  otherValue: string,
+  reason: string,
+) {
+  if (!items.includes(otherValue)) {
+    return items;
+  }
+
+  if (!reason) {
+    return items;
+  }
+
+  return items.map((item) =>
+    item === otherValue ? `${otherValue}: ${reason}` : item,
+  );
+}
+
+function withOtherReasonInSingle(value: string | null, reason: string) {
+  if (value !== "Outro" || !reason) {
+    return value;
+  }
+
+  return `Outro: ${reason}`;
+}
+
 export async function createMedicalRecordAction(formData: FormData) {
   const { appUser } = await requireActiveTenant();
   const supabase = await createClient();
@@ -49,16 +82,29 @@ export async function createMedicalRecordAction(formData: FormData) {
     .getAll("continuous_meds")
     .map((v) => String(v))
     .filter(Boolean);
-  const continuousMedsOtherReason = continuousMeds.includes("Outro (ver obs.)")
-    ? getField(formData, "continuous_meds_other_reason") || null
-    : null;
+  const continuousMedsOtherReason =
+    continuousMeds.includes("Outro") ||
+    continuousMeds.includes("Outro (ver obs.)")
+      ? getField(formData, "continuous_meds_other_reason") || null
+      : null;
   const allergies = formData
     .getAll("allergies")
     .map((v) => String(v))
     .filter(Boolean);
-  const allergiesOtherReason = allergies.includes("Outra (ver obs.)")
-    ? getField(formData, "allergies_other_reason") || null
-    : null;
+  const allergiesOtherReason =
+    allergies.includes("Outra") || allergies.includes("Outra (ver obs.)")
+      ? getField(formData, "allergies_other_reason") || null
+      : null;
+  const continuousMedsResolved = withOtherReasonInArray(
+    continuousMeds,
+    "Outro",
+    continuousMedsOtherReason ?? "",
+  );
+  const allergiesResolved = withOtherReasonInArray(
+    allergies,
+    "Outra",
+    allergiesOtherReason ?? "",
+  );
 
   // ── B. Hábitos ───────────────────────────────────────────────────
   const isSmoker = formData.get("is_smoker") === "true";
@@ -70,6 +116,10 @@ export async function createMedicalRecordAction(formData: FormData) {
     predominantFootwear === "Outro"
       ? getField(formData, "predominant_footwear_other_reason") || null
       : null;
+  const predominantFootwearResolved = withOtherReasonInSingle(
+    predominantFootwear,
+    predominantFootwearOtherReason ?? "",
+  );
 
   // ── C. Exame Físico ──────────────────────────────────────────────
   const bloodPressure = getField(formData, "blood_pressure") || null;
@@ -99,16 +149,24 @@ export async function createMedicalRecordAction(formData: FormData) {
   const nailOnychogryphosis = formData.get("nail_onychogryphosis") === "true";
 
   // ── Desfecho ─────────────────────────────────────────────────────
-  const clinicalAssessment = getField(formData, "clinical_assessment");
+  const clinicalAssessment = getField(formData, "clinical_assessment") || null;
   const procedurePerformed = getField(formData, "procedure_performed");
   const recommendations = getField(formData, "recommendations");
   const evolutionNotes = getField(formData, "evolution_notes");
-  const sterilizationLotIds = formData
-    .getAll("sterilization_lot_ids")
+  const sterilizationMaterialEntriesRaw = formData
+    .getAll("sterilization_material_entries")
     .map((value) => String(value).trim())
     .filter(Boolean);
+  const sterilizationLotIds = Array.from(
+    new Set(
+      formData
+        .getAll("sterilization_lot_ids")
+        .map((value) => String(value).trim())
+        .filter(Boolean),
+    ),
+  );
 
-  if (!patientId || !chiefComplaint || !clinicalAssessment) {
+  if (!patientId || !chiefComplaint) {
     redirect(
       `/medical-records/new?patient_id=${patientId}&error=Preencha os campos obrigatorios da anamnese`,
     );
@@ -141,7 +199,9 @@ export async function createMedicalRecordAction(formData: FormData) {
 
     const { data: selectedLots } = await supabase
       .from("sterilization_logs")
-      .select("id, chemical_indicator_status, sterilized_at")
+      .select(
+        "id, batch_number, material_name, chemical_indicator_status, sterilized_at",
+      )
       .eq("tenant_id", appUser.tenant_id)
       .in("id", sterilizationLotIds);
 
@@ -152,12 +212,14 @@ export async function createMedicalRecordAction(formData: FormData) {
     }
 
     const hasInvalidChemicalIndicator = selectedLots.some(
-      (lot) => lot.chemical_indicator_status !== "approved",
+      (lot) =>
+        lot.chemical_indicator_status !== "approved" &&
+        lot.chemical_indicator_status !== "not_measured",
     );
 
     if (hasInvalidChemicalIndicator) {
       redirect(
-        `/medical-records/new?patient_id=${patientId}&error=Somente lotes com indicador quimico aprovado podem ser vinculados`,
+        `/medical-records/new?patient_id=${patientId}&error=Somente lotes com indicador quimico aprovado ou nao aferido podem ser vinculados`,
       );
     }
 
@@ -184,6 +246,62 @@ export async function createMedicalRecordAction(formData: FormData) {
         `/medical-records/new?patient_id=${patientId}&error=Um dos lotes selecionados foi reprovado no teste biologico e nao pode ser utilizado`,
       );
     }
+
+    const lotById = new Map(selectedLots.map((lot) => [lot.id, lot]));
+    const parsedMaterialEntries = sterilizationMaterialEntriesRaw.flatMap(
+      (raw) => {
+        try {
+          const parsed = JSON.parse(raw) as {
+            lotId?: string;
+            material?: string;
+          };
+          if (!parsed.lotId || !parsed.material) {
+            return [];
+          }
+
+          return [{ lotId: parsed.lotId, material: parsed.material.trim() }];
+        } catch {
+          return [];
+        }
+      },
+    );
+
+    const sanitizedMaterialEntries = parsedMaterialEntries.flatMap((entry) => {
+      const lot = lotById.get(entry.lotId);
+      if (!lot) {
+        return [];
+      }
+
+      const lotMaterials = splitCycleMaterials(lot.material_name ?? "");
+      const isKnownMaterial =
+        lotMaterials.length === 0 || lotMaterials.includes(entry.material);
+
+      if (!isKnownMaterial) {
+        return [];
+      }
+
+      return [
+        {
+          lot_id: lot.id,
+          batch_number: lot.batch_number,
+          material: entry.material,
+        },
+      ];
+    });
+
+    if (
+      sterilizationMaterialEntriesRaw.length > 0 &&
+      sanitizedMaterialEntries.length === 0
+    ) {
+      redirect(
+        `/medical-records/new?patient_id=${patientId}&error=Selecao de materiais de rastreabilidade invalida`,
+      );
+    }
+
+    formData.set(
+      "sterilization_material_entries_sanitized",
+      JSON.stringify(sanitizedMaterialEntries),
+    );
   }
 
   const uploadedUrls: string[] = [];
@@ -228,15 +346,15 @@ export async function createMedicalRecordAction(formData: FormData) {
         has_vascular_issues: hasVascularIssues,
         has_coagulation_disorders: hasCoagulationDisorders,
         has_oncological_history: hasOncologicalHistory,
-        continuous_meds: continuousMeds,
+        continuous_meds: continuousMedsResolved,
         continuous_meds_other_reason: continuousMedsOtherReason,
-        allergies,
+        allergies: allergiesResolved,
         allergies_other_reason: allergiesOtherReason,
         // B — Hábitos
         is_smoker: isSmoker,
         has_sport_activity: hasSportActivity,
         sport_type: sportType,
-        predominant_footwear: predominantFootwear,
+        predominant_footwear: predominantFootwearResolved,
         predominant_footwear_other_reason: predominantFootwearOtherReason,
         // C — Exame Físico
         blood_pressure: bloodPressure,
@@ -263,6 +381,10 @@ export async function createMedicalRecordAction(formData: FormData) {
         procedure_performed: procedurePerformed,
         recommendations,
         evolution_notes: evolutionNotes,
+        sterilization_materials_used: JSON.parse(
+          getField(formData, "sterilization_material_entries_sanitized") ||
+            "[]",
+        ),
       },
       photos: uploadedUrls,
     })
@@ -303,8 +425,8 @@ export async function createMedicalRecordAction(formData: FormData) {
       has_vascular_issues: hasVascularIssues,
       has_coagulation_disorders: hasCoagulationDisorders,
       has_oncological_history: hasOncologicalHistory,
-      continuous_meds: continuousMeds,
-      patient_allergies: allergies,
+      continuous_meds: continuousMedsResolved,
+      patient_allergies: allergiesResolved,
       is_smoker: isSmoker,
     })
     .eq("id", patientId)

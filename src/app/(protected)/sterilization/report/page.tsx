@@ -44,6 +44,49 @@ function formatDateTime(value: string) {
   });
 }
 
+function indicatorLabel(status: string) {
+  if (status === "approved") {
+    return "Aprovado";
+  }
+
+  if (status === "rejected") {
+    return "Reprovado";
+  }
+
+  return "Não aferido";
+}
+
+function indicatorPillClass(status: string) {
+  if (status === "approved") {
+    return "bg-emerald-100 text-emerald-700";
+  }
+
+  if (status === "rejected") {
+    return "bg-rose-100 text-rose-700";
+  }
+
+  return "bg-slate-200 text-slate-700";
+}
+
+function biologicalTestLabel(status: string) {
+  if (status === "approved") {
+    return "Aprovado";
+  }
+
+  if (status === "rejected") {
+    return "Reprovado";
+  }
+
+  return "Pendente";
+}
+
+function splitCycleMaterials(materialName: string) {
+  return materialName
+    .split("|")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export default async function SterilizationReportPage({ searchParams }: Props) {
   const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
@@ -72,8 +115,17 @@ export default async function SterilizationReportPage({ searchParams }: Props) {
       .order("incubation_started_at", { ascending: false }),
   ]);
 
+  const { data: tenantBranding } = await supabase
+    .from("tenants")
+    .select("name, logo_url, cpf_cnpj")
+    .eq("id", tenant.id)
+    .maybeSingle();
+
   const cycles = cyclesResult.data ?? [];
   const tests = testsResult.data ?? [];
+  const clinicName = tenantBranding?.name ?? tenant.name;
+  const clinicLogoUrl = tenantBranding?.logo_url ?? tenant.logo_url;
+  const clinicDocument = tenantBranding?.cpf_cnpj ?? tenant.cpf_cnpj ?? "-";
 
   const testsByCycle = new Map<string, typeof tests>();
   for (const test of tests) {
@@ -82,25 +134,125 @@ export default async function SterilizationReportPage({ searchParams }: Props) {
     testsByCycle.set(test.sterilization_log_id, list);
   }
 
+  const reportRows = cycles.flatMap((cycle) => {
+    const materials = splitCycleMaterials(cycle.material_name);
+    if (materials.length === 0) {
+      return [{ cycle, material: cycle.material_name }];
+    }
+
+    return materials.map((material) => ({ cycle, material }));
+  });
+
+  const approvedCycles = cycles.filter(
+    (cycle) => cycle.chemical_indicator_status === "approved",
+  ).length;
+  const rejectedCycles = cycles.filter(
+    (cycle) => cycle.chemical_indicator_status === "rejected",
+  ).length;
+  const notMeasuredCycles = cycles.filter(
+    (cycle) => cycle.chemical_indicator_status === "not_measured",
+  ).length;
+
   return (
-    <main className="mx-auto max-w-6xl space-y-6 p-6 print:p-0">
-      <header className="border-b border-slate-300 pb-4">
-        <h1 className="text-2xl font-bold">
-          Livro de Registros de Esterilização
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">Clínica: {tenant.name}</p>
-        <p className="text-sm text-slate-600">
-          Período: {monthLabel(monthKey)}
-        </p>
+    <main className="mx-auto max-w-6xl space-y-6 bg-slate-50 p-4 text-slate-800 print:bg-white print:p-0 sm:p-6">
+      <header
+        className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm print:rounded-none print:border print:shadow-none"
+        style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-[#0F5AA5] to-[#0D9488] px-5 py-4 text-white print:bg-[#0F5AA5]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
+              Relatório de fiscalização
+            </p>
+            <h1 className="mt-1 text-2xl font-bold text-white">
+              Livro de Registros de Esterilização
+            </h1>
+          </div>
+          {clinicLogoUrl ? (
+            <img
+              src={clinicLogoUrl}
+              alt={`Logotipo da clínica ${clinicName}`}
+              className="h-14 w-auto max-w-[180px] rounded-md bg-white/90 p-1 object-contain"
+            />
+          ) : null}
+        </div>
+
+        <div className="grid gap-3 px-5 py-4 sm:grid-cols-2 lg:grid-cols-4">
+          <article className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+            <p className="text-xs uppercase tracking-wide text-slate-500">
+              Clínica
+            </p>
+            <p className="text-sm font-semibold text-slate-800">{clinicName}</p>
+          </article>
+          <article className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+            <p className="text-xs uppercase tracking-wide text-slate-500">
+              CPF/CNPJ
+            </p>
+            <p className="text-sm font-semibold text-slate-800">
+              {clinicDocument}
+            </p>
+          </article>
+          <article className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+            <p className="text-xs uppercase tracking-wide text-slate-500">
+              Período
+            </p>
+            <p className="text-sm font-semibold text-slate-800">
+              {monthLabel(monthKey)}
+            </p>
+          </article>
+          <article className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+            <p className="text-xs uppercase tracking-wide text-slate-500">
+              Linhas no relatório
+            </p>
+            <p className="text-sm font-semibold text-slate-800">
+              {reportRows.length}
+            </p>
+          </article>
+        </div>
       </header>
 
       <div className="print:hidden">
         <SterilizationReportPrintButton />
       </div>
 
-      <section className="overflow-hidden rounded-xl border border-slate-200">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 print:grid-cols-4">
+        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm print:shadow-none">
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            Ciclos no período
+          </p>
+          <p className="mt-1 text-2xl font-bold text-[#0F5AA5]">
+            {cycles.length}
+          </p>
+        </article>
+        <article className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm print:shadow-none">
+          <p className="text-xs uppercase tracking-wide text-emerald-700">
+            Indicador aprovado
+          </p>
+          <p className="mt-1 text-2xl font-bold text-emerald-700">
+            {approvedCycles}
+          </p>
+        </article>
+        <article className="rounded-xl border border-rose-200 bg-rose-50 p-4 shadow-sm print:shadow-none">
+          <p className="text-xs uppercase tracking-wide text-rose-700">
+            Indicador reprovado
+          </p>
+          <p className="mt-1 text-2xl font-bold text-rose-700">
+            {rejectedCycles}
+          </p>
+        </article>
+        <article className="rounded-xl border border-slate-300 bg-slate-100 p-4 shadow-sm print:shadow-none">
+          <p className="text-xs uppercase tracking-wide text-slate-700">
+            Indicador não aferido
+          </p>
+          <p className="mt-1 text-2xl font-bold text-slate-700">
+            {notMeasuredCycles}
+          </p>
+        </article>
+      </section>
+
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm print:shadow-none">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-100 text-slate-700">
+          <thead className="bg-[#0F5AA5]/10 text-[#0F5AA5]">
             <tr>
               <th className="px-4 py-3">Data/Hora</th>
               <th className="px-4 py-3">Lote</th>
@@ -112,14 +264,14 @@ export default async function SterilizationReportPage({ searchParams }: Props) {
             </tr>
           </thead>
           <tbody>
-            {cycles.map((cycle) => {
+            {reportRows.map(({ cycle, material }, index) => {
               const testList = testsByCycle.get(cycle.id) ?? [];
               const lastTest = testList[0] ?? null;
 
               return (
                 <tr
-                  key={cycle.id}
-                  className="border-t border-slate-200 align-top"
+                  key={`${cycle.id}-${index}`}
+                  className="border-t border-slate-200 align-top odd:bg-white even:bg-slate-50"
                 >
                   <td className="px-4 py-3">
                     {formatDateTime(cycle.sterilized_at)}
@@ -127,26 +279,28 @@ export default async function SterilizationReportPage({ searchParams }: Props) {
                   <td className="px-4 py-3 font-semibold">
                     {cycle.batch_number}
                   </td>
-                  <td className="px-4 py-3">{cycle.material_name}</td>
+                  <td className="px-4 py-3">{material}</td>
                   <td className="px-4 py-3">
                     {cycle.temperature_celsius ?? "-"} °C
                   </td>
                   <td className="px-4 py-3">{cycle.pressure_bar ?? "-"} bar</td>
                   <td className="px-4 py-3">
-                    {cycle.chemical_indicator_status === "approved"
-                      ? "Aprovado"
-                      : "Reprovado"}
+                    <span
+                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${indicatorPillClass(cycle.chemical_indicator_status)}`}
+                    >
+                      {indicatorLabel(cycle.chemical_indicator_status)}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     {lastTest
-                      ? `${lastTest.status.toUpperCase()} (ampola ${lastTest.ampoule_lot})`
+                      ? `${biologicalTestLabel(lastTest.status)} (ampola ${lastTest.ampoule_lot})`
                       : "Sem teste"}
                   </td>
                 </tr>
               );
             })}
 
-            {cycles.length === 0 ? (
+            {reportRows.length === 0 ? (
               <tr>
                 <td className="px-4 py-6 text-slate-600" colSpan={7}>
                   Nenhum registro de esterilização no período selecionado.
