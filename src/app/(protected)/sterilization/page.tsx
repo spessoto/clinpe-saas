@@ -223,7 +223,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <article className="surface-card p-6">
+        <article className="surface-card p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-secondary">Novo ciclo</h3>
           <p className="mt-1 text-sm text-muted">
             Fase 1: registre cada ciclo diário da autoclave com lote,
@@ -236,8 +236,8 @@ export default async function SterilizationPage({ searchParams }: Props) {
           >
             <input type="hidden" name="month" value={monthKey} />
 
-            <div className="grid gap-4 md:grid-cols-4">
-              <label className="grid gap-1 text-sm md:col-span-1">
+            <div className="grid gap-4 lg:grid-cols-4">
+              <label className="grid gap-1 text-sm lg:col-span-1">
                 <span className="font-semibold text-foreground">
                   Data e hora
                 </span>
@@ -250,7 +250,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
                 />
               </label>
 
-              <label className="grid gap-1 text-sm md:col-span-2">
+              <label className="grid gap-1 text-sm lg:col-span-2">
                 <span className="font-semibold text-foreground">
                   Número do ciclo/lote
                 </span>
@@ -262,7 +262,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
                 />
               </label>
 
-              <div className="md:col-span-1">
+              <div className="lg:col-span-1 lg:self-end">
                 <SterilizedMaterialsField options={materialNames} />
               </div>
             </div>
@@ -328,7 +328,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
           </form>
         </article>
 
-        <article className="surface-card p-6">
+        <article className="surface-card p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-secondary">
             Registrar teste biológico
           </h3>

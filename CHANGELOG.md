@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-03-21
+
+### Changed
+
+- **Central de Esterilização com ajustes de responsividade no formulário Novo ciclo**
+  - Refinado o espaçamento dos cards para melhorar leitura em telas pequenas
+  - Grid do bloco principal reorganizado para preservar usabilidade no mobile e alinhamento no desktop
+
+- **Campo de materiais do Novo ciclo agora aceita itens repetidos**
+  - Removida a regra que bloqueava duplicidade de material
+  - O profissional pode adicionar o mesmo material mais de uma vez quando necessário no ciclo
+
 ## [1.0.3] - 2026-03-21
 
 ### Added

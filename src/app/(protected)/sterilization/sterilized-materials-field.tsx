@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 type Props = {
   options: string[];
@@ -10,20 +10,9 @@ export function SterilizedMaterialsField({ options }: Props) {
   const [draft, setDraft] = useState("");
   const [items, setItems] = useState<string[]>([]);
 
-  const normalizedSet = useMemo(
-    () => new Set(items.map((item) => item.trim().toLowerCase())),
-    [items],
-  );
-
   function addItem() {
     const value = draft.trim();
     if (!value) return;
-
-    const key = value.toLowerCase();
-    if (normalizedSet.has(key)) {
-      setDraft("");
-      return;
-    }
 
     setItems((prev) => [...prev, value]);
     setDraft("");
