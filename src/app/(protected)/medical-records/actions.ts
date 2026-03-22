@@ -49,10 +49,16 @@ export async function createMedicalRecordAction(formData: FormData) {
     .getAll("continuous_meds")
     .map((v) => String(v))
     .filter(Boolean);
+  const continuousMedsOtherReason = continuousMeds.includes("Outro (ver obs.)")
+    ? getField(formData, "continuous_meds_other_reason") || null
+    : null;
   const allergies = formData
     .getAll("allergies")
     .map((v) => String(v))
     .filter(Boolean);
+  const allergiesOtherReason = allergies.includes("Outra (ver obs.)")
+    ? getField(formData, "allergies_other_reason") || null
+    : null;
 
   // ── B. Hábitos ───────────────────────────────────────────────────
   const isSmoker = formData.get("is_smoker") === "true";
@@ -60,6 +66,10 @@ export async function createMedicalRecordAction(formData: FormData) {
   const sportType = getField(formData, "sport_type") || null;
   const predominantFootwear =
     getField(formData, "predominant_footwear") || null;
+  const predominantFootwearOtherReason =
+    predominantFootwear === "Outro"
+      ? getField(formData, "predominant_footwear_other_reason") || null
+      : null;
 
   // ── C. Exame Físico ──────────────────────────────────────────────
   const bloodPressure = getField(formData, "blood_pressure") || null;
@@ -219,12 +229,15 @@ export async function createMedicalRecordAction(formData: FormData) {
         has_coagulation_disorders: hasCoagulationDisorders,
         has_oncological_history: hasOncologicalHistory,
         continuous_meds: continuousMeds,
+        continuous_meds_other_reason: continuousMedsOtherReason,
         allergies,
+        allergies_other_reason: allergiesOtherReason,
         // B — Hábitos
         is_smoker: isSmoker,
         has_sport_activity: hasSportActivity,
         sport_type: sportType,
         predominant_footwear: predominantFootwear,
+        predominant_footwear_other_reason: predominantFootwearOtherReason,
         // C — Exame Físico
         blood_pressure: bloodPressure,
         capillary_glucose: capillaryGlucose,

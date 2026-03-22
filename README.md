@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versão publicada: `v1.0.0`
+- Versão publicada: `v1.0.2`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -30,6 +30,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Ficha completa do paciente**: CPF, RG, e-mail, endereço, ocupação, contato de emergência, fonte de captação
 - **Histórico de Saúde no cadastro**: diabetes (tipo + insulina), vascular, coagulação, oncológico, medicamentos contínuos, alergias, fumante, calçado — exibidos como alertas visuais no perfil
 - **Anamnese estruturada podológica**: ficha A/B/C com triagem sistêmica, hábitos e exame físico; toggles CSS-only otimizados para tablet/luvas; snapshot JSONB por consulta para audit trail legal
+- **Campos condicionais para "Outros" na anamnese**: em `/medical-records/new`, ao marcar opções "Outro/Outra" nas seções A e B, abre automaticamente uma linha para detalhar o motivo
 - **Modelo híbrido**: dados de saúde crônicos armazenados no cadastro (dado mestre) e replicados como snapshot em cada prontuário; formulário de novo prontuário pré-preenche a partir do cadastro
 - **Fluxo de retorno no prontuário**: ao iniciar nova consulta pelo detalhe do paciente, o nome fica pré-preenchido e bloqueado; formulário inclui marcador de consulta de retorno
 - **Configurações de branding mais robustas**: upload e persistência de logotipo da clínica reforçados no `/settings`

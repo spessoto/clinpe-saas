@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { createMedicalRecordAction } from "@/app/(protected)/medical-records/actions";
 import { PhotoPicker } from "./photo-picker";
+import { OtherReasonInput } from "../../patients/new/other-reason-input";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -265,6 +266,14 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
                 </label>
               ))}
             </div>
+            <OtherReasonInput
+              triggerSelector={
+                'input[name="continuous_meds"][value="Outro (ver obs.)"]'
+              }
+              inputName="continuous_meds_other_reason"
+              label="Qual medicamento?"
+              placeholder="Descreva o medicamento de uso contínuo"
+            />
           </div>
 
           {/* Alergias — multi-toggle */}
@@ -298,6 +307,14 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
                 </label>
               ))}
             </div>
+            <OtherReasonInput
+              triggerSelector={
+                'input[name="allergies"][value="Outra (ver obs.)"]'
+              }
+              inputName="allergies_other_reason"
+              label="Qual alergia?"
+              placeholder="Descreva a alergia informada"
+            />
           </div>
         </fieldset>
 
@@ -377,6 +394,14 @@ export default async function NewMedicalRecordPage({ searchParams }: Props) {
                 </label>
               ))}
             </div>
+            <OtherReasonInput
+              triggerSelector={
+                'input[name="predominant_footwear"][value="Outro"]'
+              }
+              inputName="predominant_footwear_other_reason"
+              label="Qual calçado?"
+              placeholder="Descreva o calçado predominante"
+            />
           </div>
         </fieldset>
 

@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-03-21
+
+### Added
+
+- **Campos condicionais de motivo em "Outros" no novo prontuário**
+  - Em `/medical-records/new`, ao marcar "Outro/Outra" nas seções A (Triagem Sistêmica) e B (Hábitos e Estilo de Vida), o formulário agora abre uma linha para detalhar o motivo
+  - Cenários cobertos: medicamentos contínuos, alergias e calçado predominante
+
+### Changed
+
+- **Persistência da anamnese ampliada no `anamnesis_data`**
+  - Novos campos salvos no prontuário: `continuous_meds_other_reason`, `allergies_other_reason` e `predominant_footwear_other_reason`
+  - Os valores são gravados apenas quando a opção "Outro/Outra" correspondente está selecionada
+
 ## [1.0.1] - 2026-03-21
 
 ### Changed
