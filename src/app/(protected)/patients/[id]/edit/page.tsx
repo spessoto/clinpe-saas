@@ -294,7 +294,7 @@ export default async function EditPatientPage({ params, searchParams }: Props) {
             Histórico de Saúde (estado atual)
           </legend>
           <p className="text-xs text-muted">
-            Dados mestres do paciente. São pre-preenchidos na anamnese de cada
+            Dados mestres do paciente. São pré-preenchidos na anamnese de cada
             consulta e podem ser corrigidos lá.
           </p>
 

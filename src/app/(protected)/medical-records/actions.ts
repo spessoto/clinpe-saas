@@ -168,7 +168,7 @@ export async function createMedicalRecordAction(formData: FormData) {
 
   if (!patientId || !chiefComplaint) {
     redirect(
-      `/medical-records/new?patient_id=${patientId}&error=Preencha os campos obrigatorios da anamnese`,
+      `/medical-records/new?patient_id=${patientId}&error=Preencha os campos obrigatórios da anamnese`,
     );
   }
 
@@ -180,7 +180,7 @@ export async function createMedicalRecordAction(formData: FormData) {
     .single();
 
   if (!patient) {
-    redirect("/patients?error=Paciente invalido");
+    redirect("/patients?error=Paciente inválido");
   }
 
   const files = formData
@@ -207,7 +207,7 @@ export async function createMedicalRecordAction(formData: FormData) {
 
     if (!selectedLots || selectedLots.length !== sterilizationLotIds.length) {
       redirect(
-        `/medical-records/new?patient_id=${patientId}&error=Lote de esterilizacao invalido ou fora do tenant`,
+        `/medical-records/new?patient_id=${patientId}&error=Lote de esterilização inválido ou fora do tenant`,
       );
     }
 
@@ -219,7 +219,7 @@ export async function createMedicalRecordAction(formData: FormData) {
 
     if (hasInvalidChemicalIndicator) {
       redirect(
-        `/medical-records/new?patient_id=${patientId}&error=Somente lotes com indicador quimico aprovado ou nao aferido podem ser vinculados`,
+        `/medical-records/new?patient_id=${patientId}&error=Somente lotes com indicador químico aprovado ou não aferido podem ser vinculados`,
       );
     }
 
@@ -229,7 +229,7 @@ export async function createMedicalRecordAction(formData: FormData) {
 
     if (hasOldLot) {
       redirect(
-        `/medical-records/new?patient_id=${patientId}&error=Selecione apenas lotes validos dos ultimos 30 dias`,
+        `/medical-records/new?patient_id=${patientId}&error=Selecione apenas lotes válidos dos últimos 30 dias`,
       );
     }
 
@@ -243,7 +243,7 @@ export async function createMedicalRecordAction(formData: FormData) {
 
     if ((rejectedTests ?? []).length > 0) {
       redirect(
-        `/medical-records/new?patient_id=${patientId}&error=Um dos lotes selecionados foi reprovado no teste biologico e nao pode ser utilizado`,
+        `/medical-records/new?patient_id=${patientId}&error=Um dos lotes selecionados foi reprovado no teste biológico e não pode ser utilizado`,
       );
     }
 
@@ -294,7 +294,7 @@ export async function createMedicalRecordAction(formData: FormData) {
       sanitizedMaterialEntries.length === 0
     ) {
       redirect(
-        `/medical-records/new?patient_id=${patientId}&error=Selecao de materiais de rastreabilidade invalida`,
+        `/medical-records/new?patient_id=${patientId}&error=Seleção de materiais de rastreabilidade inválida`,
       );
     }
 

@@ -60,7 +60,7 @@ export default async function NewPatientPage({ searchParams }: Props) {
     <section className="surface-card mx-auto max-w-5xl p-6 md:p-8">
       <h2 className="text-2xl font-bold">Novo paciente</h2>
       <p className="mt-1 text-sm text-muted">
-        Cadastre o paciente para iniciar o historico clinico.
+        Cadastre o paciente para iniciar o histórico clínico.
       </p>
 
       {limitStatus.remainingSlots <= 3 && !isLimitReached ? (

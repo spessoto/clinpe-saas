@@ -218,11 +218,11 @@ export default async function Home() {
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div className="space-y-8">
             <span className="inline-flex items-center rounded-full border border-primary/20 bg-gradient-to-r from-primary/20 to-secondary/20 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">
-              O futuro da podologia e digital.
+              O futuro da podologia é digital.
             </span>
 
             <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight text-secondary sm:text-5xl lg:text-6xl">
-              Foque nos seus pacientes. Deixe a gestao com o PodoDesk.
+              Foque nos seus pacientes. Deixe a gestão com o PodoDesk.
             </h1>
 
             <p className="max-w-xl text-lg leading-relaxed text-slate-700">
@@ -456,18 +456,18 @@ export default async function Home() {
 
               <div className="space-y-3">
                 <h4 className="mb-4 font-bold text-white">Legal</h4>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
-                  href="#"
+                  href="/termos-de-uso"
                 >
                   Termos de Uso
-                </a>
-                <a
+                </Link>
+                <Link
                   className="block text-slate-400 transition hover:text-white"
-                  href="#"
+                  href="/politica-de-privacidade"
                 >
                   Privacidade
-                </a>
+                </Link>
               </div>
             </div>
 

@@ -175,6 +175,8 @@ export default async function DashboardPage() {
           {bookingPath ? (
             <Link
               href={bookingPath}
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
             >
               Abrir página pública
