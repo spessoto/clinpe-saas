@@ -34,6 +34,7 @@ type AdminUser = {
     professionals: number;
     patients: number;
     appointments_month: number;
+    appointments_total: number;
   };
   plan_label: string;
   renewal_date: string;
@@ -105,9 +106,13 @@ function getRenewalDaysLeft(tenant: TenantSummary | null) {
   return Math.ceil((parsed.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
-function buildCountMap(items: Array<{ tenant_id: string }>) {
+function buildCountMap<Key extends string>(
+  items: Array<Record<Key, string>>,
+  key: Key,
+) {
   return items.reduce((map, item) => {
-    map.set(item.tenant_id, (map.get(item.tenant_id) ?? 0) + 1);
+    const value = item[key];
+    map.set(value, (map.get(value) ?? 0) + 1);
     return map;
   }, new Map<string, number>());
 }
@@ -150,15 +155,22 @@ export async function getAdminUsersList(
   const tenantIds = Array.from(
     new Set(baseUsers.map((user) => user.tenant_id)),
   );
+  const userIds = baseUsers.map((user) => user.id);
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
   const monthEnd = new Date(monthStart);
   monthEnd.setMonth(monthEnd.getMonth() + 1);
 
-  const [tenantsResult, tenantUsersResult, patientsResult, appointmentsResult] =
+  const [
+    tenantsResult,
+    tenantUsersResult,
+    patientsResult,
+    appointmentsResult,
+    appointmentsByProfessionalResult,
+  ] =
     tenantIds.length === 0
-      ? [{ data: [] }, { data: [] }, { data: [] }, { data: [] }]
+      ? [{ data: [] }, { data: [] }, { data: [] }, { data: [] }, { data: [] }]
       : await Promise.all([
           adminClient
             .from("tenants")
@@ -180,6 +192,10 @@ export async function getAdminUsersList(
             .in("tenant_id", tenantIds)
             .gte("scheduled_at", monthStart.toISOString())
             .lt("scheduled_at", monthEnd.toISOString()),
+          adminClient
+            .from("appointments")
+            .select("professional_id")
+            .in("professional_id", userIds),
         ]);
 
   const tenantsById = new Map(
@@ -191,12 +207,21 @@ export async function getAdminUsersList(
 
   const professionalsByTenant = buildCountMap(
     (tenantUsersResult.data ?? []) as Array<{ tenant_id: string }>,
+    "tenant_id",
   );
   const patientsByTenant = buildCountMap(
     (patientsResult.data ?? []) as Array<{ tenant_id: string }>,
+    "tenant_id",
   );
   const appointmentsByTenant = buildCountMap(
     (appointmentsResult.data ?? []) as Array<{ tenant_id: string }>,
+    "tenant_id",
+  );
+  const appointmentsByProfessional = buildCountMap(
+    (appointmentsByProfessionalResult.data ?? []) as Array<{
+      professional_id: string;
+    }>,
+    "professional_id",
   );
 
   const users = baseUsers.map((user) => {
@@ -208,6 +233,7 @@ export async function getAdminUsersList(
         professionals: professionalsByTenant.get(user.tenant_id) ?? 0,
         patients: patientsByTenant.get(user.tenant_id) ?? 0,
         appointments_month: appointmentsByTenant.get(user.tenant_id) ?? 0,
+        appointments_total: appointmentsByProfessional.get(user.id) ?? 0,
       },
       plan_label: getPlanLabel(client),
       renewal_date: getRenewalDate(client),
@@ -332,7 +358,7 @@ export async function deleteUserAction(formData: FormData) {
 
   const { data: targetUser, error: targetUserError } = await adminClient
     .from("users")
-    .select("id, email, tenant_id, is_admin")
+    .select("id, email, full_name, tenant_id, is_admin")
     .eq("id", userId)
     .single();
 
@@ -343,6 +369,19 @@ export async function deleteUserAction(formData: FormData) {
   if (targetUser.is_admin) {
     redirect(
       `/admin/users?${pageQuery}&error=Admins%20não%20podem%20ser%20excluídos.%20Desative%20o%20admin%20no%20switch%20primeiro`,
+    );
+  }
+
+  const { error: appointmentSnapshotError } = await adminClient
+    .from("appointments")
+    .update({
+      professional_name_snapshot: targetUser.full_name,
+    })
+    .eq("professional_id", userId);
+
+  if (appointmentSnapshotError) {
+    redirect(
+      `/admin/users?${pageQuery}&error=${encodeURIComponent(`Falha ao preservar histórico de consultas do usuário: ${appointmentSnapshotError.message}`)}`,
     );
   }
 
@@ -370,7 +409,7 @@ export async function deleteUserAction(formData: FormData) {
 
   revalidatePath("/admin/users");
   redirect(
-    `/admin/users?${pageQuery}&success=Usuário%20excluído%20com%20sucesso`,
+    `/admin/users?${pageQuery}&success=${encodeURIComponent("Usuário excluído com sucesso. Consultas e pacientes foram preservados sem reatribuição para outros profissionais.")}`,
   );
 }
 

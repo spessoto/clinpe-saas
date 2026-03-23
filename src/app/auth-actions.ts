@@ -10,6 +10,7 @@ import {
   normalizeCouponCode,
   type CouponRow,
 } from "@/lib/coupons";
+import { getAppUrl } from "@/lib/env";
 import { verifyRecaptchaToken } from "@/lib/recaptcha";
 
 function getField(formData: FormData, key: string) {
@@ -92,6 +93,7 @@ export async function signUpAction(formData: FormData) {
     email,
     password,
     options: {
+      emailRedirectTo: getAppUrl(),
       data: {
         full_name: fullName,
         clinic_name: clinicName,

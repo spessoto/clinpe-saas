@@ -156,15 +156,15 @@ export default function TermsOfUsePage() {
             </h2>
             <p>
               6.1. A Plataforma oferece integrações com serviços de terceiros,
-              como o Google Calendar (para sincronização de agenda) e envio de
-              mensagens via WhatsApp.
+              como envio de e-mails transacionais, push web no navegador e envio
+              de mensagens via WhatsApp.
             </p>
             <p>
               6.2. A utilização dessas integrações depende de autorização
               explícita do Usuário e sujeita-se aos Termos de Serviço e
-              Políticas de Privacidade dos respectivos provedores (ex: Google,
-              Meta). O PodoDesk não se responsabiliza por indisponibilidades
-              nesses serviços externos.
+              Políticas de Privacidade dos respectivos provedores (ex: Meta e
+              provedores de e-mail). O PodoDesk não se responsabiliza por
+              indisponibilidades nesses serviços externos.
             </p>
           </section>
 

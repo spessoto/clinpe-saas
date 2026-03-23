@@ -13,12 +13,6 @@ const panelAdminEnvSchema = z.object({
   ADMIN_EMAIL: z.string().email(),
 });
 
-const googleEnvSchema = z.object({
-  GOOGLE_CLIENT_ID: z.string().min(1),
-  GOOGLE_CLIENT_SECRET: z.string().min(1),
-  NEXT_PUBLIC_APP_URL: z.string().url(),
-});
-
 const emailEnvSchema = z.object({
   SMTP_HOST: z.string().min(1),
   SMTP_PORT: z.coerce.number().int().positive(),
@@ -27,11 +21,19 @@ const emailEnvSchema = z.object({
   SMTP_FROM: z.string().min(1),
 });
 
+const webPushEnvSchema = z.object({
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().min(1),
+  VAPID_PRIVATE_KEY: z.string().min(1),
+  VAPID_SUBJECT: z.string().min(1).default("mailto:contato@pododesk.com.br"),
+});
+
 const asaasEnvSchema = z.object({
   ASAAS_API_KEY: z.string().min(1),
   ASAAS_WEBHOOK_SECRET: z.string().min(1),
   ASAAS_API_BASE: z.string().url().default("https://api.asaas.com/v3"),
 });
+
+const PRODUCTION_APP_URL = "https://pododesk.com.br";
 
 export type AppEnv = z.infer<typeof serverEnvSchema>;
 
@@ -90,30 +92,16 @@ export function getPanelAdminEnv() {
   return parsed.data;
 }
 
-export function getGoogleEnv() {
-  const defaultAppUrl =
-    process.env.NODE_ENV === "production"
-      ? "https://pododesk.com.br"
-      : "http://localhost:3000";
+export function getAppUrl() {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
 
-  const parsed = googleEnvSchema.safeParse({
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || defaultAppUrl,
-  });
-
-  if (!parsed.success) {
-    const missing = parsed.error.issues
-      .map((issue) => issue.path.join("."))
-      .filter(Boolean)
-      .join(", ");
-
-    throw new Error(
-      `Variáveis de Google ausentes/inválidas: ${missing}. Preencha GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET no .env.local.`,
-    );
+  if (envUrl) {
+    return envUrl;
   }
 
-  return parsed.data;
+  return process.env.NODE_ENV === "production"
+    ? PRODUCTION_APP_URL
+    : "http://localhost:3000";
 }
 
 export function getEmailEnv() {
@@ -134,6 +122,20 @@ export function getEmailEnv() {
     throw new Error(
       `Configuração de e-mail ausente ou inválida: ${missing}. Preencha SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS e SMTP_FROM no .env.local.`,
     );
+  }
+
+  return parsed.data;
+}
+
+export function getOptionalWebPushEnv() {
+  const parsed = webPushEnvSchema.safeParse({
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
+    VAPID_SUBJECT: process.env.VAPID_SUBJECT,
+  });
+
+  if (!parsed.success) {
+    return null;
   }
 
   return parsed.data;

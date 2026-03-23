@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Notificações operacionais de novas consultas**
+  - Disparo de e-mail para paciente e profissional no momento do agendamento
+  - Fallback assíncrono em fila persistente para novos agendamentos
+  - Central interna de notificações com badge de não lidas e suporte a push web
+
+### Changed
+
+- **Agenda e booking totalmente internos ao sistema**
+  - Remoção da dependência de Google Calendar nas rotas, UI, agenda e disponibilidade
+  - Booking público passa a usar apenas horários configurados e consultas registradas no banco
+
+- **Links de confirmação de conta corrigidos no Supabase Auth**
+  - Fluxos de cadastro e troca de e-mail passam a forçar `emailRedirectTo` com a URL pública correta
+
+- **Exclusão de usuários no admin com preservação de histórico**
+  - Exclusão de profissionais mantém consultas e pacientes sem reatribuição automática
+  - Histórico do paciente passa a mostrar o snapshot do nome do profissional removido
+  - Trigger no banco impede reatribuir depois consultas órfãs de profissionais excluídos
+
 ## [1.0.8] - 2026-03-22
 
 ### Changed

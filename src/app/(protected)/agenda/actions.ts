@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
 import { enqueueAppointmentDecisionEmail } from "@/lib/email-queue";
-import { deleteGoogleCalendarEvent } from "@/lib/google-calendar";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
@@ -69,10 +68,9 @@ function getFriendlyActionError(
 
   if (
     lower.includes("resource has been deleted") ||
-    lower.includes("calendar") ||
-    lower.includes("google")
+    lower.includes("calendar")
   ) {
-    return "Não foi possível sincronizar com o Google Calendar no momento. Tente novamente em instantes.";
+    return "Não foi possível concluir a ação no momento. Tente novamente em instantes.";
   }
 
   if (
@@ -97,7 +95,7 @@ async function getManagedAppointment(appointmentId: string) {
   let appointmentQuery = supabase
     .from("appointments")
     .select(
-      "id, professional_id, scheduled_at, status, confirmation_status, google_event_id, patient:patients(name, email, phone)",
+      "id, professional_id, scheduled_at, status, confirmation_status, patient:patients(name, email, phone)",
     )
     .eq("id", appointmentId)
     .eq("tenant_id", appUser.tenant_id);
@@ -106,15 +104,7 @@ async function getManagedAppointment(appointmentId: string) {
     appointmentQuery = appointmentQuery.eq("professional_id", appUser.id);
   }
 
-  const [appointmentResult, integrationResult] = await Promise.all([
-    appointmentQuery.single(),
-    supabase
-      .from("google_integrations")
-      .select("access_token, refresh_token, expires_at")
-      .eq("tenant_id", appUser.tenant_id)
-      .eq("user_id", appUser.id)
-      .maybeSingle(),
-  ]);
+  const appointmentResult = await appointmentQuery.single();
 
   const { data: appointment, error } = appointmentResult;
 
@@ -135,16 +125,12 @@ async function getManagedAppointment(appointmentId: string) {
         email: string | null;
         phone: string | null;
       } | null) ?? null);
-
-  const { data: integration } = integrationResult;
-
   const appointmentRecord: {
     id: string;
     professional_id: string;
     scheduled_at: string;
     status: "scheduled" | "completed" | "canceled";
     confirmation_status: "pending" | "confirmed" | "rejected";
-    google_event_id: string | null;
     patient: {
       name: string;
       email: string | null;
@@ -156,7 +142,6 @@ async function getManagedAppointment(appointmentId: string) {
     scheduled_at: appointment.scheduled_at,
     status: appointment.status,
     confirmation_status: appointment.confirmation_status,
-    google_event_id: appointment.google_event_id,
     patient: patient ?? null,
   };
 
@@ -164,7 +149,6 @@ async function getManagedAppointment(appointmentId: string) {
     appUser,
     tenant,
     supabase,
-    integration,
     appointment: appointmentRecord,
   };
 }
@@ -255,33 +239,12 @@ export async function cancelAppointmentAction(formData: FormData) {
   }
 
   try {
-    const { appointment, appUser, tenant, supabase, integration } =
+    const { appointment, appUser, tenant, supabase } =
       await getManagedAppointment(appointmentId);
 
     if (appointment.status === "canceled") {
       warningMessage = "Este agendamento já está cancelado.";
     } else {
-      if (
-        appointment.google_event_id &&
-        (integration?.refresh_token || integration?.access_token)
-      ) {
-        try {
-          await deleteGoogleCalendarEvent(
-            integration as {
-              access_token: string | null;
-              refresh_token: string | null;
-              expires_at: string | null;
-            },
-            appointment.google_event_id,
-          );
-        } catch {
-          warningMessage = appendWarning(
-            warningMessage,
-            "Agendamento cancelado no sistema, mas não foi possível sincronizar a exclusão no Google Calendar.",
-          );
-        }
-      }
-
       let updateQuery = supabase
         .from("appointments")
         .update({

@@ -1,5 +1,6 @@
 import type { AppUser } from "@/lib/auth";
 import { isValidBrazilTaxId, normalizeBrazilTaxId } from "@/lib/brazil-tax-id";
+import { getAppUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -103,7 +104,10 @@ export async function updateAccountBillingProfile(
 
   const emailChanged = email !== input.appUser.email;
   if (emailChanged) {
-    const { error: authError } = await input.supabase.auth.updateUser({ email });
+    const { error: authError } = await input.supabase.auth.updateUser(
+      { email },
+      { emailRedirectTo: getAppUrl() },
+    );
 
     if (authError) {
       throw new Error(authError.message);

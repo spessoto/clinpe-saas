@@ -126,45 +126,29 @@ export default function PrivacyPolicyPage() {
 
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-secondary">
-              4. Integração com o Google Workspace e Acesso a Dados (Google
-              Calendar API)
+              4. Notificações Operacionais e Serviços Externos
             </h2>
             <p>
-              Para facilitar a gestão do seu tempo e evitar o choque de horários
-              (double-booking), o PodoDesk oferece a funcionalidade de
-              integração com o Google Agenda. Se você optar por conectar sua
-              conta Google ao nosso sistema, aplicam-se as seguintes regras
-              estritas:
+              Para facilitar a operação da clínica, o PodoDesk pode enviar
+              notificações por e-mail e push web relacionadas a novas consultas,
+              confirmações e cancelamentos de agendamentos.
             </p>
             <p>
-              <strong>Quais dados acessamos:</strong> Solicitamos acesso apenas
-              à API do Google Calendar
-              (https://www.googleapis.com/auth/calendar.events). Isso nos
-              permite ler os eventos existentes para encontrar horários livres e
-              gravar novos agendamentos de pacientes feitos através da
-              Plataforma.
+              <strong>Quais dados utilizamos:</strong> Nome do paciente, e-mail,
+              telefone, data e horário do atendimento e dados do profissional
+              responsável, estritamente para compor os avisos operacionais da
+              plataforma.
             </p>
             <p>
-              <strong>Como usamos esses dados:</strong> Os dados da sua agenda
-              do Google são usados unicamente para exibir seus compromissos
-              dentro da interface do sistema e sincronizar os novos atendimentos
-              marcados.
+              <strong>Como usamos esses dados:</strong> Essas informações são
+              usadas unicamente para enviar e-mails transacionais e notificações
+              ao profissional autenticado no navegador que autorizou o push web.
             </p>
             <p>
-              <strong>O que NÃO fazemos:</strong> O PodoDesk não utiliza os
-              dados do Google Agenda para exibir anúncios, não os comercializa e
-              não permite que funcionários humanos leiam seus compromissos
-              pessoais.
-            </p>
-            <p>
-              <strong>
-                Divulgação de Uso Limitado (Limited Use Disclosure):
-              </strong>
-              O uso e a transferência das informações recebidas das APIs do
-              Google para qualquer outro aplicativo pelo PodoDesk obedecerão
-              rigorosamente à Política de Dados do Usuário dos Serviços de API
-              do Google, incluindo os requisitos de Uso Limitado (Limited Use
-              requirements).
+              <strong>O que NÃO fazemos:</strong> O PodoDesk não comercializa
+              dados de notificações, não usa esses dados para publicidade e não
+              compartilha o conteúdo operacional com terceiros fora da
+              infraestrutura estritamente necessária para entrega técnica.
             </p>
           </section>
 

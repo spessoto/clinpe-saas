@@ -151,16 +151,17 @@ export default async function DashboardPage() {
       <div className="mt-8 grid gap-4 lg:grid-cols-3">
         <article className="surface-card p-5">
           <h3 className="text-lg font-semibold text-secondary">
-            Google Calendar
+            Agenda online
           </h3>
           <p className="mt-2 text-sm text-muted">
-            Conecte sua agenda para sincronizar disponibilidade e consultas.
+            Sua agenda pública funciona com os horários configurados no sistema
+            e consultas registradas internamente.
           </p>
           <Link
             href="/settings"
             className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
           >
-            Abrir configurações
+            Ajustar horários
           </Link>
         </article>
         <article className="surface-card p-5">

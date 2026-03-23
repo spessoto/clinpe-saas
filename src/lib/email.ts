@@ -13,6 +13,24 @@ type AppointmentDecisionEmailInput = {
   decision: AppointmentDecision;
 };
 
+export type AppointmentNewBookingPatientEmailInput = {
+  to: string;
+  patientName: string;
+  clinicName: string;
+  professionalName: string;
+  scheduledAt: string;
+};
+
+export type AppointmentNewBookingProfessionalEmailInput = {
+  to: string;
+  clinicName: string;
+  professionalName: string;
+  scheduledAt: string;
+  patientName: string;
+  patientEmail: string;
+  patientPhone: string;
+};
+
 let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter() {
@@ -25,6 +43,9 @@ function getTransporter() {
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
     secure: env.SMTP_PORT === 465,
+    connectionTimeout: 3500,
+    greetingTimeout: 3500,
+    socketTimeout: 5000,
     auth: {
       user: env.SMTP_USER,
       pass: env.SMTP_PASS,
@@ -87,11 +108,107 @@ function buildDecisionCopy(input: AppointmentDecisionEmailInput) {
   return { subject, text, html };
 }
 
+function buildNewBookingPatientCopy(
+  input: AppointmentNewBookingPatientEmailInput,
+) {
+  const formattedDate = formatAppointmentDate(input.scheduledAt);
+  const subject = `${input.clinicName}: recebemos seu pedido de agendamento`;
+  const text = [
+    "Pedido de agendamento recebido",
+    "",
+    `Olá, ${input.patientName}. Recebemos sua solicitação de consulta.`,
+    `Clínica: ${input.clinicName}`,
+    `Profissional: ${input.professionalName}`,
+    `Data e hora solicitadas: ${formattedDate}`,
+    "",
+    "A clínica analisará o pedido e entrará em contato se precisar de qualquer ajuste.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #334155; line-height: 1.6;">
+      <h1 style="color: #0D9488; font-size: 24px; margin-bottom: 16px;">Pedido de agendamento recebido</h1>
+      <p>Olá, ${input.patientName}. Recebemos sua solicitação de consulta.</p>
+      <div style="margin: 20px 0; padding: 16px; border: 1px solid #E2E8F0; border-radius: 12px; background: #F8FAFC;">
+        <p style="margin: 0 0 8px;"><strong>Clínica:</strong> ${input.clinicName}</p>
+        <p style="margin: 0 0 8px;"><strong>Profissional:</strong> ${input.professionalName}</p>
+        <p style="margin: 0;"><strong>Data e hora solicitadas:</strong> ${formattedDate}</p>
+      </div>
+      <p>A clínica analisará o pedido e entrará em contato se precisar de qualquer ajuste.</p>
+    </div>
+  `;
+
+  return { subject, text, html };
+}
+
+function buildNewBookingProfessionalCopy(
+  input: AppointmentNewBookingProfessionalEmailInput,
+) {
+  const formattedDate = formatAppointmentDate(input.scheduledAt);
+  const subject = `${input.clinicName}: nova consulta agendada para ${input.professionalName}`;
+  const text = [
+    "Nova consulta agendada",
+    "",
+    `Uma nova consulta foi solicitada para ${input.professionalName}.`,
+    `Paciente: ${input.patientName}`,
+    `E-mail do paciente: ${input.patientEmail}`,
+    `Telefone do paciente: ${input.patientPhone}`,
+    `Data e hora solicitadas: ${formattedDate}`,
+    "",
+    "Abra a agenda do sistema para acompanhar e confirmar o atendimento.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #334155; line-height: 1.6;">
+      <h1 style="color: #0D9488; font-size: 24px; margin-bottom: 16px;">Nova consulta agendada</h1>
+      <p>Uma nova consulta foi solicitada para ${input.professionalName}.</p>
+      <div style="margin: 20px 0; padding: 16px; border: 1px solid #E2E8F0; border-radius: 12px; background: #F8FAFC;">
+        <p style="margin: 0 0 8px;"><strong>Paciente:</strong> ${input.patientName}</p>
+        <p style="margin: 0 0 8px;"><strong>E-mail do paciente:</strong> ${input.patientEmail}</p>
+        <p style="margin: 0 0 8px;"><strong>Telefone do paciente:</strong> ${input.patientPhone}</p>
+        <p style="margin: 0;"><strong>Data e hora solicitadas:</strong> ${formattedDate}</p>
+      </div>
+      <p>Abra a agenda do sistema para acompanhar e confirmar o atendimento.</p>
+    </div>
+  `;
+
+  return { subject, text, html };
+}
+
 export async function sendAppointmentDecisionEmail(
   input: AppointmentDecisionEmailInput,
 ) {
   const env = getEmailEnv();
   const mail = buildDecisionCopy(input);
+
+  await getTransporter().sendMail({
+    from: env.SMTP_FROM,
+    to: input.to,
+    subject: mail.subject,
+    text: mail.text,
+    html: mail.html,
+  });
+}
+
+export async function sendAppointmentNewBookingPatientEmail(
+  input: AppointmentNewBookingPatientEmailInput,
+) {
+  const env = getEmailEnv();
+  const mail = buildNewBookingPatientCopy(input);
+
+  await getTransporter().sendMail({
+    from: env.SMTP_FROM,
+    to: input.to,
+    subject: mail.subject,
+    text: mail.text,
+    html: mail.html,
+  });
+}
+
+export async function sendAppointmentNewBookingProfessionalEmail(
+  input: AppointmentNewBookingProfessionalEmailInput,
+) {
+  const env = getEmailEnv();
+  const mail = buildNewBookingProfessionalCopy(input);
 
   await getTransporter().sendMail({
     from: env.SMTP_FROM,

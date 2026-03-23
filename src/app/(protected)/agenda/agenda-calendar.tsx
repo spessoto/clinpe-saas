@@ -18,7 +18,6 @@ export type AgendaCalendarEvent = {
   patientPhone: string;
   status: "scheduled" | "completed" | "canceled";
   confirmationStatus: "pending" | "confirmed" | "rejected";
-  isExternal?: boolean;
 };
 
 type Props = {
@@ -221,7 +220,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
     : [];
 
   function handleCancelSubmit() {
-    if (!selectedEvent || selectedEvent.isExternal) {
+    if (!selectedEvent) {
       return;
     }
 
@@ -462,52 +461,45 @@ export function AgendaCalendar({ monthKey, events }: Props) {
             </div>
 
             <div className="mt-6 grid gap-2 sm:grid-cols-2">
-              {selectedEvent.isExternal ? (
-                <p className="sm:col-span-2 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
-                  Evento vindo do Google Calendar. Para confirmar/cancelar com
-                  e-mail, crie o agendamento pelo fluxo do PodoDesk.
-                </p>
-              ) : (
-                <>
-                  <form action={confirmAppointmentAction}>
-                    <input
-                      type="hidden"
-                      name="appointment_id"
-                      value={selectedEvent.id}
-                    />
-                    <input type="hidden" name="month" value={monthKey} />
-                    <button
-                      type="submit"
-                      disabled={
-                        selectedEvent.status === "canceled" ||
-                        selectedEvent.status === "completed" ||
-                        selectedEvent.confirmationStatus === "confirmed" ||
-                        selectedEvent.patientEmail === "Não informado"
-                      }
-                      className="btn-gradient w-full disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Confirmar agendamento
-                    </button>
-                  </form>
+              <>
+                <form action={confirmAppointmentAction}>
+                  <input
+                    type="hidden"
+                    name="appointment_id"
+                    value={selectedEvent.id}
+                  />
+                  <input type="hidden" name="month" value={monthKey} />
+                  <button
+                    type="submit"
+                    disabled={
+                      selectedEvent.status === "canceled" ||
+                      selectedEvent.status === "completed" ||
+                      selectedEvent.confirmationStatus === "confirmed" ||
+                      selectedEvent.patientEmail === "Não informado"
+                    }
+                    className="btn-gradient w-full disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Confirmar agendamento
+                  </button>
+                </form>
 
-                  <form action={cancelAppointmentAction}>
-                    <input
-                      type="hidden"
-                      name="appointment_id"
-                      value={selectedEvent.id}
-                    />
-                    <input type="hidden" name="month" value={monthKey} />
-                    <CancelAppointmentButton
-                      onClick={handleCancelSubmit}
-                      disabled={
-                        selectedEvent.status === "canceled" ||
-                        selectedEvent.status === "completed" ||
-                        selectedEvent.patientEmail === "Não informado"
-                      }
-                    />
-                  </form>
-                </>
-              )}
+                <form action={cancelAppointmentAction}>
+                  <input
+                    type="hidden"
+                    name="appointment_id"
+                    value={selectedEvent.id}
+                  />
+                  <input type="hidden" name="month" value={monthKey} />
+                  <CancelAppointmentButton
+                    onClick={handleCancelSubmit}
+                    disabled={
+                      selectedEvent.status === "canceled" ||
+                      selectedEvent.status === "completed" ||
+                      selectedEvent.patientEmail === "Não informado"
+                    }
+                  />
+                </form>
+              </>
             </div>
 
             {selectedEvent.patientEmail === "Não informado" ? (

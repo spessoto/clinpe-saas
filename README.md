@@ -1,6 +1,6 @@
 # ClinPe App
 
-SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuários, autoagendamento e integração com Google Calendar.
+SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuários, autoagendamento, notificações por e-mail e push web.
 
 ## Status do projeto
 
@@ -20,13 +20,14 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - Épico 1: auth e onboarding com criação automática de tenant e trial
 - Épico 2: dashboard com KPIs e CRUD de pacientes
 - Épico 3: prontuários com upload de imagens no Storage
-- Épico 4: integração com Google Calendar + autoagendamento público por profissional em `/{professional_slug}`
+- Épico 4: autoagendamento público por profissional em `/{professional_slug}`
 - Épico 5: POPs com templates e substituição dinâmica de placeholders
 - Agenda: calendário mensal de consultas lido do banco de dados, com pop-up de dados do paciente e ações de confirmação/cancelamento
 - Confirmação e cancelamento de agendamento: profissional pode confirmar ou cancelar cada consulta diretamente na agenda, com notificação por e-mail assíncrona (fila persistente)
 - Notificação por e-mail: envio SMTP com template HTML responsivo (nodemailer) informando data, clínica, profissional e próximo passo
-- Cancelamento remove automaticamente o evento do Google Calendar do profissional
-- Configurações white-label: perfil, nome da clínica, e-mail/nome do usuário, dias e horários de atendimento, duração da consulta e integração Google
+- Configurações white-label: perfil, nome da clínica, e-mail/nome do usuário, dias e horários de atendimento e duração da consulta
+- Notificações de novas consultas: e-mail para paciente e podólogo com fallback assíncrono em fila
+- Central de notificações do podólogo: página interna com badge de não lidas e suporte a push web no navegador
 - **Ficha completa do paciente**: CPF, RG, e-mail, endereço, ocupação, contato de emergência, fonte de captação
 - **Histórico de Saúde no cadastro**: diabetes (tipo + insulina), vascular, coagulação, oncológico, medicamentos contínuos, alergias, fumante, calçado — exibidos como alertas visuais no perfil
 - **Anamnese estruturada podológica**: ficha A/B/C com triagem sistêmica, hábitos e exame físico; toggles CSS-only otimizados para tablet/luvas; snapshot JSONB por consulta para audit trail legal
@@ -51,7 +52,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Relatório de esterilização com branding para PDF**: cabeçalho com identidade da clínica, indicadores-resumo e tabela pronta para impressão
 - **Sidebar comercial de billing**: CTA com destaque em degradê laranja levando para `/billing`, com rótulo dinâmico para trial e upgrade
 - **Sidebar responsiva por altura**: menu da área protegida compacta tipografia e espaçamento em telas baixas, preservando assinatura/logout no rodapé quando houver altura suficiente
-- **Admin users evoluído**: switch de admin, ações por ícone (editar/excluir) e bloqueio seguro de exclusão para admins
+- **Admin users evoluído**: switch de admin, ações por ícone (editar/excluir), preservação do histórico de consultas ao excluir usuários e proibição de reatribuição automática para outros profissionais
 - **KPIs de admin com precisão operacional**: métricas atualizadas em tempo real, excluindo canceladas e considerando apenas base ativa quando aplicável
 
 ## Requisitos locais
@@ -81,9 +82,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=xxxxxxxx
 SUPABASE_SERVICE_ROLE_KEY=xxxxxxxx
 ADMIN_EMAIL=admin@seudominio.com
 
-GOOGLE_CLIENT_ID=xxxxxxxx
-GOOGLE_CLIENT_SECRET=xxxxxxxx
 NEXT_PUBLIC_APP_URL=https://pododesk.com.br
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=xxxxxxxx
+VAPID_PRIVATE_KEY=xxxxxxxx
+VAPID_SUBJECT=mailto:contato@pododesk.com.br
 
 # Asaas (assinaturas)
 ASAAS_API_KEY=xxxxxxxx
@@ -105,10 +107,10 @@ Observacoes:
 
 - `SUPABASE_SERVICE_ROLE_KEY` e obrigatoria para fluxos de booking publico.
 - `ADMIN_EMAIL` restringe o acesso ao novo painel administrativo em `/admin`.
-- `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` sao obrigatorias para conectar o Calendar.
 - `ASAAS_API_KEY` e `ASAAS_WEBHOOK_SECRET` sao obrigatorias para billing por assinatura recorrente.
-- `SMTP_*` sao obrigatorias para o envio de e-mail ao confirmar ou cancelar agendamentos. Funciona com Hostinger (porta 465), Gmail (porta 587 + senha de app) ou Resend.
+- `SMTP_*` sao obrigatorias para o envio de e-mail em novas consultas, confirmacoes e cancelamentos. Funciona com Hostinger (porta 465), Gmail (porta 587 + senha de app) ou Resend.
 - `EMAIL_QUEUE_CRON_SECRET` protege o endpoint interno `POST /api/internal/email-queue/process` para processamento da fila.
+- `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT` habilitam push web para avisar o podologo sobre novas consultas.
 
 ### Operacao da fila de e-mail
 
@@ -162,7 +164,7 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260312000004_epic4_epic5_booking_google_pops.sql`
 - `20260313000005_professional_booking_widget.sql`
 - `20260313000006_professional_settings_schedule.sql`
-- `20260316000007_appointment_confirmation_email.sql` — adiciona `confirmation_status` (pending/confirmed/rejected) e `google_event_id` na tabela `appointments`
+- `20260316000007_appointment_confirmation_email.sql` — adiciona `confirmation_status` (pending/confirmed/rejected) na tabela `appointments`
 - `20260316000008_add_billing_alerts_profile.sql` — expande billing base, perfil do profissional e alertas clinicos
 - `20260318000009_add_mp_billing.sql` — legado da fase Mercado Pago
 - `20260318000010_asaas_transition_and_hard_lock.sql` — transicao para Asaas e endurecimento do hard lock por assinatura/trial
@@ -173,7 +175,11 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260319000023_patient_extended_fields.sql` — campos administrativos do paciente: CPF, RG, e-mail, endereço, ocupação, contato de emergência, origem
 - `20260319000024_patient_health_columns.sql` — colunas estruturadas de saúde no cadastro do paciente (modelo híbrido) com índices GIN em arrays
 - `20260321000030_add_not_measured_chemical_indicator_status.sql` — adiciona o status `not_measured` ao enum de indicador químico da esterilização
-  Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e Google.
+- `20260323000031_remove_google_calendar.sql` — remove schema legado do Google Calendar
+- `20260323000032_notifications_and_push.sql` — adiciona notificações internas e subscriptions de push web
+- `20260323000033_allow_user_delete_with_appointments.sql` — preserva consultas ao excluir profissionais, com snapshot do nome e `professional_id` anulável
+- `20260323000034_prevent_reassign_deleted_professional_appointments.sql` — impede reatribuição posterior de consultas órfãs de profissionais removidos
+  Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e notificações.
 
 > **Atencao:** O nome dos arquivos de migration usa o formato `YYYYMMDDNNNNNN` (14 digitos sem underscore entre data e sequencia). Arquivos com o formato antigo `YYYYMMDD_NNNNNN` causam conflito de versao na CLI do Supabase.
 
@@ -274,11 +280,12 @@ npm run test:watch
 
 - `src/app`: rotas e paginas
 - `src/app/(protected)/settings`: configuracoes do profissional e agenda de atendimento
-- `src/app/(protected)/agenda`: calendario de consultas sincronizadas
+- `src/app/(protected)/agenda`: calendario de consultas do sistema
+- `src/app/(protected)/notifications`: central de notificacoes do podologo
 - `src/app/[professional_slug]`: pagina publica white-label de autoagendamento
 - `src/lib/auth.ts`: guardas de autenticacao e tenant
 - `src/lib/booking.ts`: regras de slots e criacao de agendamento
-- `src/lib/google-calendar.ts`: OAuth e chamadas do Google Calendar (create + delete eventos)
 - `src/lib/email.ts`: utilitario SMTP para envio de notificacoes ao paciente
+- `src/lib/notifications.ts`: notificacoes internas e disparo de push web
 - `src/lib/supabase`: clients server/browser/admin
 - `src/components/brand-logo.tsx`: logotipo da PodoDesk

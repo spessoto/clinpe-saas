@@ -9,11 +9,13 @@ import { BrandLogoWhite } from "@/components/brand-logo";
 type MobileSidebarProps = {
   canAccessAdmin: boolean;
   billingCtaLabel: string;
+  unreadNotificationCount: number;
 };
 
 export function MobileSidebar({
   canAccessAdmin,
   billingCtaLabel,
+  unreadNotificationCount,
 }: MobileSidebarProps) {
   // `mounted` controls whether the overlay/aside are in the DOM.
   // `isOpen` drives the transition classes (false = animating out).
@@ -63,7 +65,6 @@ export function MobileSidebar({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKeyDown);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
   return (
@@ -139,6 +140,20 @@ export function MobileSidebar({
                 </Link>
                 <Link href="/agenda" className={linkClass} onClick={closeMenu}>
                   Agenda
+                </Link>
+                <Link
+                  href="/notifications"
+                  className={linkClass}
+                  onClick={closeMenu}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <span>Notificações</span>
+                    {unreadNotificationCount > 0 ? (
+                      <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#0F766E]">
+                        {unreadNotificationCount}
+                      </span>
+                    ) : null}
+                  </span>
                 </Link>
                 <Link href="/finance" className={linkClass} onClick={closeMenu}>
                   Financeiro

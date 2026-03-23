@@ -45,8 +45,8 @@ const PLAN_FEATURES = [
   "Prontuários ilimitados",
   "Agenda integrada",
   "Agendamento público online",
-  "Integração Google Calendar",
   "Notificações por e-mail",
+  "Alertas web para novas consultas",
   "Suporte por e-mail",
 ];
 

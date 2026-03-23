@@ -1,9 +1,21 @@
-import { sendAppointmentDecisionEmail } from "@/lib/email";
+import {
+  sendAppointmentDecisionEmail,
+  sendAppointmentNewBookingPatientEmail,
+  sendAppointmentNewBookingProfessionalEmail,
+} from "@/lib/email";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const APPOINTMENT_DECISION_EVENT = "appointment_decision_email";
+const APPOINTMENT_NEW_BOOKING_PATIENT_EVENT =
+  "appointment_new_booking_patient_email";
+const APPOINTMENT_NEW_BOOKING_PROFESSIONAL_EVENT =
+  "appointment_new_booking_professional_email";
 
 type AppointmentDecision = "confirmed" | "canceled";
+type EmailQueueEventType =
+  | typeof APPOINTMENT_DECISION_EVENT
+  | typeof APPOINTMENT_NEW_BOOKING_PATIENT_EVENT
+  | typeof APPOINTMENT_NEW_BOOKING_PROFESSIONAL_EVENT;
 
 export type AppointmentDecisionQueuePayload = {
   to: string;
@@ -14,9 +26,31 @@ export type AppointmentDecisionQueuePayload = {
   decision: AppointmentDecision;
 };
 
+export type AppointmentNewBookingPatientQueuePayload = {
+  to: string;
+  patientName: string;
+  clinicName: string;
+  professionalName: string;
+  scheduledAt: string;
+};
+
+export type AppointmentNewBookingProfessionalQueuePayload = {
+  to: string;
+  clinicName: string;
+  professionalName: string;
+  scheduledAt: string;
+  patientName: string;
+  patientEmail: string;
+  patientPhone: string;
+};
+
 type EmailQueueRow = {
   id: string;
-  payload: AppointmentDecisionQueuePayload;
+  event_type: EmailQueueEventType;
+  payload:
+    | AppointmentDecisionQueuePayload
+    | AppointmentNewBookingPatientQueuePayload
+    | AppointmentNewBookingProfessionalQueuePayload;
   attempts: number;
   max_attempts: number;
 };
@@ -38,11 +72,48 @@ export async function enqueueAppointmentDecisionEmail(input: {
   tenantId: string;
   payload: AppointmentDecisionQueuePayload;
 }) {
+  return enqueueEmailEvent({
+    tenantId: input.tenantId,
+    eventType: APPOINTMENT_DECISION_EVENT,
+    payload: input.payload,
+  });
+}
+
+export async function enqueueAppointmentNewBookingPatientEmail(input: {
+  tenantId: string;
+  payload: AppointmentNewBookingPatientQueuePayload;
+}) {
+  return enqueueEmailEvent({
+    tenantId: input.tenantId,
+    eventType: APPOINTMENT_NEW_BOOKING_PATIENT_EVENT,
+    payload: input.payload,
+  });
+}
+
+export async function enqueueAppointmentNewBookingProfessionalEmail(input: {
+  tenantId: string;
+  payload: AppointmentNewBookingProfessionalQueuePayload;
+}) {
+  return enqueueEmailEvent({
+    tenantId: input.tenantId,
+    eventType: APPOINTMENT_NEW_BOOKING_PROFESSIONAL_EVENT,
+    payload: input.payload,
+  });
+}
+
+async function enqueueEmailEvent(input: {
+  tenantId: string;
+  eventType: EmailQueueEventType;
+  payload:
+    | AppointmentDecisionQueuePayload
+    | AppointmentNewBookingPatientQueuePayload
+    | AppointmentNewBookingProfessionalQueuePayload;
+}) {
   const adminClient = createAdminClient();
 
   const { error } = await adminClient.from("email_queue").insert({
     tenant_id: input.tenantId,
-    event_type: APPOINTMENT_DECISION_EVENT,
+    event_type: input.eventType,
     payload: input.payload,
     status: "pending",
     attempts: 0,
@@ -62,7 +133,7 @@ async function claimQueueItem(rowId: string) {
     .update({ status: "processing" })
     .eq("id", rowId)
     .in("status", ["pending", "failed"])
-    .select("id, payload, attempts, max_attempts")
+    .select("id, event_type, payload, attempts, max_attempts")
     .single();
 
   if (error) {
@@ -107,7 +178,6 @@ export async function processPendingEmailQueue(input?: { limit?: number }) {
   const { data: rows, error } = await adminClient
     .from("email_queue")
     .select("id")
-    .eq("event_type", APPOINTMENT_DECISION_EVENT)
     .in("status", ["pending", "failed"])
     .lte("next_attempt_at", nowIso)
     .order("next_attempt_at", { ascending: true })
@@ -136,7 +206,7 @@ export async function processPendingEmailQueue(input?: { limit?: number }) {
     );
 
     try {
-      await sendAppointmentDecisionEmail(claimedItem.payload);
+      await processQueueItem(claimedItem);
 
       const { error: markSentError } = await adminClient
         .from("email_queue")
@@ -183,6 +253,28 @@ export async function processPendingEmailQueue(input?: { limit?: number }) {
   };
 }
 
+async function processQueueItem(row: EmailQueueRow) {
+  switch (row.event_type) {
+    case APPOINTMENT_DECISION_EVENT:
+      await sendAppointmentDecisionEmail(
+        row.payload as AppointmentDecisionQueuePayload,
+      );
+      return;
+    case APPOINTMENT_NEW_BOOKING_PATIENT_EVENT:
+      await sendAppointmentNewBookingPatientEmail(
+        row.payload as AppointmentNewBookingPatientQueuePayload,
+      );
+      return;
+    case APPOINTMENT_NEW_BOOKING_PROFESSIONAL_EVENT:
+      await sendAppointmentNewBookingProfessionalEmail(
+        row.payload as AppointmentNewBookingProfessionalQueuePayload,
+      );
+      return;
+    default:
+      throw new Error("Tipo de evento de e-mail não suportado.");
+  }
+}
+
 export async function getEmailQueueStats() {
   const adminClient = createAdminClient();
 
@@ -196,27 +288,22 @@ export async function getEmailQueueStats() {
     adminClient
       .from("email_queue")
       .select("id", { count: "exact", head: true })
-      .eq("event_type", APPOINTMENT_DECISION_EVENT)
       .eq("status", "pending"),
     adminClient
       .from("email_queue")
       .select("id", { count: "exact", head: true })
-      .eq("event_type", APPOINTMENT_DECISION_EVENT)
       .eq("status", "processing"),
     adminClient
       .from("email_queue")
       .select("id", { count: "exact", head: true })
-      .eq("event_type", APPOINTMENT_DECISION_EVENT)
       .eq("status", "failed"),
     adminClient
       .from("email_queue")
       .select("id", { count: "exact", head: true })
-      .eq("event_type", APPOINTMENT_DECISION_EVENT)
       .eq("status", "sent"),
     adminClient
       .from("email_queue")
       .select("id, created_at, next_attempt_at")
-      .eq("event_type", APPOINTMENT_DECISION_EVENT)
       .in("status", ["pending", "failed"])
       .order("created_at", { ascending: true })
       .limit(1)

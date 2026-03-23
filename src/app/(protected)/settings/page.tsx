@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { saveSettingsAction } from "@/app/(protected)/settings/actions";
 import { ImageUpload } from "@/components/image-upload";
 import { requireActiveTenant } from "@/lib/auth";
@@ -88,13 +86,6 @@ export default async function SettingsPage({ searchParams }: Props) {
       ? "https://pododesk.com.br"
       : "http://localhost:3000");
   const publicBookingUrl = `${appUrl}/${professionalSlug}`;
-
-  const { data: integration } = await supabase
-    .from("google_integrations")
-    .select("google_email, updated_at")
-    .eq("tenant_id", appUser.tenant_id)
-    .eq("user_id", appUser.id)
-    .maybeSingle();
 
   return (
     <section className="space-y-6">
@@ -299,41 +290,6 @@ export default async function SettingsPage({ searchParams }: Props) {
               ))}
             </div>
           </fieldset>
-        </article>
-
-        <article className="surface-card p-6">
-          <h3 className="text-lg font-semibold text-secondary">
-            Integração Google
-          </h3>
-          <p className="mt-1 text-sm text-muted">
-            O formulário white-label desta aplicação cria consultas no sistema e
-            sincroniza com seu Google Calendar automaticamente.
-          </p>
-
-          <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3 text-sm text-muted">
-            {integration ? (
-              <>
-                <p className="font-semibold text-foreground">
-                  Conta conectada:{" "}
-                  {integration.google_email ?? "Google conectado"}
-                </p>
-                <p className="mt-1">
-                  Última atualização:{" "}
-                  {integration.updated_at
-                    ? new Date(integration.updated_at).toLocaleString("pt-BR")
-                    : "Não informada"}
-                </p>
-              </>
-            ) : (
-              <p>Nenhuma conta Google conectada.</p>
-            )}
-          </div>
-
-          <Link href="/api/google/connect" className="btn-gradient mt-4">
-            {integration
-              ? "Reconectar Google Calendar"
-              : "Conectar Google Calendar"}
-          </Link>
         </article>
 
         <article className="surface-card p-6">

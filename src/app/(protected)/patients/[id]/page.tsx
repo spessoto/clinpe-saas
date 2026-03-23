@@ -52,7 +52,9 @@ export default async function PatientDetailsPage({ params }: Props) {
       .limit(20),
     supabase
       .from("appointments")
-      .select("id, professional_id, scheduled_at, status")
+      .select(
+        "id, professional_id, professional_name_snapshot, scheduled_at, status",
+      )
       .eq("tenant_id", appUser.tenant_id)
       .eq("patient_id", patient.id)
       .order("scheduled_at", { ascending: false })
@@ -63,7 +65,14 @@ export default async function PatientDetailsPage({ params }: Props) {
   const appointments = appointmentsResult.data ?? [];
 
   const professionalIds = Array.from(
-    new Set(appointments.map((appointment) => appointment.professional_id)),
+    new Set(
+      appointments
+        .map((appointment) => appointment.professional_id)
+        .filter(
+          (professionalId): professionalId is string =>
+            typeof professionalId === "string" && professionalId.length > 0,
+        ),
+    ),
   );
 
   const { data: professionals } = professionalIds.length
@@ -320,6 +329,9 @@ export default async function PatientDetailsPage({ params }: Props) {
                     appointment.status}
                   {" - "}
                   {professionalsMap.get(appointment.professional_id) ??
+                    (appointment.professional_name_snapshot
+                      ? `Profissional removido (${appointment.professional_name_snapshot})`
+                      : null) ??
                     "Profissional não informado"}
                 </p>
               </li>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { signOutAction } from "@/app/auth-actions";
 import { BrandLogoWhite } from "@/components/brand-logo";
 import { requireActiveTenant, type Tenant } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 import { MobileSidebar } from "./mobile-sidebar";
 import { RenewalBanner } from "./renewal-banner";
 
@@ -41,9 +42,11 @@ function getBillingCtaLabel(tenant: Tenant) {
 function SidebarContent({
   canAccessAdmin,
   billingCtaLabel,
+  unreadNotificationCount,
 }: {
   canAccessAdmin: boolean;
   billingCtaLabel: string;
+  unreadNotificationCount: number;
 }) {
   const linkClass =
     "rounded-xl px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/18 [@media(max-height:860px)]:px-2.5 [@media(max-height:860px)]:py-1.5 [@media(max-height:860px)]:text-[13px] [@media(max-height:720px)]:px-2 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:text-xs";
@@ -73,6 +76,16 @@ function SidebarContent({
         </Link>
         <Link href="/agenda" className={linkClass}>
           Agenda
+        </Link>
+        <Link href="/notifications" className={linkClass}>
+          <span className="inline-flex items-center gap-2">
+            <span>Notificações</span>
+            {unreadNotificationCount > 0 ? (
+              <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-[#0F766E]">
+                {unreadNotificationCount}
+              </span>
+            ) : null}
+          </span>
         </Link>
         <Link href="/finance" className={linkClass}>
           Financeiro
@@ -120,9 +133,16 @@ export default async function ProtectedLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const { appUser, tenant } = await requireActiveTenant();
+  const supabase = await createClient();
   const canAccessAdmin =
     process.env.ADMIN_EMAIL?.trim().toLowerCase() ===
     appUser.email.trim().toLowerCase();
+  const { count: unreadNotificationCount } = await supabase
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", appUser.tenant_id)
+    .eq("user_id", appUser.id)
+    .is("read_at", null);
 
   // Compute renewal banner: show when subscription expires within RENEWAL_WARNING_DAYS
   // and the billing method is not CREDIT_CARD (credit card has auto-debit, no action needed).
@@ -134,6 +154,7 @@ export default async function ProtectedLayout({
       <MobileSidebar
         canAccessAdmin={canAccessAdmin}
         billingCtaLabel={billingCtaLabel}
+        unreadNotificationCount={unreadNotificationCount ?? 0}
       />
 
       <div className="md:flex">
@@ -145,6 +166,7 @@ export default async function ProtectedLayout({
           <SidebarContent
             canAccessAdmin={canAccessAdmin}
             billingCtaLabel={billingCtaLabel}
+            unreadNotificationCount={unreadNotificationCount ?? 0}
           />
         </aside>
 
