@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
+import { sendAppointmentDecisionEmailWithTimeout } from "@/lib/email";
 import { enqueueAppointmentDecisionEmail } from "@/lib/email-queue";
+import type { AppointmentDecisionQueuePayload } from "@/lib/email-queue";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
@@ -86,6 +88,20 @@ function getFriendlyActionError(
 
 function getFriendlyEmailWarning() {
   return "A ação foi concluída, mas o e-mail de notificação não pôde ser enviado agora.";
+}
+
+async function sendOrQueueDecisionEmail(
+  tenantId: string,
+  payload: AppointmentDecisionQueuePayload,
+) {
+  try {
+    const result = await sendAppointmentDecisionEmailWithTimeout(payload);
+    if (result === "sent") return;
+  } catch {
+    // Direct send failed — fall through to queue
+  }
+
+  await enqueueAppointmentDecisionEmail({ tenantId, payload });
 }
 
 async function getManagedAppointment(appointmentId: string) {
@@ -193,16 +209,13 @@ export async function confirmAppointmentAction(formData: FormData) {
           "Agendamento confirmado, mas o paciente não possui e-mail cadastrado.";
       } else {
         try {
-          await enqueueAppointmentDecisionEmail({
-            tenantId: appUser.tenant_id,
-            payload: {
-              to: appointment.patient.email,
-              patientName: appointment.patient.name,
-              clinicName: tenant.name,
-              professionalName: appUser.full_name,
-              scheduledAt: appointment.scheduled_at,
-              decision: "confirmed",
-            },
+          await sendOrQueueDecisionEmail(appUser.tenant_id, {
+            to: appointment.patient.email,
+            patientName: appointment.patient.name,
+            clinicName: tenant.name,
+            professionalName: appUser.full_name,
+            scheduledAt: appointment.scheduled_at,
+            decision: "confirmed",
           });
         } catch {
           warningMessage = getFriendlyEmailWarning();
@@ -272,16 +285,13 @@ export async function cancelAppointmentAction(formData: FormData) {
         );
       } else {
         try {
-          await enqueueAppointmentDecisionEmail({
-            tenantId: appUser.tenant_id,
-            payload: {
-              to: appointment.patient.email,
-              patientName: appointment.patient.name,
-              clinicName: tenant.name,
-              professionalName: appUser.full_name,
-              scheduledAt: appointment.scheduled_at,
-              decision: "canceled",
-            },
+          await sendOrQueueDecisionEmail(appUser.tenant_id, {
+            to: appointment.patient.email,
+            patientName: appointment.patient.name,
+            clinicName: tenant.name,
+            professionalName: appUser.full_name,
+            scheduledAt: appointment.scheduled_at,
+            decision: "canceled",
           });
         } catch {
           warningMessage = appendWarning(
