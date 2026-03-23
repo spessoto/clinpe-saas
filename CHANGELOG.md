@@ -33,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Em `localhost` e `127.0.0.1`, o formulário submete sem executar o widget para evitar falha por domínio não cadastrado
   - Comportamento de produção inalterado
 
+- **Validação do link de recuperação de senha fortalecida**
+  - Evita troca duplicada do mesmo `code` em `/reset-password`
+  - Só marca "link inválido/expirado" quando não existe sessão válida após tentativa de troca
+
 - **Agenda e booking totalmente internos ao sistema**
   - Remoção da dependência de Google Calendar nas rotas, UI, agenda e disponibilidade
   - Booking público passa a usar apenas horários configurados e consultas registradas no banco

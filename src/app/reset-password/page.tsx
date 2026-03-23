@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +12,7 @@ type ResetStatus = "checking" | "ready" | "invalid" | "saving";
 export default function ResetPasswordPage() {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
+  const exchangedCodeRef = useRef<string | null>(null);
 
   const [status, setStatus] = useState<ResetStatus>("checking");
   const [error, setError] = useState<string | null>(null);
@@ -23,17 +24,25 @@ export default function ResetPasswordPage() {
     async function prepareRecoverySession() {
       const params = new URLSearchParams(window.location.search);
       const code = params.get("code");
+      const shouldExchange = !!code && exchangedCodeRef.current !== code;
 
-      if (code) {
+      if (shouldExchange) {
+        exchangedCodeRef.current = code;
         const { error: exchangeError } =
           await supabase.auth.exchangeCodeForSession(code);
 
         if (exchangeError) {
-          if (!cancelled) {
-            setError("Link de recuperação inválido ou expirado.");
-            setStatus("invalid");
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+
+          if (!session) {
+            if (!cancelled) {
+              setError("Link de recuperação inválido ou expirado.");
+              setStatus("invalid");
+            }
+            return;
           }
-          return;
         }
 
         window.history.replaceState({}, document.title, "/reset-password");
