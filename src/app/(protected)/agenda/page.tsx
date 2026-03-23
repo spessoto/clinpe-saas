@@ -1,7 +1,10 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 
-import type { AgendaCalendarEvent } from "@/app/(protected)/agenda/agenda-calendar";
+import type {
+  AgendaCalendarEvent,
+  AgendaBlock,
+} from "@/app/(protected)/agenda/agenda-calendar";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -214,6 +217,31 @@ export default async function AgendaPage({ searchParams }: Props) {
     );
   }
 
+  // Load agenda blocks for the month
+  let agendaBlocks: AgendaBlock[] = [];
+  {
+    let blocksQuery = supabase
+      .from("agenda_blocks")
+      .select("id, starts_at, ends_at, reason")
+      .eq("tenant_id", appUser.tenant_id)
+      .lt("starts_at", monthEnd.toISOString())
+      .gt("ends_at", monthStart.toISOString())
+      .order("starts_at", { ascending: true });
+
+    if (appUser.role === "staff") {
+      blocksQuery = blocksQuery.eq("professional_id", appUser.id);
+    }
+
+    const { data: blocks } = await blocksQuery;
+
+    agendaBlocks = (blocks ?? []).map((block) => ({
+      id: block.id as string,
+      startsAt: block.starts_at as string,
+      endsAt: block.ends_at as string,
+      reason: (block.reason as string) ?? "",
+    }));
+  }
+
   return (
     <section className="space-y-6">
       <article className="surface-card p-6">
@@ -267,7 +295,11 @@ export default async function AgendaPage({ searchParams }: Props) {
         ) : null}
       </article>
 
-      <AgendaCalendar monthKey={monthKey} events={events} />
+      <AgendaCalendar
+        monthKey={monthKey}
+        events={events}
+        blocks={agendaBlocks}
+      />
     </section>
   );
 }

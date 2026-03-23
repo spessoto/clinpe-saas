@@ -6,7 +6,10 @@ import { useFormStatus } from "react-dom";
 import {
   cancelAppointmentAction,
   confirmAppointmentAction,
+  createAgendaBlockAction,
+  deleteAgendaBlockAction,
 } from "@/app/(protected)/agenda/actions";
+import { NewAppointmentDialog } from "@/app/(protected)/agenda/new-appointment-dialog";
 
 export type AgendaCalendarEvent = {
   id: string;
@@ -20,9 +23,17 @@ export type AgendaCalendarEvent = {
   confirmationStatus: "pending" | "confirmed" | "rejected";
 };
 
+export type AgendaBlock = {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  reason: string;
+};
+
 type Props = {
   monthKey: string;
   events: AgendaCalendarEvent[];
+  blocks: AgendaBlock[];
 };
 
 function parseMonthKey(value: string) {
@@ -153,6 +164,27 @@ function groupEventsByDay(events: AgendaCalendarEvent[]) {
   return map;
 }
 
+function groupBlocksByDay(blocks: AgendaBlock[]) {
+  const map = new Map<string, AgendaBlock[]>();
+
+  for (const block of blocks) {
+    const key = toLocalDateKey(new Date(block.startsAt));
+    const bucket = map.get(key) ?? [];
+    bucket.push(block);
+    map.set(key, bucket);
+  }
+
+  return map;
+}
+
+function formatBlockTime(iso: string) {
+  const date = new Date(iso);
+  return date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function CancelAppointmentButton({
   disabled,
   onClick,
@@ -174,13 +206,17 @@ function CancelAppointmentButton({
   );
 }
 
-export function AgendaCalendar({ monthKey, events }: Props) {
+export function AgendaCalendar({ monthKey, events, blocks }: Props) {
   const [pendingCancelIds, setPendingCancelIds] = useState<Set<string>>(
     () => new Set(),
   );
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] =
     useState<AgendaCalendarEvent | null>(null);
+  const [newAppointmentDate, setNewAppointmentDate] = useState<string | null>(
+    null,
+  );
+  const [showBlockForm, setShowBlockForm] = useState(false);
 
   const monthDate = useMemo(() => parseMonthKey(monthKey), [monthKey]);
   const today = useMemo(() => new Date(), []);
@@ -195,6 +231,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
     () => groupEventsByDay(visibleEvents),
     [visibleEvents],
   );
+  const blocksMap = useMemo(() => groupBlocksByDay(blocks), [blocks]);
   const selectedDayDate = useMemo(() => {
     if (!selectedDayKey) {
       return null;
@@ -217,6 +254,9 @@ export function AgendaCalendar({ monthKey, events }: Props) {
   }, [selectedDayKey]);
   const selectedDayEvents = selectedDayKey
     ? (eventsMap.get(selectedDayKey) ?? [])
+    : [];
+  const selectedDayBlocks = selectedDayKey
+    ? (blocksMap.get(selectedDayKey) ?? [])
     : [];
 
   function handleCancelSubmit() {
@@ -298,6 +338,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
           {calendarDays.map((day) => {
             const dayKey = toLocalDateKey(day);
             const dayEvents = eventsMap.get(dayKey) ?? [];
+            const dayBlocks = blocksMap.get(dayKey) ?? [];
             const outOfMonth = day.getMonth() !== monthDate.getMonth();
             const isToday = isSameDay(day, today);
 
@@ -322,6 +363,17 @@ export function AgendaCalendar({ monthKey, events }: Props) {
                 </div>
 
                 <div className="space-y-1">
+                  {dayBlocks.slice(0, 1).map((block) => (
+                    <div
+                      key={block.id}
+                      className="w-full rounded-lg bg-slate-200 px-2 py-1 text-xs text-slate-600"
+                      title={`Bloqueado: ${formatBlockTime(block.startsAt)} - ${formatBlockTime(block.endsAt)}${block.reason ? ` (${block.reason})` : ""}`}
+                    >
+                      <p className="truncate font-semibold leading-tight">
+                        🚫 {formatBlockTime(block.startsAt)} Bloqueado
+                      </p>
+                    </div>
+                  ))}
                   {dayEvents.slice(0, 2).map((event) => (
                     <div
                       key={event.id}
@@ -338,7 +390,7 @@ export function AgendaCalendar({ monthKey, events }: Props) {
                       +{dayEvents.length - 2} consulta(s)
                     </p>
                   ) : null}
-                  {dayEvents.length === 0 ? (
+                  {dayEvents.length === 0 && dayBlocks.length === 0 ? (
                     <p className="text-[11px] text-muted">Sem consultas</p>
                   ) : null}
                 </div>
@@ -370,11 +422,48 @@ export function AgendaCalendar({ monthKey, events }: Props) {
             </div>
 
             <div className="mt-4 max-h-[60vh] space-y-2 overflow-y-auto pr-1">
-              {selectedDayEvents.length === 0 ? (
+              {/* Blocks for this day */}
+              {selectedDayBlocks.length > 0 ? (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    Bloqueios
+                  </p>
+                  {selectedDayBlocks.map((block) => (
+                    <div
+                      key={block.id}
+                      className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-600">
+                          🚫 {formatBlockTime(block.startsAt)} -{" "}
+                          {formatBlockTime(block.endsAt)}
+                        </p>
+                        {block.reason ? (
+                          <p className="text-xs text-muted">{block.reason}</p>
+                        ) : null}
+                      </div>
+                      <form action={deleteAgendaBlockAction}>
+                        <input type="hidden" name="block_id" value={block.id} />
+                        <input type="hidden" name="month" value={monthKey} />
+                        <button
+                          type="submit"
+                          className="rounded px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
+                        >
+                          Remover
+                        </button>
+                      </form>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {/* Events for this day */}
+              {selectedDayEvents.length === 0 &&
+              selectedDayBlocks.length === 0 ? (
                 <p className="rounded-lg bg-slate-50 px-3 py-4 text-sm text-muted">
                   Nenhuma consulta cadastrada para este dia.
                 </p>
-              ) : (
+              ) : selectedDayEvents.length === 0 ? null : (
                 selectedDayEvents.map((event) => (
                   <button
                     key={event.id}
@@ -399,6 +488,89 @@ export function AgendaCalendar({ monthKey, events }: Props) {
                   </button>
                 ))
               )}
+
+              {/* Block creation form */}
+              {showBlockForm ? (
+                <form
+                  action={createAgendaBlockAction}
+                  className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3"
+                >
+                  <input type="hidden" name="month" value={monthKey} />
+                  <input
+                    type="hidden"
+                    name="block_date"
+                    value={selectedDayKey ?? ""}
+                  />
+                  <p className="text-sm font-semibold text-foreground">
+                    Bloquear horário
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="block text-xs">
+                      <span className="mb-0.5 block text-muted">Início</span>
+                      <input
+                        type="time"
+                        name="block_start_time"
+                        required
+                        className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none ring-primary/40 focus:ring-2"
+                      />
+                    </label>
+                    <label className="block text-xs">
+                      <span className="mb-0.5 block text-muted">Fim</span>
+                      <input
+                        type="time"
+                        name="block_end_time"
+                        required
+                        className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none ring-primary/40 focus:ring-2"
+                      />
+                    </label>
+                  </div>
+                  <label className="block text-xs">
+                    <span className="mb-0.5 block text-muted">
+                      Motivo (opcional)
+                    </span>
+                    <input
+                      type="text"
+                      name="block_reason"
+                      maxLength={100}
+                      className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none ring-primary/40 focus:ring-2"
+                    />
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="btn-gradient px-3 py-1.5 text-xs"
+                    >
+                      Bloquear
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowBlockForm(false)}
+                      className="btn-outline-modern px-3 py-1.5 text-xs"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowBlockForm(true)}
+                  className="mt-2 w-full rounded-lg border border-dashed border-slate-300 px-3 py-2 text-center text-xs font-semibold text-muted transition hover:border-slate-400 hover:text-foreground"
+                >
+                  + Bloquear horário neste dia
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setNewAppointmentDate(selectedDayKey);
+                  setSelectedDayKey(null);
+                }}
+                className="btn-gradient mt-2 w-full text-sm"
+              >
+                + Nova consulta
+              </button>
             </div>
           </div>
         </div>
@@ -511,6 +683,13 @@ export function AgendaCalendar({ monthKey, events }: Props) {
           </div>
         </div>
       ) : null}
+
+      <NewAppointmentDialog
+        monthKey={monthKey}
+        initialDate={newAppointmentDate ?? ""}
+        open={newAppointmentDate !== null}
+        onClose={() => setNewAppointmentDate(null)}
+      />
     </>
   );
 }

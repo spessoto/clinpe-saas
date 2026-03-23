@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
+import { getAvailableSlotsByTenantId } from "@/lib/booking";
 import { sendAppointmentDecisionEmailWithTimeout } from "@/lib/email";
 import { enqueueAppointmentDecisionEmail } from "@/lib/email-queue";
 import type { AppointmentDecisionQueuePayload } from "@/lib/email-queue";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 function getField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -317,6 +319,239 @@ export async function cancelAppointmentAction(formData: FormData) {
     buildAgendaPath({
       month,
       success: "Agendamento cancelado. O paciente será notificado por e-mail.",
+    }),
+  );
+}
+
+export async function createAgendaBlockAction(formData: FormData) {
+  const month = getField(formData, "month");
+  const startDate = getField(formData, "block_date");
+  const startTime = getField(formData, "block_start_time");
+  const endTime = getField(formData, "block_end_time");
+  const reason = getField(formData, "block_reason");
+
+  if (!startDate || !startTime || !endTime) {
+    redirect(
+      buildAgendaPath({
+        month,
+        error: "Preencha data e horários do bloqueio.",
+      }),
+    );
+  }
+
+  if (startTime >= endTime) {
+    redirect(
+      buildAgendaPath({
+        month,
+        error: "Horário inicial deve ser menor que o final.",
+      }),
+    );
+  }
+
+  const startsAt = new Date(`${startDate}T${startTime}:00`);
+  const endsAt = new Date(`${startDate}T${endTime}:00`);
+
+  if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime())) {
+    redirect(buildAgendaPath({ month, error: "Data ou horário inválido." }));
+  }
+
+  const { appUser } = await requireActiveTenant();
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("agenda_blocks").insert({
+    tenant_id: appUser.tenant_id,
+    professional_id: appUser.id,
+    starts_at: startsAt.toISOString(),
+    ends_at: endsAt.toISOString(),
+    reason,
+  });
+
+  if (error) {
+    redirect(
+      buildAgendaPath({
+        month,
+        error: `Falha ao criar bloqueio: ${error.message}`,
+      }),
+    );
+  }
+
+  revalidatePath("/agenda");
+  redirect(
+    buildAgendaPath({
+      month,
+      success: "Horário bloqueado com sucesso.",
+    }),
+  );
+}
+
+export async function deleteAgendaBlockAction(formData: FormData) {
+  const month = getField(formData, "month");
+  const blockId = getField(formData, "block_id");
+
+  if (!blockId) {
+    redirect(buildAgendaPath({ month, error: "Bloqueio inválido." }));
+  }
+
+  const { appUser } = await requireActiveTenant();
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("agenda_blocks")
+    .delete()
+    .eq("id", blockId)
+    .eq("tenant_id", appUser.tenant_id);
+
+  if (error) {
+    redirect(
+      buildAgendaPath({
+        month,
+        error: `Falha ao remover bloqueio: ${error.message}`,
+      }),
+    );
+  }
+
+  revalidatePath("/agenda");
+  redirect(
+    buildAgendaPath({
+      month,
+      success: "Bloqueio removido com sucesso.",
+    }),
+  );
+}
+
+export async function createManualAppointmentAction(formData: FormData) {
+  const month = getField(formData, "month");
+  const patientMode = getField(formData, "patient_mode");
+  const selectedPatientId = getField(formData, "patient_id");
+  const newPatientName = getField(formData, "new_patient_name");
+  const newPatientPhone = getField(formData, "new_patient_phone");
+  const newPatientEmail = getField(formData, "new_patient_email");
+  const scheduledAt = getField(formData, "scheduled_at");
+  const isReturn = formData.get("is_return") === "1";
+
+  if (!scheduledAt) {
+    redirect(
+      buildAgendaPath({
+        month,
+        error: "Selecione a data e horário da consulta.",
+      }),
+    );
+  }
+
+  const { appUser } = await requireActiveTenant();
+  const adminClient = createAdminClient();
+
+  // Resolve patient
+  let patientId: string | null = null;
+
+  if (patientMode === "existing") {
+    if (!selectedPatientId) {
+      redirect(buildAgendaPath({ month, error: "Selecione um paciente." }));
+    }
+
+    // Validate patient belongs to tenant
+    const { data: patient } = await adminClient
+      .from("patients")
+      .select("id")
+      .eq("id", selectedPatientId)
+      .eq("tenant_id", appUser.tenant_id)
+      .maybeSingle();
+
+    if (!patient) {
+      redirect(buildAgendaPath({ month, error: "Paciente não encontrado." }));
+    }
+
+    patientId = patient.id;
+  } else {
+    if (!newPatientName || !newPatientPhone) {
+      redirect(
+        buildAgendaPath({
+          month,
+          error: "Nome e telefone são obrigatórios para novo paciente.",
+        }),
+      );
+    }
+
+    // Check if patient already exists by phone
+    const { data: existingPatient } = await adminClient
+      .from("patients")
+      .select("id")
+      .eq("tenant_id", appUser.tenant_id)
+      .eq("phone", newPatientPhone)
+      .maybeSingle();
+
+    if (existingPatient) {
+      patientId = existingPatient.id;
+    } else {
+      const { data: insertedPatient, error: patientError } = await adminClient
+        .from("patients")
+        .insert({
+          tenant_id: appUser.tenant_id,
+          name: newPatientName,
+          phone: newPatientPhone,
+          email: newPatientEmail || null,
+        })
+        .select("id")
+        .single();
+
+      if (patientError || !insertedPatient) {
+        redirect(
+          buildAgendaPath({
+            month,
+            error: patientError?.message ?? "Falha ao cadastrar paciente.",
+          }),
+        );
+      }
+
+      patientId = insertedPatient.id;
+    }
+  }
+
+  // Validate slot is available
+  const scheduledDate = scheduledAt.split("T")[0];
+  const availableSlots = await getAvailableSlotsByTenantId({
+    tenantId: appUser.tenant_id,
+    professionalId: appUser.id,
+    date: scheduledDate,
+  });
+
+  if (!availableSlots.includes(scheduledAt)) {
+    redirect(
+      buildAgendaPath({
+        month,
+        error:
+          "Horário indisponível. Verifique a agenda e escolha outro horário.",
+      }),
+    );
+  }
+
+  const { error: appointmentError } = await adminClient
+    .from("appointments")
+    .insert({
+      tenant_id: appUser.tenant_id,
+      patient_id: patientId,
+      professional_id: appUser.id,
+      professional_name_snapshot: appUser.full_name,
+      scheduled_at: scheduledAt,
+      status: "scheduled",
+      confirmation_status: "confirmed",
+      is_return: isReturn,
+    });
+
+  if (appointmentError) {
+    redirect(
+      buildAgendaPath({
+        month,
+        error: `Falha ao criar consulta: ${appointmentError.message}`,
+      }),
+    );
+  }
+
+  revalidatePath("/agenda");
+  redirect(
+    buildAgendaPath({
+      month,
+      success: "Consulta adicionada com sucesso.",
     }),
   );
 }

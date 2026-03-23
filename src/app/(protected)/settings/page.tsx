@@ -14,6 +14,8 @@ type UserSettings = {
   working_start_time: string | null;
   working_end_time: string | null;
   appointment_duration_minutes: number | null;
+  lunch_start_time: string | null;
+  lunch_end_time: string | null;
 };
 
 function slugifyProfessionalName(name: string) {
@@ -63,7 +65,7 @@ export default async function SettingsPage({ searchParams }: Props) {
   const withSettings = await supabase
     .from("users")
     .select(
-      "profile_photo_url, working_days, working_start_time, working_end_time, appointment_duration_minutes",
+      "profile_photo_url, working_days, working_start_time, working_end_time, appointment_duration_minutes, lunch_start_time, lunch_end_time",
     )
     .eq("id", appUser.id)
     .eq("tenant_id", appUser.tenant_id)
@@ -75,7 +77,11 @@ export default async function SettingsPage({ searchParams }: Props) {
     working_start_time: "09:00:00",
     working_end_time: "17:00:00",
     appointment_duration_minutes: 60,
+    lunch_start_time: null,
+    lunch_end_time: null,
   };
+
+  const hasLunchBreak = Boolean(userSettings.lunch_start_time);
 
   const workingDays = userSettings.working_days ?? [1, 2, 3, 4, 5];
   const professionalSlug =
@@ -268,6 +274,51 @@ export default async function SettingsPage({ searchParams }: Props) {
               </select>
             </label>
           </div>
+
+          <fieldset className="mt-4">
+            <legend className="mb-2 text-sm font-semibold text-foreground">
+              Horário de almoço
+            </legend>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="has_lunch_break"
+                value="1"
+                defaultChecked={hasLunchBreak}
+              />
+              <span>Definir horário de almoço</span>
+            </label>
+            <div className="mt-2 grid gap-4 md:grid-cols-2">
+              <label className="block text-sm">
+                <span className="mb-1 block text-foreground">
+                  Início do almoço
+                </span>
+                <input
+                  type="time"
+                  name="lunch_start_time"
+                  defaultValue={toTimeInput(
+                    userSettings.lunch_start_time,
+                    "12:00",
+                  )}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block text-foreground">
+                  Fim do almoço
+                </span>
+                <input
+                  type="time"
+                  name="lunch_end_time"
+                  defaultValue={toTimeInput(
+                    userSettings.lunch_end_time,
+                    "13:00",
+                  )}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+              </label>
+            </div>
+          </fieldset>
 
           <fieldset className="mt-4">
             <legend className="mb-2 text-sm font-semibold text-foreground">

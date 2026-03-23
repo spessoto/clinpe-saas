@@ -7,7 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-03-23
+
 ### Added
+
+- **Criação manual de consultas pela agenda**
+  - Botão "+ Nova consulta" dentro do modal do dia na agenda
+  - Busca de pacientes existentes por nome/telefone (API `/api/patients/search`)
+  - Cadastro rápido de novo paciente (nome, telefone, e-mail) direto no diálogo
+  - Seleção de horário disponível no dia (API `/api/agenda/slots`)
+  - Checkbox de consulta de retorno (`is_return`)
+  - Consulta criada como confirmada automaticamente
+
+- **Bloqueio de horários na agenda**
+  - Formulário de bloqueio no modal do dia (início, fim, motivo)
+  - Blocos exibidos em cinza nas células do calendário
+  - Exclusão de blocos com botão no modal do dia
+  - Horários bloqueados excluídos automaticamente dos slots disponíveis
+
+- **Configuração de horário de almoço**
+  - Novo fieldset em `/settings` com checkbox, hora de início e hora de fim
+  - Validação: início < fim e dentro do expediente
+  - Slots de almoço excluídos automaticamente da disponibilidade (booking público e agenda)
+
+- **Migration `20260323000036_agenda_blocks_lunch_return.sql`**
+  - Coluna `is_return` em `appointments`
+  - Tabela `agenda_blocks` com RLS por tenant
+  - Colunas `lunch_start_time` / `lunch_end_time` em `users`
 
 - **Notificações operacionais de novas consultas**
   - Disparo de e-mail para paciente e profissional no momento do agendamento

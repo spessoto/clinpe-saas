@@ -89,6 +89,33 @@ export async function saveSettingsAction(formData: FormData) {
     redirect("/settings?error=Selecione pelo menos um dia de atendimento.");
   }
 
+  const hasLunchBreak = getField(formData, "has_lunch_break") === "1";
+  let lunchStartTime: string | null = null;
+  let lunchEndTime: string | null = null;
+
+  if (hasLunchBreak) {
+    lunchStartTime = normalizeTimeInput(
+      getField(formData, "lunch_start_time"),
+      "12:00:00",
+    );
+    lunchEndTime = normalizeTimeInput(
+      getField(formData, "lunch_end_time"),
+      "13:00:00",
+    );
+
+    if (lunchStartTime >= lunchEndTime) {
+      redirect(
+        "/settings?error=Horário de início do almoço deve ser menor que o final.",
+      );
+    }
+
+    if (lunchStartTime < workingStart || lunchEndTime > workingEnd) {
+      redirect(
+        "/settings?error=Horário de almoço deve estar dentro do expediente.",
+      );
+    }
+  }
+
   const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
 
@@ -158,6 +185,8 @@ export async function saveSettingsAction(formData: FormData) {
         working_start_time: workingStart,
         working_end_time: workingEnd,
         appointment_duration_minutes: appointmentDurationMinutes,
+        lunch_start_time: lunchStartTime,
+        lunch_end_time: lunchEndTime,
       },
       tenantFields: {
         name: clinicName,

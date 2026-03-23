@@ -42,6 +42,8 @@ type ProfessionalSchedule = {
   working_start_time: string;
   working_end_time: string;
   appointment_duration_minutes: number;
+  lunch_start_time: string | null;
+  lunch_end_time: string | null;
 };
 
 type PublicProfessionalBookingContext = {
@@ -76,6 +78,8 @@ function defaultSchedule(): ProfessionalSchedule {
     working_start_time: "09:00:00",
     working_end_time: "17:00:00",
     appointment_duration_minutes: 60,
+    lunch_start_time: null,
+    lunch_end_time: null,
   };
 }
 
@@ -95,6 +99,13 @@ function createDaySlots(date: Date, schedule: ProfessionalSchedule) {
   const endMinutes = toMinutesSinceMidnight(schedule.working_end_time);
   const duration = Math.max(15, schedule.appointment_duration_minutes);
 
+  const lunchStart = schedule.lunch_start_time
+    ? toMinutesSinceMidnight(schedule.lunch_start_time)
+    : null;
+  const lunchEnd = schedule.lunch_end_time
+    ? toMinutesSinceMidnight(schedule.lunch_end_time)
+    : null;
+
   if (endMinutes <= startMinutes) {
     return [] as Date[];
   }
@@ -105,6 +116,16 @@ function createDaySlots(date: Date, schedule: ProfessionalSchedule) {
     minute + duration <= endMinutes;
     minute += duration
   ) {
+    // Skip slots that overlap with lunch
+    if (
+      lunchStart !== null &&
+      lunchEnd !== null &&
+      minute < lunchEnd &&
+      minute + duration > lunchStart
+    ) {
+      continue;
+    }
+
     const hour = Math.floor(minute / 60);
     const minutePart = minute % 60;
     const slot = setMinutes(setHours(date, hour), minutePart);
@@ -132,14 +153,14 @@ function safeDateFromInput(dateInput?: string) {
   return new Date(year, (month ?? 1) - 1, day ?? 1);
 }
 
-async function getProfessionalSchedule(
+export async function getProfessionalSchedule(
   professionalId: string,
   supabase = createAdminClient(),
 ) {
   const withSettingsResult = await supabase
     .from("users")
     .select(
-      "working_days, working_start_time, working_end_time, appointment_duration_minutes",
+      "working_days, working_start_time, working_end_time, appointment_duration_minutes, lunch_start_time, lunch_end_time",
     )
     .eq("id", professionalId)
     .maybeSingle();
@@ -158,6 +179,10 @@ async function getProfessionalSchedule(
       appointment_duration_minutes:
         withSettingsResult.data.appointment_duration_minutes ??
         defaultSchedule().appointment_duration_minutes,
+      lunch_start_time:
+        (withSettingsResult.data.lunch_start_time as string | null) ?? null,
+      lunch_end_time:
+        (withSettingsResult.data.lunch_end_time as string | null) ?? null,
     } satisfies ProfessionalSchedule;
   }
 
@@ -425,6 +450,14 @@ export async function getAvailableSlots(input: {
     .gte("scheduled_at", dayStart.toISOString())
     .lt("scheduled_at", dayEnd.toISOString());
 
+  const { data: blocks } = await supabase
+    .from("agenda_blocks")
+    .select("starts_at, ends_at")
+    .eq("tenant_id", context.tenant.id)
+    .eq("professional_id", input.professionalId)
+    .lt("starts_at", dayEnd.toISOString())
+    .gt("ends_at", dayStart.toISOString());
+
   return createDaySlots(day, schedule)
     .filter((slotStart) => {
       const slotEnd = addMinutes(
@@ -442,6 +475,95 @@ export async function getAvailableSlots(input: {
       });
 
       if (dbConflict) {
+        return false;
+      }
+
+      const blockConflict = (blocks ?? []).some((block) => {
+        return overlaps(
+          slotStart,
+          slotEnd,
+          new Date(block.starts_at),
+          new Date(block.ends_at),
+        );
+      });
+
+      if (blockConflict) {
+        return false;
+      }
+
+      return true;
+    })
+    .map((slot) => slot.toISOString());
+}
+
+export async function getAvailableSlotsByTenantId(input: {
+  tenantId: string;
+  professionalId: string;
+  date: string;
+}) {
+  const supabase = createAdminClient();
+  const schedule = await getProfessionalSchedule(
+    input.professionalId,
+    supabase,
+  );
+  const day = safeDateFromInput(input.date);
+  const dayStart = new Date(
+    day.getFullYear(),
+    day.getMonth(),
+    day.getDate(),
+    0,
+    0,
+    0,
+  );
+  const dayEnd = addDays(dayStart, 1);
+
+  const { data: appointments } = await supabase
+    .from("appointments")
+    .select("scheduled_at")
+    .eq("tenant_id", input.tenantId)
+    .eq("professional_id", input.professionalId)
+    .neq("status", "canceled")
+    .gte("scheduled_at", dayStart.toISOString())
+    .lt("scheduled_at", dayEnd.toISOString());
+
+  const { data: blocks } = await supabase
+    .from("agenda_blocks")
+    .select("starts_at, ends_at")
+    .eq("tenant_id", input.tenantId)
+    .eq("professional_id", input.professionalId)
+    .lt("starts_at", dayEnd.toISOString())
+    .gt("ends_at", dayStart.toISOString());
+
+  return createDaySlots(day, schedule)
+    .filter((slotStart) => {
+      const slotEnd = addMinutes(
+        slotStart,
+        schedule.appointment_duration_minutes,
+      );
+
+      const dbConflict = (appointments ?? []).some((appointment) => {
+        const appointmentStart = new Date(appointment.scheduled_at);
+        const appointmentEnd = addMinutes(
+          appointmentStart,
+          schedule.appointment_duration_minutes,
+        );
+        return overlaps(slotStart, slotEnd, appointmentStart, appointmentEnd);
+      });
+
+      if (dbConflict) {
+        return false;
+      }
+
+      const blockConflict = (blocks ?? []).some((block) => {
+        return overlaps(
+          slotStart,
+          slotEnd,
+          new Date(block.starts_at),
+          new Date(block.ends_at),
+        );
+      });
+
+      if (blockConflict) {
         return false;
       }
 
