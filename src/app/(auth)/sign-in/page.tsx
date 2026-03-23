@@ -3,6 +3,7 @@ import Link from "next/link";
 import { signInAction } from "@/app/auth-actions";
 import { BrandLogo } from "@/components/brand-logo";
 import { RecaptchaForm } from "../recaptcha-form";
+import { ResendConfirmationForm } from "../resend-confirmation-form";
 import { SignInSubmitButton } from "./sign-in-submit-button";
 
 type Props = {
@@ -13,6 +14,7 @@ export default async function SignInPage({ searchParams }: Props) {
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;
   const message = typeof params.message === "string" ? params.message : null;
+  const email = typeof params.email === "string" ? params.email : "";
 
   return (
     <main className="relative isolate flex min-h-screen items-center overflow-hidden px-6 py-14">
@@ -52,6 +54,7 @@ export default async function SignInPage({ searchParams }: Props) {
               type="email"
               name="email"
               required
+              defaultValue={email}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
             />
           </label>
@@ -78,6 +81,8 @@ export default async function SignInPage({ searchParams }: Props) {
             Criar conta
           </Link>
         </p>
+
+        <ResendConfirmationForm source="/sign-in" initialEmail={email} />
       </section>
     </main>
   );

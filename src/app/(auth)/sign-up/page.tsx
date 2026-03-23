@@ -3,6 +3,7 @@ import Link from "next/link";
 import { signUpAction } from "@/app/auth-actions";
 import { BrandLogo } from "@/components/brand-logo";
 import { RecaptchaForm, RecaptchaSubmitButton } from "../recaptcha-form";
+import { ResendConfirmationForm } from "../resend-confirmation-form";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -11,6 +12,8 @@ type Props = {
 export default async function SignUpPage({ searchParams }: Props) {
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;
+  const message = typeof params.message === "string" ? params.message : null;
+  const email = typeof params.email === "string" ? params.email : "";
 
   return (
     <main className="relative isolate flex min-h-screen items-center overflow-hidden px-6 py-14">
@@ -32,6 +35,12 @@ export default async function SignUpPage({ searchParams }: Props) {
         {error ? (
           <p className="mt-4 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
+          </p>
+        ) : null}
+
+        {message ? (
+          <p className="mt-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
+            {message}
           </p>
         ) : null}
 
@@ -99,6 +108,7 @@ export default async function SignUpPage({ searchParams }: Props) {
               type="email"
               name="email"
               required
+              defaultValue={email}
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
             />
           </label>
@@ -126,6 +136,8 @@ export default async function SignUpPage({ searchParams }: Props) {
             Entrar
           </Link>
         </p>
+
+        <ResendConfirmationForm source="/sign-up" initialEmail={email} />
       </section>
     </main>
   );

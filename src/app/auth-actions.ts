@@ -112,7 +112,7 @@ export async function signUpAction(formData: FormData) {
 
   if (!data.session) {
     redirect(
-      "/sign-in?message=Conta criada. Verifique seu e-mail para confirmar.",
+      `/sign-in?message=${encodeURIComponent("Conta criada. Verifique seu e-mail para confirmar.")}&email=${encodeURIComponent(email)}`,
     );
   }
 
@@ -162,4 +162,43 @@ export async function signOutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/sign-in");
+}
+
+export async function resendConfirmationAction(formData: FormData) {
+  const email = getField(formData, "email").toLowerCase();
+  const recaptchaToken = getField(formData, "recaptcha_token");
+  const source =
+    getField(formData, "source") === "/sign-up" ? "/sign-up" : "/sign-in";
+
+  if (!email) {
+    redirect(
+      `${source}?error=${encodeURIComponent("Informe o e-mail para reenviar a confirmação.")}`,
+    );
+  }
+
+  const recaptchaOk = await verifyRecaptchaToken(recaptchaToken);
+  if (!recaptchaOk) {
+    redirect(
+      `${source}?error=${encodeURIComponent("Verificação de segurança falhou. Tente novamente.")}&email=${encodeURIComponent(email)}`,
+    );
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: getAppUrl(),
+    },
+  });
+
+  if (error) {
+    redirect(
+      `${source}?error=${encodeURIComponent(error.message)}&email=${encodeURIComponent(email)}`,
+    );
+  }
+
+  redirect(
+    `${source}?message=${encodeURIComponent("Reenvio solicitado. Verifique sua caixa de entrada e spam.")}&email=${encodeURIComponent(email)}`,
+  );
 }

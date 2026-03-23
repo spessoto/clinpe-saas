@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Disparo de e-mail para paciente e profissional no momento do agendamento
   - Fallback assíncrono em fila persistente para novos agendamentos
   - Central interna de notificações com badge de não lidas e suporte a push web
+- **Ferramentas operacionais de autenticação e push**
+  - Novo botão de reenvio de e-mail de confirmação em `/sign-in` e `/sign-up`
+  - Script `push:vapid` para gerar chaves VAPID
+  - Script `ops:booking-flow` para validar o pipeline de booking, notificações e push
 
 ### Changed
 

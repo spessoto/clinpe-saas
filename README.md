@@ -112,6 +112,33 @@ Observacoes:
 - `EMAIL_QUEUE_CRON_SECRET` protege o endpoint interno `POST /api/internal/email-queue/process` para processamento da fila.
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT` habilitam push web para avisar o podologo sobre novas consultas.
 
+### Push web: onde configurar
+
+Essas variáveis não vêm do Supabase nem da Hostinger. Elas precisam ser geradas pela própria aplicação e cadastradas no ambiente onde o app roda.
+
+Gerar novas chaves localmente:
+
+```bash
+npm.cmd run push:vapid
+```
+
+O comando imprime exatamente estes três valores:
+
+- `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+- `VAPID_SUBJECT`
+
+Onde configurar:
+
+- Local: arquivo `.env.local`
+- Produção na Hostinger: hPanel -> Node.js -> Environment Variables da aplicação `pododesk.com.br`
+
+Depois de salvar na Hostinger, faça novo deploy/restart para que o servidor passe a enxergar os valores.
+
+Valor recomendado para `VAPID_SUBJECT`:
+
+- `mailto:contato@pododesk.com.br`
+
 ### Operacao da fila de e-mail
 
 Endpoint interno protegido por secret:
@@ -269,6 +296,19 @@ Checklist rapido quando houver mudanca de schema:
 npm run lint
 npm run test
 ```
+
+Teste operacional do fluxo de agendamento/notificações:
+
+```bash
+npm.cmd run ops:booking-flow -- --email=profissional@dominio.com --minutes=120
+```
+
+Esse script confere, para a janela informada:
+
+- agendamentos recentes do profissional
+- notificações internas criadas
+- subscriptions de push cadastradas
+- entradas de fallback na `email_queue`
 
 Modo watch:
 
