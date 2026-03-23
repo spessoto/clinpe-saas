@@ -116,11 +116,16 @@ export async function deleteHeadScriptAction(fd: FormData) {
 
 /** Called from root layout (no admin check — reads only active scripts) */
 export async function getActiveHeadScripts(): Promise<string[]> {
-  const admin = createAdminClient();
-  const { data } = await admin
-    .from("head_scripts")
-    .select("content")
-    .eq("is_active", true)
-    .order("created_at", { ascending: true });
-  return (data ?? []).map((r: { content: string }) => r.content);
+  try {
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("head_scripts")
+      .select("content")
+      .eq("is_active", true)
+      .order("created_at", { ascending: true });
+    if (error) return [];
+    return (data ?? []).map((r: { content: string }) => r.content);
+  } catch {
+    return [];
+  }
 }

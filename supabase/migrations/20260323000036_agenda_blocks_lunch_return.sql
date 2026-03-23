@@ -33,7 +33,7 @@ CREATE POLICY "Users can view own tenant agenda blocks"
   ON public.agenda_blocks FOR SELECT
   USING (
     tenant_id IN (
-      SELECT u.tenant_id FROM public.users u WHERE u.auth_id = auth.uid()
+      SELECT u.tenant_id FROM public.users u WHERE u.id = auth.uid()
     )
   );
 
@@ -42,10 +42,10 @@ CREATE POLICY "Users can insert own agenda blocks"
   ON public.agenda_blocks FOR INSERT
   WITH CHECK (
     tenant_id IN (
-      SELECT u.tenant_id FROM public.users u WHERE u.auth_id = auth.uid()
+      SELECT u.tenant_id FROM public.users u WHERE u.id = auth.uid()
     )
     AND professional_id IN (
-      SELECT u.id FROM public.users u WHERE u.auth_id = auth.uid()
+      SELECT u.id FROM public.users u WHERE u.id = auth.uid()
     )
   );
 
@@ -54,17 +54,17 @@ CREATE POLICY "Users can delete own agenda blocks"
   ON public.agenda_blocks FOR DELETE
   USING (
     tenant_id IN (
-      SELECT u.tenant_id FROM public.users u WHERE u.auth_id = auth.uid()
+      SELECT u.tenant_id FROM public.users u WHERE u.id = auth.uid()
     )
     AND (
       professional_id IN (
-        SELECT u.id FROM public.users u WHERE u.auth_id = auth.uid()
+        SELECT u.id FROM public.users u WHERE u.id = auth.uid()
       )
       OR EXISTS (
         SELECT 1 FROM public.users u
-        WHERE u.auth_id = auth.uid()
+        WHERE u.id = auth.uid()
           AND u.tenant_id = agenda_blocks.tenant_id
-          AND u.role = 'admin'
+          AND u.role = 'owner'
       )
     )
   );
