@@ -203,37 +203,21 @@ export async function resendConfirmationAction(formData: FormData) {
   );
 }
 
-export async function requestPasswordResetAction(formData: FormData) {
-  const email = getField(formData, "email").toLowerCase();
-  const recaptchaToken = getField(formData, "recaptcha_token");
-  const source =
-    getField(formData, "source") === "/sign-up" ? "/sign-up" : "/sign-in";
-
-  if (!email) {
-    redirect(
-      `${source}?error=${encodeURIComponent("Informe o e-mail para recuperação de senha.")}`,
-    );
+/**
+ * Verifica apenas o token reCAPTCHA server-side e retorna o resultado.
+ * O chamador (client component) é responsável por chamar resetPasswordForEmail
+ * diretamente via supabase browser client para que o PKCE verifier fique no
+ * localStorage do navegador — onde exchangeCodeForSession irá buscá-lo.
+ */
+export async function verifyRecaptchaAction(
+  token: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const ok = await verifyRecaptchaToken(token);
+  if (!ok) {
+    return {
+      ok: false,
+      error: "Verificação de segurança falhou. Tente novamente.",
+    };
   }
-
-  const recaptchaOk = await verifyRecaptchaToken(recaptchaToken);
-  if (!recaptchaOk) {
-    redirect(
-      `${source}?error=${encodeURIComponent("Verificação de segurança falhou. Tente novamente.")}&email=${encodeURIComponent(email)}`,
-    );
-  }
-
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${getAppUrl()}/reset-password`,
-  });
-
-  if (error) {
-    redirect(
-      `${source}?error=${encodeURIComponent(error.message)}&email=${encodeURIComponent(email)}`,
-    );
-  }
-
-  redirect(
-    `${source}?message=${encodeURIComponent("Enviamos instruções para redefinir sua senha. Verifique sua caixa de entrada e spam.")}&email=${encodeURIComponent(email)}`,
-  );
+  return { ok: true };
 }

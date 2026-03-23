@@ -18,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Script `ops:booking-flow` para validar o pipeline de booking, notificações e push
 - **Fluxo de recuperação de senha completo**
   - Nova página `/reset-password` valida o token, exige nova senha com confirmação e redireciona para login
-  - Action `requestPasswordResetAction` envia e-mail com link seguro via Supabase Auth
+  - `resetPasswordForEmail` chamado do browser client para que o verifier PKCE fique no localStorage (corrige "link inválido")
+  - `verifyRecaptchaAction` — nova Server Action que apenas valida o token reCAPTCHA e retorna `{ok, error}`; lógica de envio migrada para o componente client
+  - Mensagens de erro de rate limit e falha genérica exibidas em português no modal
 
 ### Changed
 
