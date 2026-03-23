@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-03-23
+
+### Added
+
+- **Banner de consentimento de cookies (LGPD)**
+  - Componente `CookieConsentBanner` fixo no rodapé com opções "Aceitar todos" e "Somente essenciais"
+  - Preferência persistida em `localStorage` (sem cookie adicional)
+  - Link "Saiba mais" direciona para `/politica-de-privacidade#cookies`
+  - reCAPTCHA v3 condicionado ao consentimento funcional (formulários continuam funcionando sem ele)
+
+- **Seção "Cookies e Tecnologias Similares" na Política de Privacidade**
+  - Cookies essenciais (sessão Supabase Auth) e funcionais (reCAPTCHA) documentados
+  - Âncora `#cookies` para link direto do banner
+  - Instruções de como gerenciar preferências pelo navegador
+
 ## [1.1.0] - 2026-03-23
 
 ### Added

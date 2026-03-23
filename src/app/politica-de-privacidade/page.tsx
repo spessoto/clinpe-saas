@@ -206,9 +206,43 @@ export default function PrivacyPolicyPage() {
             </p>
           </section>
 
+          <section id="cookies" className="space-y-3">
+            <h2 className="text-xl font-bold text-secondary">
+              8. Cookies e Tecnologias Similares
+            </h2>
+            <p>
+              O PodoDesk utiliza um número mínimo de cookies, estritamente
+              necessários para o funcionamento e a segurança da plataforma. Não
+              utilizamos cookies para rastreamento, publicidade ou análise
+              comportamental.
+            </p>
+            <p>
+              <strong>Cookies essenciais (sempre ativos):</strong> Cookies de
+              sessão gerados pelo Supabase Auth para manter sua autenticação
+              ativa. Sem eles, não é possível fazer login ou navegar pela área
+              protegida do sistema. Esses cookies são estritamente técnicos e
+              não coletam dados pessoais.
+            </p>
+            <p>
+              <strong>Cookies funcionais (desativáveis):</strong> O Google
+              reCAPTCHA v3 é utilizado para proteger formulários de login e
+              cadastro contra bots. Ele pode definir cookies próprios do Google.
+              Você pode optar por não carregar o reCAPTCHA através do banner de
+              consentimento exibido no primeiro acesso ao site. Formulários
+              continuam funcionando normalmente sem ele.
+            </p>
+            <p>
+              <strong>Como gerenciar suas preferências:</strong> No primeiro
+              acesso, um banner permite que você escolha entre aceitar todos os
+              cookies ou somente os essenciais. Sua preferência é armazenada
+              localmente no navegador (localStorage) e pode ser redefinida
+              limpando os dados do site nas configurações do navegador.
+            </p>
+          </section>
+
           <section className="space-y-3">
             <h2 className="text-xl font-bold text-secondary">
-              8. Contato e Dúvidas
+              9. Contato e Dúvidas
             </h2>
             <p>
               Se você tiver qualquer dúvida sobre esta Política de Privacidade,

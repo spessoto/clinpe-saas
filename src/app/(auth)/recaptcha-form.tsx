@@ -8,6 +8,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { hasFunctionalConsent } from "@/lib/cookie-consent";
+
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
 
 function shouldUseRecaptcha() {
@@ -48,6 +50,7 @@ export function RecaptchaForm({
   useEffect(() => {
     if (
       !useRecaptcha ||
+      !hasFunctionalConsent() ||
       document.querySelector(`script[src*="recaptcha/api.js"]`)
     )
       return;
