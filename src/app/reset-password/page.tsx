@@ -9,6 +9,20 @@ import { createClient } from "@/lib/supabase/client";
 
 type ResetStatus = "checking" | "ready" | "invalid" | "saving";
 
+function toFriendlyPasswordError(message: string) {
+  const lower = message.toLowerCase();
+  const isPasswordPolicyError =
+    lower.includes("password should be") ||
+    lower.includes("password") ||
+    lower.includes("characters");
+
+  if (isPasswordPolicyError) {
+    return "A senha precisa ter pelo menos 8 caracteres, com letra maiúscula, letra minúscula, número e símbolo.";
+  }
+
+  return "Não foi possível atualizar a senha agora. Tente novamente em instantes.";
+}
+
 export default function ResetPasswordPage() {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -83,8 +97,8 @@ export default function ResetPasswordPage() {
       formData.get("confirm_password") ?? "",
     ).trim();
 
-    if (password.length < 6) {
-      setError("A nova senha deve ter pelo menos 6 caracteres.");
+    if (password.length < 8) {
+      setError("A nova senha deve ter pelo menos 8 caracteres.");
       return;
     }
 
@@ -102,7 +116,7 @@ export default function ResetPasswordPage() {
     });
 
     if (updateError) {
-      setError(updateError.message);
+      setError(toFriendlyPasswordError(updateError.message));
       setStatus("ready");
       return;
     }
@@ -176,7 +190,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 name="password"
                 required
-                minLength={6}
+                minLength={8}
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
               />
             </label>
@@ -189,7 +203,7 @@ export default function ResetPasswordPage() {
                 type="password"
                 name="confirm_password"
                 required
-                minLength={6}
+                minLength={8}
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
               />
             </label>

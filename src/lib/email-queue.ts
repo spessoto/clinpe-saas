@@ -117,7 +117,7 @@ async function enqueueEmailEvent(input: {
     payload: input.payload,
     status: "pending",
     attempts: 0,
-    max_attempts: 3,
+    max_attempts: 5,
     next_attempt_at: new Date().toISOString(),
   });
 
@@ -174,6 +174,14 @@ export async function processPendingEmailQueue(input?: { limit?: number }) {
   const adminClient = createAdminClient();
   const limit = Math.max(1, Math.min(input?.limit ?? 20, 100));
   const nowIso = new Date().toISOString();
+
+  // Rescue items that exhausted retries under a previous lower max_attempts.
+  await adminClient
+    .from("email_queue")
+    .update({ max_attempts: 5, next_attempt_at: nowIso })
+    .eq("status", "failed")
+    .is("next_attempt_at", null)
+    .lt("max_attempts", 5);
 
   const { data: rows, error } = await adminClient
     .from("email_queue")
