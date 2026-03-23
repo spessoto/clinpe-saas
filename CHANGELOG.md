@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-23
+
+### Added
+
+- **Gerenciamento de scripts no `<head>` via painel admin**
+  - Nova página `/admin/settings` com CRUD de snippets HTML injetados no `<head>`
+  - Formulário de adição com rótulo e conteúdo (aceita `<script>`, `<meta>`, `<link>`, etc.)
+  - Lista de scripts instalados com edição inline, toggle ativo/inativo e exclusão com confirmação
+  - Componente `HeadScriptsLoader` injeta snippets ativos no `<head>` de todas as páginas
+  - Link "Configurações" adicionado ao sidebar do painel admin
+  - Migration `20260323000037_head_scripts.sql` com tabela `head_scripts` e RLS
+
 ## [1.1.1] - 2026-03-23
 
 ### Added
