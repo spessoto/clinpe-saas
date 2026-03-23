@@ -36,7 +36,7 @@ export default function PrivacyPolicyPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-secondary md:text-4xl">
             Política de Privacidade – PodoDesk
           </h1>
-          <p className="text-sm text-muted">Última atualização: 21/03/2026</p>
+          <p className="text-sm text-muted">Última atualização: 23/03/2026</p>
         </header>
 
         <div className="space-y-6 text-sm leading-7 text-foreground md:text-base">
@@ -212,9 +212,9 @@ export default function PrivacyPolicyPage() {
             </h2>
             <p>
               O PodoDesk utiliza um número mínimo de cookies, estritamente
-              necessários para o funcionamento e a segurança da plataforma. Não
-              utilizamos cookies para rastreamento, publicidade ou análise
-              comportamental.
+              necessários para o funcionamento e a segurança da plataforma.
+              Recursos analíticos e de medição só são carregados após
+              consentimento explícito do visitante.
             </p>
             <p>
               <strong>Cookies essenciais (sempre ativos):</strong> Cookies de
@@ -222,6 +222,13 @@ export default function PrivacyPolicyPage() {
               ativa. Sem eles, não é possível fazer login ou navegar pela área
               protegida do sistema. Esses cookies são estritamente técnicos e
               não coletam dados pessoais.
+            </p>
+            <p>
+              <strong>Tecnologias técnicas sem perfilamento:</strong> O Google
+              Search Console pode exigir uma meta tag de verificação de domínio
+              para comprovar a titularidade do site perante o Google. Essa
+              verificação é técnica, não comportamental, e não ativa medições
+              analíticas por si só.
             </p>
             <p>
               <strong>Cookies funcionais (desativáveis):</strong> O Google
@@ -232,11 +239,20 @@ export default function PrivacyPolicyPage() {
               continuam funcionando normalmente sem ele.
             </p>
             <p>
+              <strong>Cookies e identificadores analíticos (opcionais):</strong>
+              O Google Analytics e o Microsoft Clarity podem ser utilizados para
+              medir audiência, desempenho de páginas, mapas de calor e navegação
+              agregada dos visitantes. Esses scripts só devem ser ativados após
+              consentimento expresso, e podem empregar cookies, identificadores
+              online e tecnologias equivalentes geridos por Google e Microsoft.
+            </p>
+            <p>
               <strong>Como gerenciar suas preferências:</strong> No primeiro
-              acesso, um banner permite que você escolha entre aceitar todos os
-              cookies ou somente os essenciais. Sua preferência é armazenada
-              localmente no navegador (localStorage) e pode ser redefinida
-              limpando os dados do site nas configurações do navegador.
+              acesso, um banner permite aceitar apenas o necessário ou
+              personalizar separadamente categorias funcionais e analíticas. A
+              preferência fica armazenada localmente no navegador (localStorage)
+              e pode ser revisada a qualquer momento pelo botão "Cookies" no
+              site.
             </p>
           </section>
 

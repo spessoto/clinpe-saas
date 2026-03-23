@@ -4,9 +4,9 @@ import {
   getHeadScripts,
   createHeadScriptAction,
   updateHeadScriptAction,
+  deleteHeadScriptAction,
   type HeadScript,
 } from "./actions";
-import { DeleteScriptButton } from "./delete-script-button";
 
 export default async function AdminSettingsPage({
   searchParams,
@@ -55,6 +55,30 @@ export default async function AdminSettingsPage({
               placeholder="Ex.: Google Analytics, Meta Pixel"
               className="w-full"
             />
+          </div>
+
+          <div>
+            <label
+              htmlFor="new-consent-category"
+              className="mb-1 block text-sm font-semibold text-foreground"
+            >
+              Categoria LGPD
+            </label>
+            <select
+              id="new-consent-category"
+              name="consent_category"
+              defaultValue="essential"
+              className="w-full"
+            >
+              <option value="essential">Essencial / técnico</option>
+              <option value="functional">Funcional</option>
+              <option value="analytics">Analytics</option>
+            </select>
+            <p className="mt-1 text-xs text-muted">
+              Use <strong>Analytics</strong> para Google Analytics e Microsoft
+              Clarity. Use <strong>Essencial / técnico</strong> para meta tag de
+              verificação do Google Search Console.
+            </p>
           </div>
 
           <div>
@@ -116,6 +140,10 @@ async function ScriptsList() {
         <h2 className="text-lg font-bold text-secondary">
           Scripts instalados ({scripts.length})
         </h2>
+        <p className="mt-1 text-sm text-muted">
+          Scripts analytics só serão carregados após consentimento explícito do
+          visitante.
+        </p>
       </div>
 
       {scripts.map((s) => (
@@ -143,6 +171,9 @@ function ScriptRow({ script }: { script: HeadScript }) {
         />
         <span className="flex-1 text-sm font-semibold text-foreground">
           {script.label || "(sem rótulo)"}
+        </span>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+          {formatConsentCategory(script.consent_category)}
         </span>
         <span className="text-xs text-muted">{dateLabel}</span>
         <svg
@@ -188,6 +219,21 @@ function ScriptRow({ script }: { script: HeadScript }) {
           />
         </div>
 
+        <div>
+          <label className="mb-1 block text-xs font-semibold text-muted">
+            Categoria LGPD
+          </label>
+          <select
+            name="consent_category"
+            defaultValue={script.consent_category}
+            className="w-full text-sm"
+          >
+            <option value="essential">Essencial / técnico</option>
+            <option value="functional">Funcional</option>
+            <option value="analytics">Analytics</option>
+          </select>
+        </div>
+
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
@@ -206,9 +252,23 @@ function ScriptRow({ script }: { script: HeadScript }) {
             Salvar alterações
           </button>
 
-          <DeleteScriptButton id={script.id} />
+          <form action={deleteHeadScriptAction}>
+            <input type="hidden" name="id" value={script.id} />
+            <button
+              type="submit"
+              className="cursor-pointer rounded-xl border border-red-200 px-4 py-1.5 text-xs font-semibold text-destructive transition hover:bg-red-50"
+            >
+              Excluir
+            </button>
+          </form>
         </div>
       </form>
     </details>
   );
+}
+
+function formatConsentCategory(value: HeadScript["consent_category"]) {
+  if (value === "analytics") return "Analytics";
+  if (value === "functional") return "Funcional";
+  return "Essencial";
 }

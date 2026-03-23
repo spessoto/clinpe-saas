@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-03-23
+
+### Changed
+
+- **Consentimento LGPD refinado para scripts de terceiros**
+  - Scripts no `<head>` agora possuem categoria de consentimento: `essential`, `functional` ou `analytics`
+  - Google Analytics e Microsoft Clarity podem ser cadastrados como `analytics` e só carregam após consentimento explícito
+  - Google Search Console pode ser cadastrado como script/meta tag `essential` sem bloqueio analítico
+  - Banner de cookies agora permite personalizar categorias funcionais e analíticas separadamente
+  - Preferências podem ser reabertas posteriormente pelo botão `Cookies`
+  - Política de privacidade atualizada para documentar Google Analytics, Google Search Console e Microsoft Clarity
+
 ## [1.2.0] - 2026-03-23
 
 ### Added

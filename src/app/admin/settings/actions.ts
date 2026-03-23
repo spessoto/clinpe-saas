@@ -10,10 +10,21 @@ export type HeadScript = {
   id: string;
   label: string;
   content: string;
+  consent_category: "essential" | "functional" | "analytics";
   is_active: boolean;
   created_at: string;
   updated_at: string;
 };
+
+type ActiveHeadScript = Pick<
+  HeadScript,
+  "id" | "label" | "content" | "consent_category"
+>;
+
+function parseConsentCategory(value: FormDataEntryValue | null) {
+  if (value === "functional" || value === "analytics") return value;
+  return "essential" as const;
+}
 
 export async function getHeadScripts(): Promise<HeadScript[]> {
   await requireAdminAccess();
@@ -31,6 +42,7 @@ export async function createHeadScriptAction(fd: FormData) {
 
   const label = (fd.get("label") as string | null)?.trim() ?? "";
   const content = (fd.get("content") as string | null)?.trim() ?? "";
+  const consentCategory = parseConsentCategory(fd.get("consent_category"));
 
   if (!content) {
     redirect(
@@ -40,7 +52,9 @@ export async function createHeadScriptAction(fd: FormData) {
   }
 
   const admin = createAdminClient();
-  const { error } = await admin.from("head_scripts").insert({ label, content });
+  const { error } = await admin
+    .from("head_scripts")
+    .insert({ label, content, consent_category: consentCategory });
 
   if (error) {
     redirect(
@@ -61,6 +75,7 @@ export async function updateHeadScriptAction(fd: FormData) {
   const id = fd.get("id") as string | null;
   const label = (fd.get("label") as string | null)?.trim() ?? "";
   const content = (fd.get("content") as string | null)?.trim() ?? "";
+  const consentCategory = parseConsentCategory(fd.get("consent_category"));
   const isActive = fd.get("is_active") === "on";
 
   if (!id || !content) {
@@ -73,6 +88,7 @@ export async function updateHeadScriptAction(fd: FormData) {
     .update({
       label,
       content,
+      consent_category: consentCategory,
       is_active: isActive,
       updated_at: new Date().toISOString(),
     })
@@ -115,16 +131,16 @@ export async function deleteHeadScriptAction(fd: FormData) {
 }
 
 /** Called from root layout (no admin check — reads only active scripts) */
-export async function getActiveHeadScripts(): Promise<string[]> {
+export async function getActiveHeadScripts(): Promise<ActiveHeadScript[]> {
   try {
     const admin = createAdminClient();
     const { data, error } = await admin
       .from("head_scripts")
-      .select("content")
+      .select("id, label, content, consent_category")
       .eq("is_active", true)
       .order("created_at", { ascending: true });
     if (error) return [];
-    return (data ?? []).map((r: { content: string }) => r.content);
+    return (data ?? []) as ActiveHeadScript[];
   } catch {
     return [];
   }
