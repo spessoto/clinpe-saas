@@ -8,23 +8,18 @@ export type StoredPushSubscription = {
   auth: string;
 };
 
-let isConfigured = false;
-
-function getWebPushClient() {
+function configureAndGetClient() {
   const env = getOptionalWebPushEnv();
 
   if (!env) {
     return null;
   }
 
-  if (!isConfigured) {
-    webpush.setVapidDetails(
-      env.VAPID_SUBJECT,
-      env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-      env.VAPID_PRIVATE_KEY,
-    );
-    isConfigured = true;
-  }
+  webpush.setVapidDetails(
+    env.VAPID_SUBJECT,
+    env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+    env.VAPID_PRIVATE_KEY,
+  );
 
   return webpush;
 }
@@ -33,10 +28,13 @@ export async function sendWebPushNotification(
   subscription: StoredPushSubscription,
   payload: Record<string, unknown>,
 ) {
-  const client = getWebPushClient();
+  const client = configureAndGetClient();
 
   if (!client) {
-    return { delivered: false, reason: "missing_config" as const };
+    console.error(
+      "[web-push] VAPID não configurado — NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY ou VAPID_SUBJECT ausentes no env.",
+    );
+    throw new Error("Configuração VAPID ausente para envio de push.");
   }
 
   await client.sendNotification(
@@ -49,6 +47,4 @@ export async function sendWebPushNotification(
     },
     JSON.stringify(payload),
   );
-
-  return { delivered: true as const };
 }

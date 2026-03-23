@@ -79,7 +79,15 @@ export async function sendNewAppointmentPushNotification(input: {
     .select("id, endpoint, p256dh, auth")
     .eq("user_id", input.userId);
 
-  if (error || !subscriptions || subscriptions.length === 0) {
+  if (error) {
+    console.error("[push] Erro ao buscar push_subscriptions:", error.message);
+    return;
+  }
+
+  if (!subscriptions || subscriptions.length === 0) {
+    console.warn(
+      `[push] Nenhuma subscription encontrada para user_id=${input.userId}. O profissional precisa ativar push em /notifications.`,
+    );
     return;
   }
 
@@ -105,6 +113,14 @@ export async function sendNewAppointmentPushNotification(input: {
             .from("push_subscriptions")
             .delete()
             .eq("id", subscription.id);
+          console.warn(
+            `[push] Subscription ${subscription.id} removida (endpoint expirado, status ${statusCode}).`,
+          );
+        } else {
+          console.error(
+            `[push] Falha ao enviar push para subscription ${subscription.id}:`,
+            error instanceof Error ? error.message : error,
+          );
         }
       }
     }),

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { sendTestPushAction } from "./actions";
+
 type Props = {
   vapidPublicKey: string | null;
 };
@@ -26,6 +28,7 @@ export function NotificationPreferences({ vapidPublicKey }: Props) {
   >("unsupported");
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isPending, setIsPending] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -197,6 +200,26 @@ export function NotificationPreferences({ vapidPublicKey }: Props) {
           className="btn-outline-modern disabled:cursor-not-allowed disabled:opacity-50"
         >
           Desativar neste navegador
+        </button>
+
+        <button
+          type="button"
+          disabled={isTesting || !isSubscribed}
+          className="btn-outline-modern disabled:cursor-not-allowed disabled:opacity-50"
+          onClick={async () => {
+            setIsTesting(true);
+            setMessage(null);
+            try {
+              const result = await sendTestPushAction();
+              setMessage(result.message);
+            } catch {
+              setMessage("Erro ao testar push.");
+            } finally {
+              setIsTesting(false);
+            }
+          }}
+        >
+          {isTesting ? "Enviando..." : "Testar push"}
         </button>
       </div>
     </article>
