@@ -216,6 +216,8 @@ export function AgendaCalendar({ monthKey, events, blocks }: Props) {
   const [newAppointmentDate, setNewAppointmentDate] = useState<string | null>(
     null,
   );
+  const [showMobileNewAppointment, setShowMobileNewAppointment] =
+    useState(false);
   const [showBlockForm, setShowBlockForm] = useState(false);
 
   const monthDate = useMemo(() => parseMonthKey(monthKey), [monthKey]);
@@ -270,12 +272,23 @@ export function AgendaCalendar({ monthKey, events, blocks }: Props) {
   return (
     <>
       <article className="surface-card p-4 md:hidden">
-        <h3 className="text-sm font-semibold text-secondary">
-          Consultas do mês
-        </h3>
-        <p className="mt-1 text-xs text-muted">
-          Toque em um dia para ver as consultas.
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-secondary">
+              Consultas do mês
+            </h3>
+            <p className="mt-1 text-xs text-muted">
+              Toque em um dia para ver as consultas.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowMobileNewAppointment(true)}
+            className="btn-gradient px-3 py-1.5 text-xs"
+          >
+            + Consulta
+          </button>
+        </div>
 
         <div className="mt-3 space-y-2">
           {calendarDays
@@ -689,6 +702,14 @@ export function AgendaCalendar({ monthKey, events, blocks }: Props) {
         initialDate={newAppointmentDate ?? ""}
         open={newAppointmentDate !== null}
         onClose={() => setNewAppointmentDate(null)}
+      />
+
+      <NewAppointmentDialog
+        monthKey={monthKey}
+        initialDate=""
+        open={showMobileNewAppointment}
+        onClose={() => setShowMobileNewAppointment(false)}
+        mobileSimpleMode
       />
     </>
   );

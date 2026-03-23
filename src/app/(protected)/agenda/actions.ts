@@ -5,9 +5,16 @@ import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
 import { getAvailableSlotsByTenantId } from "@/lib/booking";
-import { sendAppointmentDecisionEmailWithTimeout } from "@/lib/email";
-import { enqueueAppointmentDecisionEmail } from "@/lib/email-queue";
+import {
+  sendAppointmentDecisionEmailWithTimeout,
+  sendAppointmentNewBookingPatientEmail,
+} from "@/lib/email";
+import {
+  enqueueAppointmentDecisionEmail,
+  enqueueAppointmentNewBookingPatientEmail,
+} from "@/lib/email-queue";
 import type { AppointmentDecisionQueuePayload } from "@/lib/email-queue";
+import type { AppointmentNewBookingPatientQueuePayload } from "@/lib/email-queue";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -104,6 +111,20 @@ async function sendOrQueueDecisionEmail(
   }
 
   await enqueueAppointmentDecisionEmail({ tenantId, payload });
+}
+
+async function sendOrQueueNewBookingPatientEmail(
+  tenantId: string,
+  payload: AppointmentNewBookingPatientQueuePayload,
+) {
+  try {
+    await sendAppointmentNewBookingPatientEmail(payload);
+    return;
+  } catch {
+    // Direct send failed — fall through to queue
+  }
+
+  await enqueueAppointmentNewBookingPatientEmail({ tenantId, payload });
 }
 
 async function getManagedAppointment(appointmentId: string) {
@@ -438,8 +459,9 @@ export async function createManualAppointmentAction(formData: FormData) {
     );
   }
 
-  const { appUser } = await requireActiveTenant();
+  const { appUser, tenant } = await requireActiveTenant();
   const adminClient = createAdminClient();
+  let warningMessage: string | null = null;
 
   // Resolve patient
   let patientId: string | null = null;
@@ -507,6 +529,13 @@ export async function createManualAppointmentAction(formData: FormData) {
     }
   }
 
+  const { data: patientRecord } = await adminClient
+    .from("patients")
+    .select("name, email")
+    .eq("id", patientId)
+    .eq("tenant_id", appUser.tenant_id)
+    .maybeSingle();
+
   // Validate slot is available
   const scheduledDate = scheduledAt.split("T")[0];
   const availableSlots = await getAvailableSlotsByTenantId({
@@ -547,11 +576,39 @@ export async function createManualAppointmentAction(formData: FormData) {
     );
   }
 
+  const patientName = patientRecord?.name ?? newPatientName;
+  const patientEmail = patientRecord?.email ?? newPatientEmail;
+
+  if (!patientEmail) {
+    warningMessage = appendWarning(
+      warningMessage,
+      "Consulta criada, mas o paciente não possui e-mail cadastrado.",
+    );
+  } else {
+    try {
+      await sendOrQueueNewBookingPatientEmail(appUser.tenant_id, {
+        to: patientEmail,
+        patientName,
+        clinicName: tenant.name,
+        professionalName: appUser.full_name,
+        scheduledAt,
+      });
+    } catch {
+      warningMessage = appendWarning(warningMessage, getFriendlyEmailWarning());
+    }
+  }
+
   revalidatePath("/agenda");
+
+  if (warningMessage) {
+    redirect(buildAgendaPath({ month, warning: warningMessage }));
+  }
+
   redirect(
     buildAgendaPath({
       month,
-      success: "Consulta adicionada com sucesso.",
+      success:
+        "Consulta adicionada com sucesso. E-mail de confirmação enviado ao paciente.",
     }),
   );
 }

@@ -16,7 +16,16 @@ type Props = {
   initialDate: string;
   open: boolean;
   onClose: () => void;
+  mobileSimpleMode?: boolean;
 };
+
+function getTodayDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 function formatSlotLabel(iso: string) {
   const date = new Date(iso);
@@ -31,10 +40,12 @@ export function NewAppointmentDialog({
   initialDate,
   open,
   onClose,
+  mobileSimpleMode = false,
 }: Props) {
   const [patientMode, setPatientMode] = useState<"existing" | "new">(
     "existing",
   );
+  const [selectedDate, setSelectedDate] = useState(initialDate || "");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -83,9 +94,9 @@ export function NewAppointmentDialog({
     };
   }, [searchQuery, searchPatients]);
 
-  // Load available slots when dialog opens with a date
+  // Load available slots when dialog opens and date is selected
   useEffect(() => {
-    if (!open || !initialDate) {
+    if (!open || !selectedDate) {
       return;
     }
 
@@ -94,7 +105,7 @@ export function NewAppointmentDialog({
     setSelectedSlot("");
     setAvailableSlots([]);
 
-    fetch(`/api/agenda/slots?date=${initialDate}`)
+    fetch(`/api/agenda/slots?date=${selectedDate}`)
       .then((response) => (response.ok ? response.json() : []))
       .then((data) => {
         if (!cancelled) {
@@ -110,27 +121,30 @@ export function NewAppointmentDialog({
     return () => {
       cancelled = true;
     };
-  }, [open, initialDate]);
+  }, [open, selectedDate]);
 
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setPatientMode("existing");
+      setPatientMode(mobileSimpleMode ? "new" : "existing");
       setSearchQuery("");
       setSearchResults([]);
       setSelectedPatient(null);
       setSelectedSlot("");
       setIsSubmitting(false);
+      setSelectedDate(initialDate || getTodayDateKey());
     }
-  }, [open]);
+  }, [open, initialDate, mobileSimpleMode]);
 
   if (!open) return null;
 
-  const dateLabel = initialDate
+  const effectivePatientMode = mobileSimpleMode ? "new" : patientMode;
+
+  const dateLabel = selectedDate
     ? new Date(
-        Number(initialDate.slice(0, 4)),
-        Number(initialDate.slice(5, 7)) - 1,
-        Number(initialDate.slice(8, 10)),
+        Number(selectedDate.slice(0, 4)),
+        Number(selectedDate.slice(5, 7)) - 1,
+        Number(selectedDate.slice(8, 10)),
       ).toLocaleDateString("pt-BR", {
         weekday: "long",
         day: "2-digit",
@@ -167,52 +181,76 @@ export function NewAppointmentDialog({
           className="mt-4 space-y-4"
         >
           <input type="hidden" name="month" value={monthKey} />
-          <input type="hidden" name="patient_mode" value={patientMode} />
-          {selectedPatient && patientMode === "existing" ? (
+          <input
+            type="hidden"
+            name="patient_mode"
+            value={effectivePatientMode}
+          />
+          {selectedPatient && effectivePatientMode === "existing" ? (
             <input type="hidden" name="patient_id" value={selectedPatient.id} />
           ) : null}
           <input type="hidden" name="scheduled_at" value={selectedSlot} />
 
-          {/* Patient mode toggle */}
-          <fieldset>
-            <legend className="mb-2 text-sm font-semibold text-foreground">
-              Paciente
-            </legend>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setPatientMode("existing");
-                  setSelectedPatient(null);
+          {initialDate ? null : (
+            <label className="block text-sm">
+              <span className="mb-1 block text-foreground">
+                Data da consulta *
+              </span>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(event) => {
+                  setSelectedDate(event.target.value);
+                  setSelectedSlot("");
                 }}
-                className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition ${
-                  patientMode === "existing"
-                    ? "bg-primary/10 text-primary"
-                    : "bg-slate-100 text-muted hover:bg-slate-200"
-                }`}
-              >
-                Paciente existente
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setPatientMode("new");
-                  setSelectedPatient(null);
-                  setSearchQuery("");
-                  setSearchResults([]);
-                }}
-                className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition ${
-                  patientMode === "new"
-                    ? "bg-primary/10 text-primary"
-                    : "bg-slate-100 text-muted hover:bg-slate-200"
-                }`}
-              >
-                Novo paciente
-              </button>
-            </div>
-          </fieldset>
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
+                required
+              />
+            </label>
+          )}
 
-          {patientMode === "existing" ? (
+          {/* Patient mode toggle */}
+          {mobileSimpleMode ? null : (
+            <fieldset>
+              <legend className="mb-2 text-sm font-semibold text-foreground">
+                Paciente
+              </legend>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPatientMode("existing");
+                    setSelectedPatient(null);
+                  }}
+                  className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition ${
+                    patientMode === "existing"
+                      ? "bg-primary/10 text-primary"
+                      : "bg-slate-100 text-muted hover:bg-slate-200"
+                  }`}
+                >
+                  Paciente existente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPatientMode("new");
+                    setSelectedPatient(null);
+                    setSearchQuery("");
+                    setSearchResults([]);
+                  }}
+                  className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition ${
+                    patientMode === "new"
+                      ? "bg-primary/10 text-primary"
+                      : "bg-slate-100 text-muted hover:bg-slate-200"
+                  }`}
+                >
+                  Novo paciente
+                </button>
+              </div>
+            </fieldset>
+          )}
+
+          {effectivePatientMode === "existing" ? (
             <div>
               <label className="block text-sm">
                 <span className="mb-1 block text-foreground">
@@ -282,7 +320,7 @@ export function NewAppointmentDialog({
                 <input
                   type="text"
                   name="new_patient_name"
-                  required={patientMode === "new"}
+                  required={effectivePatientMode === "new"}
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
                 />
               </label>
@@ -292,7 +330,7 @@ export function NewAppointmentDialog({
                 <input
                   type="tel"
                   name="new_patient_phone"
-                  required={patientMode === "new"}
+                  required={effectivePatientMode === "new"}
                   placeholder="(11) 99999-0000"
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
                 />
@@ -305,6 +343,7 @@ export function NewAppointmentDialog({
                 <input
                   type="email"
                   name="new_patient_email"
+                  required={mobileSimpleMode}
                   className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
                 />
               </label>
@@ -355,7 +394,7 @@ export function NewAppointmentDialog({
             disabled={
               isSubmitting ||
               !selectedSlot ||
-              (patientMode === "existing" && !selectedPatient)
+              (effectivePatientMode === "existing" && !selectedPatient)
             }
             className="btn-gradient w-full disabled:cursor-not-allowed disabled:opacity-50"
           >

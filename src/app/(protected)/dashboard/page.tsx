@@ -44,6 +44,7 @@ export default async function DashboardPage() {
       .from("appointments")
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", appUser.tenant_id)
+      .neq("status", "canceled")
       .gte("scheduled_at", start)
       .lt("scheduled_at", end),
     supabase
