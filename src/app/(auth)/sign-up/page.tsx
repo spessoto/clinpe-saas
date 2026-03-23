@@ -2,8 +2,8 @@ import Link from "next/link";
 
 import { signUpAction } from "@/app/auth-actions";
 import { BrandLogo } from "@/components/brand-logo";
+import { AuthHelpModals } from "../auth-help-modals";
 import { RecaptchaForm, RecaptchaSubmitButton } from "../recaptcha-form";
-import { ResendConfirmationForm } from "../resend-confirmation-form";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -137,7 +137,7 @@ export default async function SignUpPage({ searchParams }: Props) {
           </Link>
         </p>
 
-        <ResendConfirmationForm source="/sign-up" initialEmail={email} />
+        <AuthHelpModals source="/sign-up" initialEmail={email} />
       </section>
     </main>
   );

@@ -202,3 +202,38 @@ export async function resendConfirmationAction(formData: FormData) {
     `${source}?message=${encodeURIComponent("Reenvio solicitado. Verifique sua caixa de entrada e spam.")}&email=${encodeURIComponent(email)}`,
   );
 }
+
+export async function requestPasswordResetAction(formData: FormData) {
+  const email = getField(formData, "email").toLowerCase();
+  const recaptchaToken = getField(formData, "recaptcha_token");
+  const source =
+    getField(formData, "source") === "/sign-up" ? "/sign-up" : "/sign-in";
+
+  if (!email) {
+    redirect(
+      `${source}?error=${encodeURIComponent("Informe o e-mail para recuperação de senha.")}`,
+    );
+  }
+
+  const recaptchaOk = await verifyRecaptchaToken(recaptchaToken);
+  if (!recaptchaOk) {
+    redirect(
+      `${source}?error=${encodeURIComponent("Verificação de segurança falhou. Tente novamente.")}&email=${encodeURIComponent(email)}`,
+    );
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${getAppUrl()}/reset-password`,
+  });
+
+  if (error) {
+    redirect(
+      `${source}?error=${encodeURIComponent(error.message)}&email=${encodeURIComponent(email)}`,
+    );
+  }
+
+  redirect(
+    `${source}?message=${encodeURIComponent("Enviamos instruções para redefinir sua senha. Verifique sua caixa de entrada e spam.")}&email=${encodeURIComponent(email)}`,
+  );
+}

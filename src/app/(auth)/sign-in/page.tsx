@@ -2,8 +2,8 @@ import Link from "next/link";
 
 import { signInAction } from "@/app/auth-actions";
 import { BrandLogo } from "@/components/brand-logo";
+import { AuthHelpModals } from "../auth-help-modals";
 import { RecaptchaForm } from "../recaptcha-form";
-import { ResendConfirmationForm } from "../resend-confirmation-form";
 import { SignInSubmitButton } from "./sign-in-submit-button";
 
 type Props = {
@@ -82,7 +82,7 @@ export default async function SignInPage({ searchParams }: Props) {
           </Link>
         </p>
 
-        <ResendConfirmationForm source="/sign-in" initialEmail={email} />
+        <AuthHelpModals source="/sign-in" initialEmail={email} />
       </section>
     </main>
   );

@@ -14,11 +14,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fallback assíncrono em fila persistente para novos agendamentos
   - Central interna de notificações com badge de não lidas e suporte a push web
 - **Ferramentas operacionais de autenticação e push**
-  - Novo botão de reenvio de e-mail de confirmação em `/sign-in` e `/sign-up`
   - Script `push:vapid` para gerar chaves VAPID
   - Script `ops:booking-flow` para validar o pipeline de booking, notificações e push
+- **Fluxo de recuperação de senha completo**
+  - Nova página `/reset-password` valida o token, exige nova senha com confirmação e redireciona para login
+  - Action `requestPasswordResetAction` envia e-mail com link seguro via Supabase Auth
 
 ### Changed
+
+- **UX de autenticação: ajuda discreta via links + popup**
+  - Bloco de reenvio de confirmação inline substituído por dois links de texto discretos abaixo do formulário em `/sign-in` e `/sign-up`
+  - Clicar em "Não recebeu o e-mail de confirmação?" ou "Esqueci minha senha" abre overlay focado com campo de e-mail e reCAPTCHA
+  - Componente `AuthHelpModals` unifica os dois fluxos; `ResendConfirmationForm` removido
+
+- **reCAPTCHA v3 com bypass automático em localhost**
+  - Em `localhost` e `127.0.0.1`, o formulário submete sem executar o widget para evitar falha por domínio não cadastrado
+  - Comportamento de produção inalterado
 
 - **Agenda e booking totalmente internos ao sistema**
   - Remoção da dependência de Google Calendar nas rotas, UI, agenda e disponibilidade
@@ -31,6 +42,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Exclusão de profissionais mantém consultas e pacientes sem reatribuição automática
   - Histórico do paciente passa a mostrar o snapshot do nome do profissional removido
   - Trigger no banco impede reatribuir depois consultas órfãs de profissionais excluídos
+
+- **Segurança do banco (Supabase linter)**
+  - RLS habilitado em `billing_plan_prices` e `email_queue`
+  - `search_path` fixado em todas as funções sinalizadas como mutable
+  - Extensão `unaccent` movida para schema `extensions`
 
 ## [1.0.8] - 2026-03-22
 

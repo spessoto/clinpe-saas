@@ -10,6 +10,14 @@ import {
 
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? "";
 
+function shouldUseRecaptcha() {
+  if (!SITE_KEY) return false;
+  if (typeof window === "undefined") return true;
+
+  const host = window.location.hostname;
+  return host !== "localhost" && host !== "127.0.0.1";
+}
+
 const PendingCtx = createContext(false);
 
 export function useRecaptchaPending() {
@@ -35,21 +43,25 @@ export function RecaptchaForm({
   children,
 }: RecaptchaFormProps) {
   const [isPending, startTransition] = useTransition();
+  const useRecaptcha = shouldUseRecaptcha();
 
   useEffect(() => {
-    if (!SITE_KEY || document.querySelector(`script[src*="recaptcha/api.js"]`))
+    if (
+      !useRecaptcha ||
+      document.querySelector(`script[src*="recaptcha/api.js"]`)
+    )
       return;
     const s = document.createElement("script");
     s.src = `https://www.google.com/recaptcha/api.js?render=${encodeURIComponent(SITE_KEY)}`;
     s.async = true;
     document.head.appendChild(s);
-  }, []);
+  }, [useRecaptcha]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    if (SITE_KEY) {
+    if (useRecaptcha) {
       try {
         const gr = (window as unknown as { grecaptcha: GRecaptcha }).grecaptcha;
         await new Promise<void>((resolve) => gr.ready(resolve));
