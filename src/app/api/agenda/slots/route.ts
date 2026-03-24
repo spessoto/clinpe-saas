@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAvailableSlotsByTenantId } from "@/lib/booking";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const {
@@ -10,7 +12,12 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json([], { status: 401 });
+    return NextResponse.json([], {
+      status: 401,
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
   }
 
   const { data: profile } = await supabase
@@ -20,13 +27,22 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!profile?.tenant_id) {
-    return NextResponse.json([], { status: 403 });
+    return NextResponse.json([], {
+      status: 403,
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
   }
 
   const date = request.nextUrl.searchParams.get("date")?.trim() ?? "";
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return NextResponse.json([]);
+    return NextResponse.json([], {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    });
   }
 
   const slots = await getAvailableSlotsByTenantId({
@@ -35,5 +51,9 @@ export async function GET(request: NextRequest) {
     date,
   });
 
-  return NextResponse.json(slots);
+  return NextResponse.json(slots, {
+    headers: {
+      "Cache-Control": "no-store, max-age=0",
+    },
+  });
 }

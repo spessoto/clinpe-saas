@@ -105,7 +105,9 @@ export function NewAppointmentDialog({
     setSelectedSlot("");
     setAvailableSlots([]);
 
-    fetch(`/api/agenda/slots?date=${selectedDate}`)
+    fetch(`/api/agenda/slots?date=${encodeURIComponent(selectedDate)}`, {
+      cache: "no-store",
+    })
       .then((response) => (response.ok ? response.json() : []))
       .then((data) => {
         if (!cancelled) {
