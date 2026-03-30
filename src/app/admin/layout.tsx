@@ -32,6 +32,12 @@ export default async function AdminLayout({
             Visão geral
           </Link>
           <Link
+            href="/admin/analytics"
+            className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
+          >
+            Análises
+          </Link>
+          <Link
             href="/admin/users"
             className="rounded-xl px-3 py-2 font-semibold text-white transition hover:bg-white/18"
           >

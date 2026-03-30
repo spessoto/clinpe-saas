@@ -156,11 +156,14 @@ export async function getAdminUsersList(
     new Set(baseUsers.map((user) => user.tenant_id)),
   );
   const userIds = baseUsers.map((user) => user.id);
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
-  const monthEnd = new Date(monthStart);
-  monthEnd.setMonth(monthEnd.getMonth() + 1);
+  // UTC-safe month boundaries
+  const now = new Date();
+  const monthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+  );
+  const monthEnd = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
+  );
 
   const [
     tenantsResult,

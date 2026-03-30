@@ -122,8 +122,6 @@ export default async function AdminDashboardPage({
   next7Days.setDate(next7Days.getDate() + 7);
   const next30Days = new Date(now);
   next30Days.setDate(next30Days.getDate() + 30);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
   const [clients, usersCountResult] = await Promise.all([
     fetchAllTenantsForKpis(),
@@ -145,6 +143,14 @@ export default async function AdminDashboardPage({
     .filter((client) => hasTenantAccess(client))
     .map((client) => client.id);
 
+  // UTC-safe month boundaries — avoids off-by-one when server timezone ≠ database UTC
+  const utcMonthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+  );
+  const utcMonthEnd = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
+  );
+
   const [totalPatients, appointmentsThisMonth, completedThisMonth] =
     await Promise.all([
       countRowsByActiveTenants({
@@ -154,19 +160,20 @@ export default async function AdminDashboardPage({
       countRowsByActiveTenants({
         table: "appointments",
         tenantIds: activeTenantIds,
-        monthStartIso: monthStart.toISOString(),
-        monthEndIso: monthEnd.toISOString(),
+        monthStartIso: utcMonthStart.toISOString(),
+        monthEndIso: utcMonthEnd.toISOString(),
         excludeCanceled: true,
       }),
       countRowsByActiveTenants({
         table: "appointments",
         tenantIds: activeTenantIds,
-        monthStartIso: monthStart.toISOString(),
-        monthEndIso: monthEnd.toISOString(),
+        monthStartIso: utcMonthStart.toISOString(),
+        monthEndIso: utcMonthEnd.toISOString(),
         status: "completed",
       }),
     ]);
 
+  const totalClients = clients.length;
   const activeClients = activeTenantIds.length;
   const permanentFreeClients = clients.filter(
     (client) => client.is_permanent_free_plan,
@@ -187,8 +194,13 @@ export default async function AdminDashboardPage({
     const effectiveTrialEnd = getEffectiveTrialEnd(client);
     return effectiveTrialEnd >= now && effectiveTrialEnd <= next7Days;
   }).length;
+  // Only count tenants with active subscriptions (not trials) expiring in 30 days
   const renewalsNext30Days = clients.filter((client) => {
-    if (!client.subscription_expires_at || client.is_permanent_free_plan) {
+    if (
+      !client.subscription_expires_at ||
+      client.is_permanent_free_plan ||
+      client.subscription_status !== "active"
+    ) {
       return false;
     }
 
@@ -196,6 +208,11 @@ export default async function AdminDashboardPage({
     return renewalDate >= now && renewalDate <= next30Days;
   }).length;
   const cards = [
+    {
+      title: "Clientes cadastrados",
+      value: totalClients,
+      tone: "bg-secondary/10 text-secondary",
+    },
     {
       title: "Clientes ativos",
       value: activeClients,

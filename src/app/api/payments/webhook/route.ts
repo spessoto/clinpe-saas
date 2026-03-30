@@ -44,10 +44,12 @@ function mapAsaasStatus(status: string): "trialing" | "active" | "past_due" {
 
 function parseExternalReference(reference: string | null) {
   if (!reference) return null;
-  const [tenantId, tier, maxStr] = reference.split("|");
+  const [tenantId, tier, maxStr, periodRaw] = reference.split("|");
   const maxPatients = Number.parseInt(maxStr, 10);
   if (!tenantId || !tier || Number.isNaN(maxPatients)) return null;
-  return { tenantId, tier, maxPatients };
+  const period =
+    periodRaw === "monthly" || periodRaw === "annual" ? periodRaw : null;
+  return { tenantId, tier, maxPatients, period };
 }
 
 async function fetchAsaasSubscription(
@@ -197,6 +199,9 @@ export async function POST(request: NextRequest) {
     if (parsedRef) {
       updatePayload.billing_tier = parsedRef.tier;
       updatePayload.max_patients_allowed = parsedRef.maxPatients;
+      if (parsedRef.period) {
+        updatePayload.subscription_period = parsedRef.period;
+      }
     }
 
     const { error } = await supabase
