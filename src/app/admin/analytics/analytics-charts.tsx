@@ -68,16 +68,23 @@ function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 }
 
 function formatBRLShort(value: number) {
-  if (value >= 1000) {
-    return `R$${(value / 1000).toFixed(1)}k`;
-  }
-  return `R$${value.toFixed(0)}`;
+  return Number(value ?? 0).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function formatDecimal(value: number) {
+  return Number(value ?? 0).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 // ─── Shared chart config ─────────────────────────────────────────────────────
@@ -225,13 +232,13 @@ export function AnalyticsCharts({
         />
         <SummaryCard
           label="Taxa de conversão"
-          value={`${conversionRate}%`}
+          value={`${formatDecimal(conversionRate)}%`}
           sub={`${paidTenants} de ${summaryCards.totalTenants} clientes pagantes`}
           tone="bg-success/10 text-success"
         />
         <SummaryCard
           label="Consultas ativas (mês)"
-          value={currentMonthAppointments}
+          value={formatDecimal(currentMonthAppointments)}
           sub={`${activeTenants} clientes com acesso ativo`}
           tone="bg-primary/10 text-primary"
         />
@@ -255,7 +262,10 @@ export function AnalyticsCharts({
               <YAxis {...AXIS_PROPS} allowDecimals={false} />
               <Tooltip
                 {...TOOLTIP_STYLE}
-                formatter={(v) => [Number(v ?? 0), "Profissionais"]}
+                formatter={(v) => [
+                  formatDecimal(Number(v ?? 0)),
+                  "Profissionais",
+                ]}
               />
               <Bar
                 dataKey="signups"
@@ -281,7 +291,10 @@ export function AnalyticsCharts({
               />
               <XAxis dataKey="month" {...AXIS_PROPS} />
               <YAxis {...AXIS_PROPS} allowDecimals={false} />
-              <Tooltip {...TOOLTIP_STYLE} />
+              <Tooltip
+                {...TOOLTIP_STYLE}
+                formatter={(v) => [formatDecimal(Number(v ?? 0)), "Agendadas"]}
+              />
               <Bar
                 dataKey="appointments"
                 fill={COLOR_SECONDARY}
@@ -307,7 +320,7 @@ export function AnalyticsCharts({
               <XAxis dataKey="month" {...AXIS_PROPS} />
               <YAxis
                 {...AXIS_PROPS}
-                tickFormatter={formatBRLShort}
+                tickFormatter={(v) => `R$ ${formatBRLShort(Number(v ?? 0))}`}
                 width={60}
               />
               <Tooltip
@@ -338,7 +351,13 @@ export function AnalyticsCharts({
               />
               <XAxis dataKey="month" {...AXIS_PROPS} />
               <YAxis {...AXIS_PROPS} allowDecimals={false} />
-              <Tooltip {...TOOLTIP_STYLE} />
+              <Tooltip
+                {...TOOLTIP_STYLE}
+                formatter={(v, name) => [
+                  formatDecimal(Number(v ?? 0)),
+                  String(name ?? ""),
+                ]}
+              />
               <Legend
                 wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
                 iconType="circle"
@@ -376,7 +395,13 @@ export function AnalyticsCharts({
               />
               <XAxis dataKey="month" {...AXIS_PROPS} />
               <YAxis {...AXIS_PROPS} allowDecimals={false} />
-              <Tooltip {...TOOLTIP_STYLE} />
+              <Tooltip
+                {...TOOLTIP_STYLE}
+                formatter={(v, name) => [
+                  formatDecimal(Number(v ?? 0)),
+                  String(name ?? ""),
+                ]}
+              />
               <Legend
                 wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
                 iconType="circle"
@@ -416,7 +441,7 @@ export function AnalyticsCharts({
               <YAxis {...AXIS_PROPS} allowDecimals={false} />
               <Tooltip
                 {...TOOLTIP_STYLE}
-                formatter={(v) => [Number(v ?? 0), "Churns"]}
+                formatter={(v) => [formatDecimal(Number(v ?? 0)), "Churns"]}
               />
               <Bar
                 dataKey="churn"
@@ -460,7 +485,10 @@ export function AnalyticsCharts({
                 </Pie>
                 <Tooltip
                   {...TOOLTIP_STYLE}
-                  formatter={(v, name) => [Number(v ?? 0), String(name ?? "")]}
+                  formatter={(v, name) => [
+                    formatDecimal(Number(v ?? 0)),
+                    String(name ?? ""),
+                  ]}
                 />
                 <Legend
                   wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
@@ -470,7 +498,7 @@ export function AnalyticsCharts({
                     const payload = entry.payload as
                       | { value: number }
                       | undefined;
-                    return `${value} (${payload?.value ?? 0})`;
+                    return `${value} (${formatDecimal(payload?.value ?? 0)})`;
                   }}
                 />
               </PieChart>
@@ -511,7 +539,10 @@ export function AnalyticsCharts({
                 </Pie>
                 <Tooltip
                   {...TOOLTIP_STYLE}
-                  formatter={(v, name) => [Number(v ?? 0), String(name ?? "")]}
+                  formatter={(v, name) => [
+                    formatDecimal(Number(v ?? 0)),
+                    String(name ?? ""),
+                  ]}
                 />
                 <Legend
                   wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
@@ -521,7 +552,7 @@ export function AnalyticsCharts({
                     const payload = entry.payload as
                       | { value: number }
                       | undefined;
-                    return `${value} (${payload?.value ?? 0})`;
+                    return `${value} (${formatDecimal(payload?.value ?? 0)})`;
                   }}
                 />
               </PieChart>

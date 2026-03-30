@@ -28,7 +28,13 @@ type TenantRow = {
 
 type UserRow = { id: string; created_at: string };
 
-type AppointmentRow = { scheduled_at: string; status: string };
+type TenantUserRow = { tenant_id: string };
+
+type AppointmentRow = {
+  tenant_id: string;
+  scheduled_at: string;
+  status: string;
+};
 
 type PricingRow = {
   tier: string;
@@ -85,39 +91,57 @@ async function fetchAnalyticsData() {
   );
 
   // Fetch all data in parallel
-  const [tenantsResult, usersResult, appointmentsResult, pricingResult] =
-    await Promise.all([
-      // All tenants (no date filter — we need all-time for aggregation)
-      adminClient
-        .from("tenants")
-        .select(
-          "id, created_at, billing_tier, subscription_status, subscription_period, subscription_expires_at, trial_ends_at, trial_extension_days, is_permanent_free_plan",
-        )
-        .order("created_at", { ascending: true }),
+  const [
+    tenantsResult,
+    usersResult,
+    activeClientTenantsResult,
+    appointmentsResult,
+    pricingResult,
+  ] = await Promise.all([
+    // All tenants (no date filter — we need all-time for aggregation)
+    adminClient
+      .from("tenants")
+      .select(
+        "id, created_at, billing_tier, subscription_status, subscription_period, subscription_expires_at, trial_ends_at, trial_extension_days, is_permanent_free_plan",
+      )
+      .order("created_at", { ascending: true }),
 
-      // Non-admin users in the period
-      adminClient
-        .from("users")
-        .select("id, created_at")
-        .eq("is_admin", false)
-        .gte("created_at", periodStart.toISOString()),
+    // Non-admin users in the period
+    adminClient
+      .from("users")
+      .select("id, created_at")
+      .eq("is_admin", false)
+      .gte("created_at", periodStart.toISOString()),
 
-      // Appointments in the period
-      adminClient
-        .from("appointments")
-        .select("scheduled_at, status")
-        .gte("scheduled_at", periodStart.toISOString()),
+    // Existing active clients: tenants with at least one non-admin user.
+    // When a client is deleted from admin, user rows are removed and tenant can become orphan.
+    adminClient.from("users").select("tenant_id").eq("is_admin", false),
 
-      // Pricing reference
-      adminClient
-        .from("billing_plan_prices")
-        .select("tier, monthly_amount, annual_amount"),
-    ]);
+    // Appointments in the period
+    adminClient
+      .from("appointments")
+      .select("tenant_id, scheduled_at, status")
+      .gte("scheduled_at", periodStart.toISOString()),
+
+    // Pricing reference
+    adminClient
+      .from("billing_plan_prices")
+      .select("tier, monthly_amount, annual_amount"),
+  ]);
 
   const tenants = (tenantsResult.data ?? []) as TenantRow[];
   const users = (usersResult.data ?? []) as UserRow[];
+  const activeClientTenants = (activeClientTenantsResult.data ??
+    []) as TenantUserRow[];
   const appointments = (appointmentsResult.data ?? []) as AppointmentRow[];
   const pricing = (pricingResult.data ?? []) as PricingRow[];
+
+  const activeClientTenantIds = new Set(
+    activeClientTenants.map((row) => row.tenant_id),
+  );
+  const analyzableTenants = tenants.filter((tenant) =>
+    activeClientTenantIds.has(tenant.id),
+  );
 
   const monthLabels = buildMonthLabels(MONTHS);
 
@@ -154,7 +178,7 @@ async function fetchAnalyticsData() {
   // Tenant (clinic) signups per month (all time, also for conversion calc)
   const tenantSignupsByMonth = new Map<string, number>();
   const subscribedByMonth = new Map<string, number>();
-  for (const t of tenants) {
+  for (const t of analyzableTenants) {
     const k = monthKey(t.created_at);
     tenantSignupsByMonth.set(k, (tenantSignupsByMonth.get(k) ?? 0) + 1);
     if (
@@ -170,6 +194,10 @@ async function fetchAnalyticsData() {
   const completedByMonth = new Map<string, number>();
   const canceledByMonth = new Map<string, number>();
   for (const a of appointments) {
+    if (!activeClientTenantIds.has(a.tenant_id)) {
+      continue;
+    }
+
     const k = monthKey(a.scheduled_at);
     if (monthLabels.includes(k)) {
       appointmentsByMonth.set(k, (appointmentsByMonth.get(k) ?? 0) + 1);
@@ -193,7 +221,7 @@ async function fetchAnalyticsData() {
       Date.UTC(Number(yearStr), Number(monthStr), 1),
     ); // First day of next month = end boundary
     let monthRevenue = 0;
-    for (const t of tenants) {
+    for (const t of analyzableTenants) {
       // Tenant must have existed before end of month
       if (new Date(t.created_at) >= monthEndDate) continue;
       // Active subscription: status=active and not expired by month end
@@ -212,7 +240,7 @@ async function fetchAnalyticsData() {
   // Churn proxy: tenants whose subscription_expires_at fell within the month
   // AND subscription_status = past_due (i.e., they churned that month)
   const churnByMonth = new Map<string, number>();
-  for (const t of tenants) {
+  for (const t of analyzableTenants) {
     if (t.subscription_status !== "past_due" || !t.subscription_expires_at) {
       continue;
     }
@@ -237,7 +265,7 @@ async function fetchAnalyticsData() {
 
   // ── Plan distribution (current snapshot) ─────────────────────────────────
   const planCounts = { trial: 0, tier_1: 0, tier_2: 0, tier_3: 0, free: 0 };
-  for (const t of tenants) {
+  for (const t of analyzableTenants) {
     if (!hasTenantAccess(t)) continue;
     if (t.is_permanent_free_plan) {
       planCounts.free += 1;
@@ -261,7 +289,7 @@ async function fetchAnalyticsData() {
 
   // ── Period distribution (monthly vs annual) ────────────────────────────────
   const periodCounts = { monthly: 0, annual: 0, unknown: 0 };
-  for (const t of tenants) {
+  for (const t of analyzableTenants) {
     if (t.subscription_status !== "active") continue;
     if (!hasTenantAccess(t)) continue;
     if (t.subscription_period === "monthly") periodCounts.monthly += 1;
@@ -288,20 +316,24 @@ async function fetchAnalyticsData() {
 
   // MRR: sum of monthly equivalent for all currently active tenants
   let mrr = 0;
-  for (const t of tenants) {
+  for (const t of analyzableTenants) {
     if (t.subscription_status === "active" && hasTenantAccess(t)) {
       mrr += getMonthlyEquivalentPrice(t);
     }
   }
   mrr = Math.round(mrr * 100) / 100;
 
-  const totalTenants = tenants.length;
-  const activeTenants = tenants.filter((t) => hasTenantAccess(t)).length;
-  const paidTenants = tenants.filter(
+  const totalTenants = analyzableTenants.length;
+  const activeTenants = analyzableTenants.filter((t) =>
+    hasTenantAccess(t),
+  ).length;
+  const paidTenants = analyzableTenants.filter(
     (t) => t.subscription_status === "active" && hasTenantAccess(t),
   ).length;
   const conversionRate =
-    totalTenants > 0 ? Math.round((paidTenants / totalTenants) * 100) : 0;
+    totalTenants > 0
+      ? Number(((paidTenants / totalTenants) * 100).toFixed(2))
+      : 0;
 
   // Total appointments (current month, non-canceled)
   const currentMonthAppointments =
