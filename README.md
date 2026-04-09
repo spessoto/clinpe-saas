@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versão publicada: `v1.0.8`
+- Versão publicada: `v1.3.0`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -54,6 +54,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Sidebar responsiva por altura**: menu da área protegida compacta tipografia e espaçamento em telas baixas, preservando assinatura/logout no rodapé quando houver altura suficiente
 - **Admin users evoluído**: switch de admin, ações por ícone (editar/excluir), preservação do histórico de consultas ao excluir usuários e proibição de reatribuição automática para outros profissionais
 - **KPIs de admin com precisão operacional**: métricas atualizadas em tempo real, excluindo canceladas e considerando apenas base ativa quando aplicável
+- **Blog com Sanity CMS**: listagem pública em `/blog` e página dinâmica em `/blog/[slug]` com conteúdo rico (Portable Text)
 
 ## Requisitos locais
 
@@ -101,6 +102,11 @@ SMTP_FROM="NomeClinica <seu-email@seudominio.com>"
 
 # Fila de e-mail (processamento assíncrono via cron)
 EMAIL_QUEUE_CRON_SECRET=um-segredo-forte
+
+# Sanity CMS (blog)
+NEXT_PUBLIC_SANITY_PROJECT_ID=mzldy58m
+NEXT_PUBLIC_SANITY_DATASET=production
+NEXT_PUBLIC_SANITY_API_VERSION=2025-01-01
 ```
 
 Observacoes:
@@ -111,6 +117,7 @@ Observacoes:
 - `SMTP_*` sao obrigatorias para o envio de e-mail em novas consultas, confirmacoes e cancelamentos. Funciona com Hostinger (porta 465), Gmail (porta 587 + senha de app) ou Resend.
 - `EMAIL_QUEUE_CRON_SECRET` protege o endpoint interno `POST /api/internal/email-queue/process` para processamento da fila.
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT` habilitam push web para avisar o podologo sobre novas consultas.
+- `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET` e `NEXT_PUBLIC_SANITY_API_VERSION` habilitam a leitura de artigos do blog via Sanity.
 
 ### Push web: onde configurar
 

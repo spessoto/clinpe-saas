@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-04-09
+
+### Added
+
+- **Blog CMS com Sanity integrado ao app**
+  - Estrutura de schema `post` no Studio Sanity com `title`, `slug`, `mainImage`, `excerpt` e `body` (Portable Text)
+  - Nova listagem pública de artigos em `/blog` com grid de cards (imagem, título e resumo)
+  - Nova rota dinâmica de artigo em `/blog/[slug]` com renderização rica via `@portabletext/react`
+  - SEO por artigo com `generateMetadata` consumindo `title` e `excerpt` do Sanity
+  - Client dedicado `next-sanity` no app para queries GROQ server-side
+
+### Changed
+
+- **Versionamento do projeto atualizado para `v1.3.0`**
+  - Dependências de conteúdo adicionadas: `next-sanity` e `@portabletext/react`
+
+- **Sincronização de banco validada via CLI Supabase**
+  - `db:migrations` executado com local/remoto alinhados
+  - `db:push` executado sem pendências (`Remote database is up to date`)
+
 ## [1.2.1] - 2026-03-23
 
 ### Changed
