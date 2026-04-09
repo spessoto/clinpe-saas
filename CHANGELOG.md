@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-04-09
+
+### Changed
+
+- **POP com dados do cadastro corrigidos em `/pop-documents/[id]`**
+  - `{{ESTABELECIMENTO}}` e placeholders equivalentes agora usam o campo de cadastro "Nome da clínica"
+  - `{{REGISTRO_OU_CPF}}` e placeholders equivalentes agora usam registro profissional com fallback para "CPF ou CNPJ para faturamento"
+  - Formatação visual revisada com títulos/subtítulos para leitura e impressão
+  - Texto do manual revisado em português pt-BR
+
+- **Sincronização de banco validada via CLI Supabase**
+  - Migration `20260409000041_pop_manual_ptbr_format.sql` aplicada com sucesso no remoto
+  - Local/remoto alinhados em `41/41`
+
 ## [1.4.0] - 2026-04-09
 
 ### Added

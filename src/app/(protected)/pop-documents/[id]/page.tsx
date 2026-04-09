@@ -25,9 +25,35 @@ function injectProfessionalData(
 ) {
   return content
     .replaceAll("{{ESTABELECIMENTO}}", input.clinicName)
+    .replaceAll("[Nome da clínica]", input.clinicName)
+    .replaceAll("[Nome da clinica]", input.clinicName)
     .replaceAll("{{NOME_PROFISSIONAL}}", input.fullName)
+    .replaceAll("[Nome do Profissional e Registro]", input.fullName)
     .replaceAll("{{REGISTRO_OU_CPF}}", input.registrationOrCpf)
+    .replaceAll("[CPF ou CNPJ para faturamento]", input.registrationOrCpf)
     .replaceAll("{{REGISTRO}}", input.registrationOrCpf);
+}
+
+function getLineClassName(line: string) {
+  const trimmed = line.trim();
+
+  if (!trimmed) {
+    return "h-4";
+  }
+
+  if (/^MANUAL\sDE\sBOAS\sPRATICAS/i.test(trimmed)) {
+    return "mt-2 text-lg font-bold text-secondary";
+  }
+
+  if (/^POP\s\d+:/i.test(trimmed) || /^\d+\.\s/.test(trimmed)) {
+    return "mt-5 text-base font-bold text-foreground";
+  }
+
+  if (/^[A-ZÀ-Ú0-9\s\-()]+:$/.test(trimmed)) {
+    return "mt-4 text-sm font-semibold text-foreground";
+  }
+
+  return "text-sm leading-7 text-foreground";
 }
 
 type Props = {
@@ -38,6 +64,12 @@ export default async function PopDocumentDetailsPage({ params }: Props) {
   const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
   const { id } = await params;
+
+  const { data: tenantBranding } = await supabase
+    .from("tenants")
+    .select("name, cpf_cnpj")
+    .eq("id", tenant.id)
+    .maybeSingle();
 
   const { data: document } = await supabase
     .from("pop_documents")
@@ -53,11 +85,16 @@ export default async function PopDocumentDetailsPage({ params }: Props) {
   }
 
   const renderedContent = injectProfessionalData(document.content, {
-    clinicName: tenant.name,
+    clinicName: tenantBranding?.name ?? tenant.name,
     fullName: appUser.full_name,
     registrationOrCpf:
-      appUser.professional_register ?? tenant.cpf_cnpj ?? "Não informado",
+      appUser.professional_register ??
+      tenantBranding?.cpf_cnpj ??
+      tenant.cpf_cnpj ??
+      "Não informado",
   });
+
+  const renderedLines = renderedContent.split("\n");
 
   return (
     <section className="space-y-6">
@@ -89,9 +126,13 @@ export default async function PopDocumentDetailsPage({ params }: Props) {
       </div>
 
       <article className="surface-card p-8">
-        <pre className="whitespace-pre-wrap font-sans text-sm leading-7 text-foreground">
-          {renderedContent}
-        </pre>
+        <div className="font-sans">
+          {renderedLines.map((line, index) => (
+            <p key={`${index}-${line}`} className={getLineClassName(line)}>
+              {line || "\u00A0"}
+            </p>
+          ))}
+        </div>
       </article>
     </section>
   );
