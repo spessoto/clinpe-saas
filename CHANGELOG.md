@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-04-09
+
+### Changed
+
+- **Navegação pública e blog refinados**
+  - Header e footer adicionados às páginas `/blog` e `/blog/[slug]`, seguindo o padrão visual das páginas públicas
+  - Item `Blog` mantido apenas em menus públicos (header/footer)
+  - Item `Blog` removido dos menus internos (sidebar da área protegida e painel admin)
+
+- **Sincronização de banco validada via CLI Supabase**
+  - `db:migrations` executado com local/remoto alinhados
+  - `db:push` executado sem pendências (`Remote database is up to date`)
+
 ## [1.3.0] - 2026-04-09
 
 ### Added

@@ -166,6 +166,12 @@ export default async function Home() {
                   Preços
                 </a>
                 <Link
+                  href="/blog"
+                  className="rounded-lg px-3 py-2 font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  Blog
+                </Link>
+                <Link
                   href="/sign-in"
                   className="rounded-lg px-3 py-2 font-semibold text-slate-700 transition hover:bg-slate-100"
                 >
@@ -194,6 +200,12 @@ export default async function Home() {
             >
               Preços
             </a>
+            <Link
+              href="/blog"
+              className="text-sm font-bold tracking-tight text-slate-600 transition hover:text-primary"
+            >
+              Blog
+            </Link>
             <Link
               href="/sign-in"
               className="text-sm font-bold tracking-tight text-slate-600 transition hover:text-primary"
@@ -446,12 +458,12 @@ export default async function Home() {
                 >
                   Contato
                 </a>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
-                  href="#"
+                  href="/blog"
                 >
-                  Blog de Gestão
-                </a>
+                  Blog
+                </Link>
               </div>
 
               <div className="space-y-3">

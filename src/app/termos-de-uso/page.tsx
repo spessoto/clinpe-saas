@@ -24,6 +24,12 @@ export default function TermsOfUsePage() {
             >
               Início
             </Link>
+            <Link
+              href="/blog"
+              className="text-sm font-semibold text-slate-600 transition hover:text-primary"
+            >
+              Blog
+            </Link>
             <Link href="/sign-in" className="btn-gradient px-4 py-2 text-sm">
               Entrar
             </Link>
@@ -326,12 +332,12 @@ export default function TermsOfUsePage() {
                 >
                   Contato
                 </a>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
-                  href="#"
+                  href="/blog"
                 >
-                  Blog de Gestão
-                </a>
+                  Blog
+                </Link>
               </div>
 
               <div className="space-y-3">
