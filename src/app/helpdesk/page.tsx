@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Helpdesk | PodoDesk",
   description:
-    "Guia pratico para operar o PodoDesk no dia a dia da podologia: pacientes, agenda, prontuario, financeiro e esterilizacao.",
+    "Guia prático para operar o PodoDesk no dia a dia da podologia: pacientes, agenda, prontuário, financeiro e esterilização.",
 };
 
 export default function HelpdeskPage() {
@@ -29,7 +29,7 @@ export default function HelpdeskPage() {
               href="/"
               className="text-sm font-semibold text-slate-600 transition hover:text-primary"
             >
-              Inicio
+              Início
             </Link>
             <Link
               href="/blog"
@@ -56,13 +56,13 @@ export default function HelpdeskPage() {
             Helpdesk PodoDesk
           </p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-            Como operar o PodoDesk sem perder tempo com gestao
+            Como operar o PodoDesk sem perder tempo com gestão
           </h1>
           <p className="max-w-3xl text-sm leading-relaxed text-slate-700 md:text-base">
-            Voce terminou um atendimento, ainda precisa confirmar o proximo,
-            registrar a evolucao e lembrar de cobrar. Essa e a rotina real de
-            quem toca o consultorio. Este guia foi escrito para esse contexto,
-            com orientacoes objetivas para usar cada funcao da plataforma no
+            Você terminou um atendimento, ainda precisa confirmar o próximo,
+            registrar a evolução e lembrar de cobrar. Essa é a rotina real de
+            quem toca o consultório. Este guia foi escrito para esse contexto,
+            com orientações objetivas para usar cada função da plataforma no
             momento certo do dia.
           </p>
         </header>
@@ -70,45 +70,48 @@ export default function HelpdeskPage() {
         <article className="space-y-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Comeco rapido: acerte a base em 20 minutos
+              Começo rápido: acerte a base em 20 minutos
             </h2>
             <p className="text-slate-700">
-              Se voce esta comecando agora, abra nesta ordem:
+              Se você está começando agora, abra nesta ordem:
               <Link
                 href="/settings"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/settings
+                {" "}
+                /settings
               </Link>
               ,
               <Link
                 href="/patients"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/patients
+                {" "}
+                /patients
               </Link>
               e
               <Link
                 href="/agenda"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/agenda
+                {" "}
+                /agenda
               </Link>
               .
             </p>
             <p className="text-slate-700">
-              Em <strong>Configuracoes</strong>, ajuste nome da clinica,
-              horarios e duracao da consulta. Em <strong>Pacientes</strong>,
+              Em <strong>Configurações</strong>, ajuste nome da clínica,
+              horários e duração da consulta. Em <strong>Pacientes</strong>,
               cadastre sua base principal com dados completos e alertas de
-              saude. Em <strong>Agenda</strong>, revise o dia e confirme os
-              horarios mais criticos. Esse trio evita retrabalho ja na primeira
+              saúde. Em <strong>Agenda</strong>, revise o dia e confirme os
+              horários mais críticos. Esse trio evita retrabalho já na primeira
               semana.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Dashboard: o que olhar antes de comecar a atender
+              Dashboard: o que olhar antes de começar a atender
             </h2>
             <p className="text-slate-700">
               O painel em
@@ -116,23 +119,24 @@ export default function HelpdeskPage() {
                 href="/dashboard"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/dashboard
+                {" "}
+                /dashboard
               </Link>
-              mostra os indicadores que impactam sua operacao: consultas do
-              mes, pacientes ativos e alertas operacionais. Em vez de abrir dez
-              abas, use esse resumo para decidir a prioridade do dia.
+              mostra os indicadores que impactam sua operação: consultas do mês,
+              pacientes ativos e alertas operacionais. Em vez de abrir dez abas,
+              use esse resumo para decidir a prioridade do dia.
             </p>
             <p className="text-slate-700">
-              Regra pratica: se a agenda esta cheia e os retornos estao
-              atrasados, ajuste sua regua de retorno antes de abrir novos
-              horarios. Crescer a agenda sem controlar retorno aumenta faltas e
+              Regra prática: se a agenda está cheia e os retornos estão
+              atrasados, ajuste sua régua de retorno antes de abrir novos
+              horários. Crescer a agenda sem controlar retorno aumenta faltas e
               piora previsibilidade de caixa.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Pacientes: cadastro bem feito reduz erro clinico
+              Pacientes: cadastro bem feito reduz erro clínico
             </h2>
             <p className="text-slate-700">
               No modulo
@@ -140,23 +144,24 @@ export default function HelpdeskPage() {
                 href="/patients"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/patients
+                {" "}
+                /patients
               </Link>
-              , registre alem do basico: CPF, e-mail, endereco, contato de
-              emergencia e origem do paciente. Esses dados ajudam no financeiro,
+              , registre além do básico: CPF, e-mail, endereço, contato de
+              emergência e origem do paciente. Esses dados ajudam no financeiro,
               no recall e no relacionamento de longo prazo.
             </p>
             <p className="text-slate-700">
-              O historico de saude deve ser atualizado no cadastro para que os
-              alertas aparecam no perfil e no fluxo clinico. Se o paciente e
-              diabetico, usa anticoagulante ou tem alergia, isso precisa estar
-              visivel antes do inicio do procedimento.
+              O histórico de saúde deve ser atualizado no cadastro para que os
+              alertas apareçam no perfil e no fluxo clínico. Se o paciente é
+              diabético, usa anticoagulante ou tem alergia, isso precisa estar
+              visível antes do início do procedimento.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Prontuario e anamnese: registre uma vez, reaproveite sempre
+              Prontuário e anamnese: registre uma vez, reaproveite sempre
             </h2>
             <p className="text-slate-700">
               Em
@@ -164,22 +169,23 @@ export default function HelpdeskPage() {
                 href="/medical-records/new"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/medical-records/new
+                {" "}
+                /medical-records/new
               </Link>
-              , a anamnese e estruturada e o sistema reaproveita dados do
-              cadastro para acelerar o preenchimento. O objetivo e manter
-              consistencia clinica sem te prender em formulario longo.
+              , a anamnese é estruturada e o sistema reaproveita dados do
+              cadastro para acelerar o preenchimento. O objetivo é manter
+              consistência clínica sem te prender em formulário longo.
             </p>
             <p className="text-slate-700">
-              Use o registro fotografico em toda evolucao relevante. A foto com
-              data e contexto evita duvida em retorno, sustenta conduta clinica
-              e protege sua documentacao em caso de questionamento.
+              Use o registro fotográfico em toda evolução relevante. A foto com
+              data e contexto evita dúvida em retorno, sustenta conduta clínica
+              e protege sua documentação em caso de questionamento.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Agenda: confirmacao e cancelamento com menos ruido
+              Agenda: confirmação e cancelamento com menos ruído
             </h2>
             <p className="text-slate-700">
               Em
@@ -187,15 +193,17 @@ export default function HelpdeskPage() {
                 href="/agenda"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/agenda
+                {" "}
+                /agenda
               </Link>
-              , confirme ou cancele consultas direto no calendario. Isso atualiza
-              seu controle interno e dispara notificacao por e-mail para o
-              paciente sem depender de recado manual no meio do atendimento.
+              , confirme ou cancele consultas direto no calendário. Isso
+              atualiza seu controle interno e dispara notificação por e-mail
+              para o paciente sem depender de recado manual no meio do
+              atendimento.
             </p>
             <p className="text-slate-700">
-              Quando houver encaixe, confirme primeiro os horarios com maior
-              risco de ausencia. Essa acao simples reduz janela ociosa e melhora
+              Quando houver encaixe, confirme primeiro os horários com maior
+              risco de ausência. Essa ação simples reduz janela ociosa e melhora
               previsibilidade do dia.
             </p>
           </section>
@@ -205,27 +213,29 @@ export default function HelpdeskPage() {
               Autoagendamento: como usar sem perder controle
             </h2>
             <p className="text-slate-700">
-              O agendamento publico por profissional fica na rota com seu slug,
-              por exemplo <span className="font-semibold text-slate-900">/seu-slug</span>.
-              Configure seus dias e horarios em
+              O agendamento público por profissional fica na rota com seu slug,
+              por exemplo{" "}
+              <span className="font-semibold text-slate-900">/seu-slug</span>.
+              Configure seus dias e horários em
               <Link
                 href="/settings"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/settings
+                {" "}
+                /settings
               </Link>
               antes de divulgar o link.
             </p>
             <p className="text-slate-700">
-              Boa pratica: revise o link publico semanalmente no celular. Voce
-              verifica como o paciente enxerga a clinica e evita receber
+              Boa prática: revise o link público semanalmente no celular. Você
+              verifica como o paciente enxerga a clínica e evita receber
               agendamento fora da sua janela real de atendimento.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Financeiro e billing: decida com numero, nao por sensacao
+              Financeiro e billing: decida com número, não por sensação
             </h2>
             <p className="text-slate-700">
               Acompanhe transacoes em
@@ -233,28 +243,30 @@ export default function HelpdeskPage() {
                 href="/finance"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/finance
+                {" "}
+                /finance
               </Link>
               e revise plano, limite de pacientes e assinatura em
               <Link
                 href="/billing"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/billing
+                {" "}
+                /billing
               </Link>
               . Esse acompanhamento evita bloqueio operacional em momento de
               agenda cheia.
             </p>
             <p className="text-slate-700">
-              Se voce esta perto do limite de pacientes, planeje upgrade antes
-              de travar o cadastro. O custo de perder ritmo de atendimento e
+              Se você está perto do limite de pacientes, planeje upgrade antes
+              de travar o cadastro. O custo de perder ritmo de atendimento é
               maior do que o custo de ajustar o plano no tempo certo.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Esterilizacao: rastreabilidade que protege sua rotina
+              Esterilização: rastreabilidade que protege sua rotina
             </h2>
             <p className="text-slate-700">
               No modulo
@@ -262,22 +274,23 @@ export default function HelpdeskPage() {
                 href="/sterilization"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/sterilization
+                {" "}
+                /sterilization
               </Link>
-              , registre ciclos com materiais e status do indicador quimico.
-              Isso cria historico tecnico para auditoria e reduz erro de
+              , registre ciclos com materiais e status do indicador químico.
+              Isso cria histórico técnico para auditoria e reduz erro de
               processo no dia a dia.
             </p>
             <p className="text-slate-700">
-              Feche a semana emitindo o relatorio e validando pendencias. Cinco
-              minutos de revisao evitam lacunas de registro que viram problema
-              quando voce mais precisa da informacao.
+              Feche a semana emitindo o relatório e validando pendências. Cinco
+              minutos de revisão evitam lacunas de registro que viram problema
+              quando você mais precisa da informação.
             </p>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              POPs e notificacoes: padronize o que se repete
+              POPs e notificações: padronize o que se repete
             </h2>
             <p className="text-slate-700">
               Em
@@ -285,40 +298,43 @@ export default function HelpdeskPage() {
                 href="/pop-documents"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/pop-documents
+                {" "}
+                /pop-documents
               </Link>
-              , use os POPs para padronizar documentos recorrentes com seus dados
-              profissionais. Na central de
+              , use os POPs para padronizar documentos recorrentes com seus
+              dados profissionais. Na central de
               <Link
                 href="/notifications"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}notificacoes
+                {" "}
+                notificações
               </Link>
-              , acompanhe novas consultas e pendencias sem depender de memoria.
+              , acompanhe novas consultas e pendências sem depender de memória.
             </p>
             <p className="text-slate-700">
-              Operacao previsivel nasce de padrao. O que se repete no seu
-              consultorio precisa ter fluxo definido, nao improviso.
+              Operação previsível nasce de padrão. O que se repete no seu
+              consultório precisa ter fluxo definido, não improviso.
             </p>
           </section>
 
           <section className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-5">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-              Se algo nao sair como esperado
+              Se algo não sair como esperado
             </h2>
             <p className="text-slate-700">
-              Primeiro, revise dados de configuracao em
+              Primeiro, revise dados de configuração em
               <Link
                 href="/settings"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}/settings
+                {" "}
+                /settings
               </Link>
               . Depois, valide o impacto no modulo em que o problema apareceu.
-              Se ainda persistir, fale com nosso suporte e ja envie contexto:
-              tela, horario do ocorrido e paciente envolvido. Isso acelera muito
-              a correcao.
+              Se ainda persistir, fale com nosso suporte e já envie contexto:
+              tela, horário do ocorrido e paciente envolvido. Isso acelera muito
+              a correção.
             </p>
             <p className="text-slate-700">
               E-mail de suporte:
@@ -326,7 +342,8 @@ export default function HelpdeskPage() {
                 href="mailto:master@pododesk.com.br"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}master@pododesk.com.br
+                {" "}
+                master@pododesk.com.br
               </a>
               .
               <br />
@@ -335,7 +352,8 @@ export default function HelpdeskPage() {
                 href="tel:+5511937474389"
                 className="font-semibold text-primary hover:underline"
               >
-                {" "}+55 11 93747-4389
+                {" "}
+                +55 11 93747-4389
               </a>
               .
             </p>
@@ -348,7 +366,7 @@ export default function HelpdeskPage() {
           <div className="flex flex-col items-center space-y-10 text-center">
             <div className="space-y-6">
               <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-                Pronto para elevar o padrao da sua clinica?
+                Pronto para elevar o padrão da sua clínica?
               </h2>
               <Link
                 href="/sign-up"
@@ -368,7 +386,7 @@ export default function HelpdeskPage() {
                   className="h-auto w-40"
                 />
                 <p className="text-sm leading-relaxed text-slate-400">
-                  Gestao clinica com precisao asseptica. Desenvolvido por
+                  Gestão clínica com precisão asséptica. Desenvolvido por
                   especialistas para profissionais de alto rendimento.
                 </p>
               </div>
@@ -385,7 +403,7 @@ export default function HelpdeskPage() {
                   className="block text-slate-400 transition hover:text-white"
                   href="/#precos"
                 >
-                  Precos
+                  Preços
                 </a>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
@@ -429,7 +447,9 @@ export default function HelpdeskPage() {
             </div>
 
             <div className="flex w-full flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-sm text-slate-500 md:flex-row">
-              <span>(c) 2024 PodoDesk. Gestao clinica com precisao asseptica.</span>
+              <span>
+                (c) 2024 PodoDesk. Gestão clínica com precisão asséptica.
+              </span>
               <div className="flex gap-6">
                 <a className="transition hover:text-white" href="#">
                   LinkedIn

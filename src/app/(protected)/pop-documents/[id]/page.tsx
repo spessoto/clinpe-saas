@@ -1,19 +1,9 @@
 import { redirect } from "next/navigation";
 
+import { PopDownloadPdfButton } from "@/components/pop-download-pdf-button";
 import { PrintButton } from "@/components/print-button";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-
-function toDownloadFileName(title: string) {
-  return `${
-    title
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "pop-documento"
-  }.txt`;
-}
 
 function injectProfessionalData(
   content: string,
@@ -26,7 +16,6 @@ function injectProfessionalData(
   return content
     .replaceAll("{{ESTABELECIMENTO}}", input.clinicName)
     .replaceAll("[Nome da clínica]", input.clinicName)
-    .replaceAll("[Nome da clinica]", input.clinicName)
     .replaceAll("{{NOME_PROFISSIONAL}}", input.fullName)
     .replaceAll("[Nome do Profissional e Registro]", input.fullName)
     .replaceAll("{{REGISTRO_OU_CPF}}", input.registrationOrCpf)
@@ -41,7 +30,7 @@ function getLineClassName(line: string) {
     return "h-4";
   }
 
-  if (/^MANUAL\sDE\sBOAS\sPRATICAS/i.test(trimmed)) {
+  if (/^MANUAL\sDE\sBOAS\sPR[ÁA]TICAS/i.test(trimmed)) {
     return "mt-2 text-lg font-bold text-secondary";
   }
 
@@ -113,14 +102,11 @@ export default async function PopDocumentDetailsPage({ params }: Props) {
             {new Date(document.updated_at).toLocaleString("pt-BR")}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <a
-            href={`data:text/plain;charset=utf-8,${encodeURIComponent(renderedContent)}`}
-            download={toDownloadFileName(document.title)}
-            className="rounded-md border border-secondary px-4 py-2 text-sm font-semibold text-secondary hover:bg-secondary/5"
-          >
-            Baixar POP
-          </a>
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <PopDownloadPdfButton
+            title={document.title}
+            content={renderedContent}
+          />
           <PrintButton />
         </div>
       </div>

@@ -223,7 +223,7 @@ export default async function SettingsPage({ searchParams }: Props) {
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <label className="block text-sm">
               <span className="mb-1 block text-foreground">
-                Inicio do atendimento
+                Início do atendimento
               </span>
               <input
                 type="time"

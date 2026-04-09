@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-04-09
+
+### Added
+
+- **Exportação real em PDF no detalhe de POP (`/pop-documents/[id]`)**
+  - Novo componente client `PopDownloadPdfButton` com geração via `jsPDF`
+  - Download do documento em formato `.pdf`, mantendo layout operacional para uso em auditorias e rotina clínica
+
+### Changed
+
+- **Ações da página de POP ajustadas para impressão/PDF**
+  - Botões `Baixar POP` e `Imprimir` não aparecem na mídia de impressão (`print:hidden`), evitando contaminar o arquivo final
+
+- **Revisão textual PT-BR em fluxos operacionais**
+  - Correções de acentuação e padronização em `/helpdesk`, `/settings` e conteúdo de POP
+  - Migration `20260409000042_pop_manual_ptbr_accents.sql` criada para refletir os ajustes no template do banco
+
 ## [1.4.1] - 2026-04-09
 
 ### Changed
