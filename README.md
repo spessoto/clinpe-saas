@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versão publicada: `v1.3.1`
+- Versão publicada: `v1.3.2`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -55,6 +55,8 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Admin users evoluído**: switch de admin, ações por ícone (editar/excluir), preservação do histórico de consultas ao excluir usuários e proibição de reatribuição automática para outros profissionais
 - **KPIs de admin com precisão operacional**: métricas atualizadas em tempo real, excluindo canceladas e considerando apenas base ativa quando aplicável
 - **Blog com Sanity CMS**: listagem pública em `/blog` e página dinâmica em `/blog/[slug]` com conteúdo rico (Portable Text)
+- **Central de ajuda pública (`/helpdesk`)**: guia prático de operação por módulo para uso diário do SaaS
+- **Página pública de contato (`/contato`)**: formulário com envio SMTP para `master@pododesk.com.br` e canais oficiais de atendimento
 
 ## Requisitos locais
 

@@ -446,18 +446,18 @@ export default async function Home() {
 
               <div className="space-y-3">
                 <h4 className="mb-4 font-bold text-white">Suporte</h4>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
-                  href="#"
+                  href="/helpdesk"
                 >
                   Central de Ajuda
-                </a>
-                <a
-                  className="block text-slate-400 transition hover:text-white"
-                  href="#"
-                >
-                  Contato
-                </a>
+                </Link>
+                 <Link
+                   className="block text-slate-400 transition hover:text-white"
+                   href="/contato"
+                 >
+                   Contato
+                 </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/blog"
@@ -466,13 +466,13 @@ export default async function Home() {
                 </Link>
               </div>
 
-              <div className="space-y-3">
-                <h4 className="mb-4 font-bold text-white">Legal</h4>
-                <Link
-                  className="block text-slate-400 transition hover:text-white"
-                  href="/termos-de-uso"
-                >
-                  Termos de Uso
+               <div className="space-y-3">
+                 <h4 className="mb-4 font-bold text-white">Legal</h4>
+                 <Link
+                   className="block text-slate-400 transition hover:text-white"
+                   href="/termos-de-uso"
+                 >
+                   Termos de Uso
                 </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"

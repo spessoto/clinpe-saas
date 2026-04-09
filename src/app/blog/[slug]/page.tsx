@@ -1,3 +1,4 @@
+import React from "react";
 import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -95,6 +96,34 @@ export async function generateMetadata({
 
 export const revalidate = 60;
 
+const blogPortableTextComponents = {
+  block: {
+    h1: ({ children }: { children?: React.ReactNode }) => (
+      <h1 className="mb-4 mt-8 text-3xl font-bold leading-tight text-slate-900">
+        {children}
+      </h1>
+    ),
+    h2: ({ children }: { children?: React.ReactNode }) => (
+      <h2 className="mb-3 mt-7 text-2xl font-bold leading-snug text-slate-900">
+        {children}
+      </h2>
+    ),
+    h3: ({ children }: { children?: React.ReactNode }) => (
+      <h3 className="mb-2 mt-6 text-xl font-bold leading-snug text-slate-800">
+        {children}
+      </h3>
+    ),
+    h4: ({ children }: { children?: React.ReactNode }) => (
+      <h4 className="mb-2 mt-5 text-lg font-bold leading-snug text-slate-800">
+        {children}
+      </h4>
+    ),
+    normal: ({ children }: { children?: React.ReactNode }) => (
+      <p className="mb-4 leading-relaxed">{children}</p>
+    ),
+  },
+};
+
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
 
@@ -161,7 +190,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           </header>
 
           <section className="space-y-4 text-slate-700">
-            <PortableText value={post.body ?? []} />
+            <PortableText value={post.body ?? []} components={blogPortableTextComponents} />
           </section>
         </article>
       </section>
@@ -220,18 +249,18 @@ export default async function BlogPostPage({ params }: PageProps) {
 
               <div className="space-y-3">
                 <h4 className="mb-4 font-bold text-white">Suporte</h4>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
-                  href="#"
+                  href="/helpdesk"
                 >
                   Central de Ajuda
-                </a>
-                <a
-                  className="block text-slate-400 transition hover:text-white"
-                  href="#"
-                >
-                  Contato
-                </a>
+                </Link>
+                 <Link
+                   className="block text-slate-400 transition hover:text-white"
+                   href="/contato"
+                 >
+                   Contato
+                 </Link>
               </div>
 
               <div className="space-y-3">

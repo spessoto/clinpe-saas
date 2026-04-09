@@ -97,11 +97,11 @@ export default async function BlogPage() {
             Blog
           </p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
-            Artigos e conteudos mais recentes
+            Artigos e conteúdos mais recentes
           </h1>
           <p className="max-w-2xl text-sm text-slate-600 md:text-base">
-            Novidades, guias praticos e materiais para apoiar sua rotina
-            clinica.
+            Novidades, guias práticos e materiais para apoiar sua rotina
+            clínica.
           </p>
         </header>
 
@@ -138,7 +138,7 @@ export default async function BlogPage() {
                     </Link>
                   </CardTitle>
                   <CardDescription className="line-clamp-3">
-                    {post.excerpt ?? "Sem resumo disponivel."}
+                    {post.excerpt ?? "Sem resumo disponível."}
                   </CardDescription>
                 </CardHeader>
               </Card>
@@ -201,18 +201,18 @@ export default async function BlogPage() {
 
               <div className="space-y-3">
                 <h4 className="mb-4 font-bold text-white">Suporte</h4>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
-                  href="#"
+                  href="/helpdesk"
                 >
                   Central de Ajuda
-                </a>
-                <a
-                  className="block text-slate-400 transition hover:text-white"
-                  href="#"
-                >
-                  Contato
-                </a>
+                </Link>
+                 <Link
+                   className="block text-slate-400 transition hover:text-white"
+                   href="/contato"
+                 >
+                   Contato
+                 </Link>
               </div>
 
               <div className="space-y-3">

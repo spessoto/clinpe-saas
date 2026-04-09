@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-04-09
+
+### Added
+
+- **Central de ajuda operacional (`/helpdesk`)**
+  - Nova página pública com guia didático por módulo para operação diária do SaaS
+  - Conteúdo orientado ao perfil de podólogo autônomo, com foco em rotina prática de consultório
+  - Seções de uso para Dashboard, Pacientes, Prontuário, Agenda, Autoagendamento, Financeiro, Esterilização, POPs e Notificações
+
+- **Página de contato pública (`/contato`) com formulário funcional**
+  - Formulário com validações server-side e envio via SMTP
+  - Mensagens encaminhadas para `master@pododesk.com.br`
+  - Exibição dos canais de contato oficiais (e-mail e WhatsApp)
+
+### Changed
+
+- **Rodapé público atualizado com navegação de suporte real**
+  - Item `Central de Ajuda` dos rodapés públicos agora aponta para `/helpdesk`
+  - Item `Contato` dos rodapés públicos agora aponta para `/contato`
+
+- **Sincronização de banco validada via CLI Supabase**
+  - `db:migrations` executado com local/remoto alinhados (39/39)
+  - `db:push` executado sem pendências (`Remote database is up to date`)
+
 ## [1.3.1] - 2026-04-09
 
 ### Changed
