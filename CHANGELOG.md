@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-04-09
+
+### Added
+
+- **Manual de POP completo em `/pop-documents`**
+  - Novo template "Manual de Boas Praticas e Procedimentos Operacionais Padrao (POP)" com base legal (RDC 15/2012, RDC 222/2018 e RDC 63/2011)
+  - Injeção dinamica de placeholders com dados do cadastro: estabelecimento, nome profissional e registro/CPF
+  - Botao `Baixar POP` no detalhe do documento para uso operacional imediato
+
+### Changed
+
+- **Fallback de identificacao profissional no POP**
+  - Quando `professional_register` nao estiver preenchido, o documento usa `tenant.cpf_cnpj`
+
+- **Sincronizacao de banco validada via CLI Supabase**
+  - Migration `20260409000040_pop_manual_template.sql` aplicada com sucesso no remoto
+  - Local/remoto alinhados em `40/40`
+
 ## [1.3.2] - 2026-04-09
 
 ### Added

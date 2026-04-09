@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versão publicada: `v1.3.2`
+- Versão publicada: `v1.4.0`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -57,6 +57,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Blog com Sanity CMS**: listagem pública em `/blog` e página dinâmica em `/blog/[slug]` com conteúdo rico (Portable Text)
 - **Central de ajuda pública (`/helpdesk`)**: guia prático de operação por módulo para uso diário do SaaS
 - **Página pública de contato (`/contato`)**: formulário com envio SMTP para `master@pododesk.com.br` e canais oficiais de atendimento
+- **Modelo POP regulatório completo**: novo template do manual de boas práticas em `/pop-documents`, com substituição de estabelecimento/profissional/registro e fallback para CPF/CNPJ, além dos botões de imprimir e baixar
 
 ## Requisitos locais
 
@@ -215,6 +216,7 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260323000032_notifications_and_push.sql` — adiciona notificações internas e subscriptions de push web
 - `20260323000033_allow_user_delete_with_appointments.sql` — preserva consultas ao excluir profissionais, com snapshot do nome e `professional_id` anulável
 - `20260323000034_prevent_reassign_deleted_professional_appointments.sql` — impede reatribuição posterior de consultas órfãs de profissionais removidos
+- `20260409000040_pop_manual_template.sql` — adiciona template completo de POP, botão de download e seed para tenants existentes/novos
   Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e notificações.
 
 > **Atencao:** O nome dos arquivos de migration usa o formato `YYYYMMDDNNNNNN` (14 digitos sem underscore entre data e sequencia). Arquivos com o formato antigo `YYYYMMDD_NNNNNN` causam conflito de versao na CLI do Supabase.
