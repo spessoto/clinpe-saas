@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.4] - 2026-04-09
+
+### Changed
+
+- **PDF do POP alinhado ao branding e identificação da clínica**
+  - Texto ajustado para `Registro profissional ou CPF/CNPJ` no PDF
+  - Paleta visual do PDF atualizada com cores da PodoDesk
+  - Logo da clínica adicionada no rodapé do PDF (quando disponível)
+
 ## [1.4.3] - 2026-04-09
 
 ### Changed

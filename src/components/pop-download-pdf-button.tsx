@@ -6,6 +6,7 @@ type PopDownloadPdfButtonProps = {
   title: string;
   content: string;
   updatedAt?: string;
+  clinicLogoUrl?: string | null;
 };
 
 type LineType =
@@ -20,6 +21,59 @@ type ClassifiedLine = {
   text: string;
   type: LineType;
 };
+
+const PODODESK_COLORS = {
+  primary: [15, 143, 135] as const,
+  primarySoft: [229, 245, 243] as const,
+  secondary: [33, 66, 166] as const,
+  text: [31, 41, 55] as const,
+  muted: [95, 112, 134] as const,
+  line: [220, 224, 229] as const,
+};
+
+function normalizePdfContent(content: string) {
+  return content.replaceAll(
+    /Registro profissional ou CPF\/CNPJ para faturamento/gi,
+    "Registro profissional ou CPF/CNPJ",
+  );
+}
+
+async function loadImageAsDataUrl(imageUrl: string) {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      return null;
+    }
+
+    const blob = await response.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () =>
+        reject(new Error("Falha ao converter logo para data URL."));
+      reader.readAsDataURL(blob);
+    });
+
+    const dimensions = await new Promise<{ width: number; height: number }>(
+      (resolve, reject) => {
+        const image = new Image();
+        image.onload = () =>
+          resolve({
+            width: image.naturalWidth || image.width,
+            height: image.naturalHeight || image.height,
+          });
+        image.onerror = () =>
+          reject(new Error("Falha ao carregar dimensoes do logo."));
+        image.src = dataUrl;
+      },
+    );
+
+    const format = blob.type.toLowerCase().includes("png") ? "PNG" : "JPEG";
+    return { dataUrl, format, ...dimensions };
+  } catch {
+    return null;
+  }
+}
 
 function toPdfFileName(title: string) {
   return `${
@@ -36,16 +90,22 @@ export function PopDownloadPdfButton({
   title,
   content,
   updatedAt,
+  clinicLogoUrl,
 }: PopDownloadPdfButtonProps) {
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const normalizedContent = normalizePdfContent(content);
+    const clinicLogo = clinicLogoUrl
+      ? await loadImageAsDataUrl(clinicLogoUrl)
+      : null;
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const marginX = 52;
     const headerHeight = 64;
     const topOffset = 24;
-    const bottomMargin = 50;
+    const footerHeight = 44;
+    const bottomMargin = 24 + footerHeight;
     const textWidth = pageWidth - marginX * 2;
 
     const contentStartY = topOffset + headerHeight + 24;
@@ -80,12 +140,12 @@ export function PopDownloadPdfButton({
     };
 
     const drawPageHeader = () => {
-      doc.setFillColor(246, 248, 250);
+      doc.setFillColor(...PODODESK_COLORS.primarySoft);
       doc.rect(0, 0, pageWidth, topOffset + headerHeight, "F");
 
-      doc.setTextColor(31, 41, 55);
+      doc.setTextColor(...PODODESK_COLORS.secondary);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
+      doc.setFontSize(11);
       doc.text("Manual POP", marginX, topOffset + 18);
 
       doc.setFont("helvetica", "normal");
@@ -93,14 +153,54 @@ export function PopDownloadPdfButton({
       const updatedText = updatedAt
         ? `Atualizado em ${updatedAt}`
         : "Documento operacional";
+      doc.setTextColor(...PODODESK_COLORS.muted);
       doc.text(updatedText, marginX, topOffset + 34);
 
-      doc.setDrawColor(220, 224, 229);
+      doc.setDrawColor(...PODODESK_COLORS.primary);
       doc.line(
         marginX,
         topOffset + headerHeight,
         pageWidth - marginX,
         topOffset + headerHeight,
+      );
+    };
+
+    const drawPageFooter = (page: number, pageCount: number) => {
+      const footerTopY = pageHeight - footerHeight;
+
+      doc.setDrawColor(...PODODESK_COLORS.line);
+      doc.line(marginX, footerTopY, pageWidth - marginX, footerTopY);
+
+      if (clinicLogo && clinicLogo.width > 0 && clinicLogo.height > 0) {
+        const maxLogoWidth = 110;
+        const maxLogoHeight = 24;
+        const ratio = Math.min(
+          maxLogoWidth / clinicLogo.width,
+          maxLogoHeight / clinicLogo.height,
+        );
+        const logoWidth = Math.max(16, clinicLogo.width * ratio);
+        const logoHeight = Math.max(10, clinicLogo.height * ratio);
+
+        doc.addImage(
+          clinicLogo.dataUrl,
+          clinicLogo.format,
+          marginX,
+          footerTopY + 10,
+          logoWidth,
+          logoHeight,
+        );
+      }
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...PODODESK_COLORS.muted);
+      doc.text(
+        `Pagina ${page} de ${pageCount}`,
+        pageWidth - marginX,
+        pageHeight - 16,
+        {
+          align: "right",
+        },
       );
     };
 
@@ -126,11 +226,11 @@ export function PopDownloadPdfButton({
     doc.text(titleLines, marginX, y);
     y += titleLines.length * 22 + 10;
 
-    doc.setDrawColor(226, 232, 240);
+    doc.setDrawColor(...PODODESK_COLORS.line);
     doc.line(marginX, y, pageWidth - marginX, y);
     y += 14;
 
-    const lines = content.split("\n").map(classifyLine);
+    const lines = normalizedContent.split("\n").map(classifyLine);
 
     for (const line of lines) {
       if (line.type === "empty") {
@@ -183,13 +283,13 @@ export function PopDownloadPdfButton({
 
       doc.setFont("helvetica", fontStyle);
       doc.setFontSize(fontSize);
-      doc.setTextColor(17, 24, 39);
+      doc.setTextColor(...PODODESK_COLORS.text);
       doc.text(wrapped, x, y);
       y += wrapped.length * lineHeight + spacingAfter;
 
       if (line.type === "section") {
         y = ensurePageSpace(y, 8);
-        doc.setDrawColor(235, 238, 243);
+        doc.setDrawColor(...PODODESK_COLORS.line);
         doc.line(marginX, y - 2, pageWidth - marginX, y - 2);
       }
     }
@@ -197,17 +297,7 @@ export function PopDownloadPdfButton({
     const pageCount = doc.getNumberOfPages();
     for (let page = 1; page <= pageCount; page += 1) {
       doc.setPage(page);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(107, 114, 128);
-      doc.text(
-        `Pagina ${page} de ${pageCount}`,
-        pageWidth - marginX,
-        pageHeight - 24,
-        {
-          align: "right",
-        },
-      );
+      drawPageFooter(page, pageCount);
     }
 
     doc.save(toPdfFileName(title));

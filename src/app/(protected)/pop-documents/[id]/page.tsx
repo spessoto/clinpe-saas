@@ -56,7 +56,7 @@ export default async function PopDocumentDetailsPage({ params }: Props) {
 
   const { data: tenantBranding } = await supabase
     .from("tenants")
-    .select("name, cpf_cnpj")
+    .select("name, cpf_cnpj, logo_url")
     .eq("id", tenant.id)
     .maybeSingle();
 
@@ -107,6 +107,7 @@ export default async function PopDocumentDetailsPage({ params }: Props) {
             title={document.title}
             content={renderedContent}
             updatedAt={new Date(document.updated_at).toLocaleString("pt-BR")}
+            clinicLogoUrl={tenantBranding?.logo_url ?? tenant.logo_url ?? null}
           />
           <PrintButton />
         </div>
