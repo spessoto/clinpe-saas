@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-04-09
+
+### Changed
+
+- **Diagramação do PDF do POP aprimorada para leitura e impressão**
+  - Cabeçalho com contexto do manual e data de atualização
+  - Hierarquia visual para título, seções, subtítulos e itens de lista
+  - Paginação automática no rodapé (`Página X de Y`)
+  - Quebra de página e espaçamento otimizados para evitar cortes de conteúdo
+
 ## [1.4.2] - 2026-04-09
 
 ### Added

@@ -106,6 +106,7 @@ export default async function PopDocumentDetailsPage({ params }: Props) {
           <PopDownloadPdfButton
             title={document.title}
             content={renderedContent}
+            updatedAt={new Date(document.updated_at).toLocaleString("pt-BR")}
           />
           <PrintButton />
         </div>
