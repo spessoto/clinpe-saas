@@ -1,12 +1,12 @@
 {
   "name": "pododesk-blog",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "package.json",
   "license": "UNLICENSED",
   "scripts": {
     "build": "sanity build",
-    "deploy": "sanity deploy",
+    "deploy": "sanity deploy --url pododesk-blog.sanity.studio -y",
     "deploy-graphql": "sanity graphql deploy",
     "dev": "sanity dev",
     "start": "sanity start"

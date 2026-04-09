@@ -4,7 +4,7 @@ import {visionTool} from '@sanity/vision'
 import {schemaTypes} from './schemaTypes'
 
 export default defineConfig({
-  name: 'default',
+  name: 'pododesk-blog',
   title: 'PodoDesk Blog',
 
   projectId: 'mzldy58m',

@@ -1,9 +1,40 @@
-# Sanity Clean Content Studio
+# PodoDesk Blog Studio
 
-Congratulations, you have now installed the Sanity Content Studio, an open-source real-time content editing environment connected to the Sanity backend.
+Sanity Studio do blog PodoDesk, conectado ao projeto `mzldy58m` no dataset `production`.
 
-Now you can do the following things:
+## Requisitos
 
-- [Read “getting started” in the docs](https://www.sanity.io/docs/introduction/getting-started?utm_source=readme)
-- [Join the Sanity community](https://www.sanity.io/community/join?utm_source=readme)
-- [Extend and build plugins](https://www.sanity.io/docs/content-studio/extending?utm_source=readme)
+- Node.js 20+
+- npm
+- Sanity CLI autenticado (`npx sanity login`)
+
+## Comandos
+
+- `npm run dev`: roda o Studio localmente
+- `npm run build`: gera build de producao
+- `npm run deploy`: publica no hostname oficial `pododesk-blog.sanity.studio`
+
+## Configuracao de projeto
+
+- `projectId`: `mzldy58m`
+- `dataset`: `production`
+- `studio name` (slug): `pododesk-blog`
+- `deployment.appId`: `zq9k33uastnb6p9skblzsnzn`
+
+## Fluxo de release
+
+1. Atualize schemas e arquivos necessarios.
+2. Atualize `package.json` com a nova versao SemVer.
+3. Atualize `CHANGELOG.md` com os itens da release.
+4. Execute `npm run deploy`.
+5. Commit e tag:
+
+```bash
+git add .
+git commit -m "chore(release): vX.Y.Z"
+git tag -a vX.Y.Z -m "release: vX.Y.Z"
+```
+
+## Nota sobre Supabase
+
+As migrations do Supabase ficam no repositorio `clinpe-app` (pasta `supabase/migrations`).
