@@ -19,8 +19,10 @@ type EvolutionConnectionState = {
 };
 
 type EvolutionQRCodeResponse = {
-  base64?: string;
+  pairingCode?: string;
   code?: string;
+  base64?: string;
+  count?: number;
 };
 
 type EvolutionSendResponse = {

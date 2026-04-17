@@ -35,6 +35,27 @@ export async function GET() {
     return NextResponse.json({ status });
   } catch (err) {
     console.error("GET /api/whatsapp/instance/status error:", err);
+
+    // If Evolution API can't find the instance (likely deleted externally),
+    // clean up the orphaned reference so the user can reconnect.
+    try {
+      const errMsg = String(err);
+      if (errMsg.includes("404") || errMsg.includes("not exist")) {
+        const { tenant } = await requireActiveTenant();
+        const supabase = await createClient();
+        await supabase
+          .from("tenants")
+          .update({
+            evolution_instance_name: null,
+            evolution_instance_token: null,
+            whatsapp_status: "disconnected",
+          })
+          .eq("id", tenant.id);
+      }
+    } catch {
+      // ignore cleanup errors
+    }
+
     return NextResponse.json({ status: "disconnected" });
   }
 }

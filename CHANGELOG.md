@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-04-17
+
+### Fixed
+
+- **Diagnóstico e preparação para QR code da Evolution API**
+  - Identificado bug conhecido na Evolution API v2.2.3 ([#2504](https://github.com/EvolutionAPI/evolution-api/issues/2504)): `{count: 0}` sem base64
+  - Tipos atualizados em `evolution-api.ts` para formato de resposta v2.3+ (`pairingCode`, `code`, `base64`, `count`)
+  - UI mostra orientação de upgrade quando QR code não é gerado após 5 tentativas
+  - Rota `/api/whatsapp/instance/status` agora limpa referências órfãs quando instância não existe mais na Evolution API
+  - Solução: atualizar Evolution API para v2.3.7+ (`evoapicloud/evolution-api`)
+
 ## [2.0.1] - 2026-04-17
 
 ### Fixed

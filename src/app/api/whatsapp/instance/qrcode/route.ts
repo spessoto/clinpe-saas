@@ -19,6 +19,7 @@ export async function GET() {
     return NextResponse.json({
       base64: qrData.base64 ?? null,
       code: qrData.code ?? null,
+      count: qrData.count ?? 0,
     });
   } catch (err) {
     console.error("GET /api/whatsapp/instance/qrcode error:", err);

@@ -34,6 +34,7 @@ export function WhatsAppSettings({
 }: WhatsAppSettingsProps) {
   const [status, setStatus] = useState(initialStatus ?? "disconnected");
   const [qrBase64, setQrBase64] = useState<string | null>(null);
+  const [qrRetries, setQrRetries] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -70,6 +71,9 @@ export function WhatsAppSettings({
         const qrData = await qrRes.json();
         if (qrData.base64) {
           setQrBase64(qrData.base64);
+          setQrRetries(0);
+        } else {
+          setQrRetries((prev) => prev + 1);
         }
       } catch {
         // Silently ignore polling errors
@@ -96,6 +100,7 @@ export function WhatsAppSettings({
       }
 
       setStatus("qrcode");
+      setQrRetries(0);
       if (data.qrcode) {
         setQrBase64(data.qrcode);
       }
@@ -256,7 +261,21 @@ export function WhatsAppSettings({
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-muted">Carregando QR code...</p>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted">
+                    {qrRetries < 5
+                      ? "Carregando QR code..."
+                      : "O servidor não está gerando o QR code. Verifique se a Evolution API está na versão 2.3.7+."}
+                  </p>
+                  {qrRetries >= 5 && (
+                    <p className="text-xs text-amber-600">
+                      Dica: atualize a imagem Docker para{" "}
+                      <code className="rounded bg-amber-100 px-1">
+                        evoapicloud/evolution-api:v2.3.7
+                      </code>
+                    </p>
+                  )}
+                </div>
               )}
 
               <button
