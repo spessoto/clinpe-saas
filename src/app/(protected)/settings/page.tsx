@@ -88,6 +88,12 @@ export default async function SettingsPage({ searchParams }: Props) {
     .eq("tenant_id", tenant.id)
     .order("position");
 
+  const { data: whatsappEventTemplates } = await supabase
+    .from("whatsapp_event_templates")
+    .select("*")
+    .eq("tenant_id", tenant.id)
+    .order("event_type");
+
   const hasLunchBreak = Boolean(userSettings.lunch_start_time);
 
   const workingDays = userSettings.working_days ?? [1, 2, 3, 4, 5];
@@ -370,6 +376,7 @@ export default async function SettingsPage({ searchParams }: Props) {
       <WhatsAppSettings
         initialStatus={tenant.whatsapp_status}
         initialTemplates={whatsappTemplates ?? []}
+        initialEventTemplates={whatsappEventTemplates ?? []}
       />
     </section>
   );

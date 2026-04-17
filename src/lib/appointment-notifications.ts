@@ -10,6 +10,7 @@ import {
   createNewAppointmentNotification,
   sendNewAppointmentPushNotification,
 } from "@/lib/notifications";
+import { sendWhatsAppEventNotification } from "@/lib/whatsapp-notifications";
 
 async function sendOrQueuePatientEmail(input: {
   tenantId: string;
@@ -134,6 +135,18 @@ export async function notifyNewPublicAppointment(input: {
       }),
     );
   }
+
+  tasks.push(
+    sendWhatsAppEventNotification({
+      tenantId: input.tenantId,
+      eventType: "booking",
+      patientPhone: input.patientPhone,
+      patientName: input.patientName,
+      clinicName: input.clinicName,
+      professionalName: input.professionalName,
+      scheduledAt: input.scheduledAt,
+    }),
+  );
 
   await Promise.allSettled(tasks);
 }

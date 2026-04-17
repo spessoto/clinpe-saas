@@ -17,6 +17,7 @@ import type { AppointmentDecisionQueuePayload } from "@/lib/email-queue";
 import type { AppointmentNewBookingPatientQueuePayload } from "@/lib/email-queue";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendWhatsAppEventNotification } from "@/lib/whatsapp-notifications";
 
 function getField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -244,6 +245,17 @@ export async function confirmAppointmentAction(formData: FormData) {
           warningMessage = getFriendlyEmailWarning();
         }
       }
+
+      // WhatsApp notification (fire-and-forget)
+      sendWhatsAppEventNotification({
+        tenantId: appUser.tenant_id,
+        eventType: "confirmation",
+        patientPhone: appointment.patient?.phone ?? null,
+        patientName: appointment.patient?.name ?? "",
+        clinicName: tenant.name,
+        professionalName: appUser.full_name,
+        scheduledAt: appointment.scheduled_at,
+      });
     }
   } catch (error) {
     const message = getFriendlyActionError(
@@ -323,6 +335,17 @@ export async function cancelAppointmentAction(formData: FormData) {
           );
         }
       }
+
+      // WhatsApp notification (fire-and-forget)
+      sendWhatsAppEventNotification({
+        tenantId: appUser.tenant_id,
+        eventType: "cancellation",
+        patientPhone: appointment.patient?.phone ?? null,
+        patientName: appointment.patient?.name ?? "",
+        clinicName: tenant.name,
+        professionalName: appUser.full_name,
+        scheduledAt: appointment.scheduled_at,
+      });
     }
   } catch (error) {
     const message = getFriendlyActionError(

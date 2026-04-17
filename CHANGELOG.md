@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-04-17
+
+### Added
+
+- **WhatsApp automático em agendamento/confirmação/cancelamento**
+  - Ao agendar, confirmar ou cancelar uma consulta, o paciente recebe automaticamente uma mensagem via WhatsApp (se conectado e paciente tiver telefone)
+  - Templates editáveis separados dos lembretes: Agendamento, Confirmação e Cancelamento
+  - Nova seção "Mensagens de evento" no painel de configurações com toggle on/off e variáveis dinâmicas
+  - Nova tabela `whatsapp_event_templates` com RLS por tenant (migration `20260417000045`)
+  - Nova lib `whatsapp-notifications.ts` reutilizável (fire-and-forget, não bloqueia o fluxo)
+  - API routes: `GET/POST /api/whatsapp/event-templates`, `PUT /api/whatsapp/event-templates/[id]`
+  - Hooks em `notifyNewPublicAppointment()`, `confirmAppointmentAction()` e `cancelAppointmentAction()`
+
 ## [2.0.3] - 2026-04-17
 
 ### Changed

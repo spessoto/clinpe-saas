@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versão publicada: `v2.0.2`
+- Versão publicada: `v2.1.0`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -61,6 +61,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Lembretes de consulta via WhatsApp**: integração com Evolution API para envio automático de lembretes 24h antes da consulta, com configuração de instância, conexão via QR Code, templates personalizáveis e cron de disparo
 - **Configurações de WhatsApp por profissional**: painel em `/settings` para criar/excluir instância, visualizar QR Code, acompanhar status da conexão e testar envio de mensagem
 - **Retry e diagnóstico de QR Code**: contador de tentativas com orientação de upgrade quando a API não retorna o QR (bug conhecido do Evolution API < v2.3.7)
+- **Notificações WhatsApp automáticas por evento**: envio automático de mensagem ao paciente ao agendar, confirmar ou cancelar consulta, com templates editáveis separados dos lembretes de consulta
 
 ## Requisitos locais
 
@@ -253,6 +254,7 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260409000040_pop_manual_template.sql` — adiciona template completo de POP, botão de download e seed para tenants existentes/novos
 - `20260409000041_pop_manual_ptbr_format.sql` — corrige placeholders de cadastro do POP e revisa conteúdo/formatação em pt-BR
 - `20260417000044_whatsapp_simplify_reminders.sql` — tabelas de templates e log de lembretes WhatsApp com RLS por tenant
+- `20260417000045_whatsapp_event_templates.sql` — templates de mensagens de evento (agendamento/confirmação/cancelamento) com RLS por tenant
   Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e notificações.
 
 > **Atencao:** O nome dos arquivos de migration usa o formato `YYYYMMDDNNNNNN` (14 digitos sem underscore entre data e sequencia). Arquivos com o formato antigo `YYYYMMDD_NNNNNN` causam conflito de versao na CLI do Supabase.
@@ -376,5 +378,6 @@ npm run test:watch
 - `src/lib/notifications.ts`: notificacoes internas e disparo de push web
 - `src/lib/supabase`: clients server/browser/admin
 - `src/lib/evolution-api.ts`: client da Evolution API (criar/excluir instância, QR Code, enviar mensagem)
+- `src/lib/whatsapp-notifications.ts`: envio automático de WhatsApp por evento (agendamento/confirmação/cancelamento)
 - `src/components/whatsapp-settings.tsx`: painel de configuração WhatsApp para o profissional
 - `src/components/brand-logo.tsx`: logotipo da PodoDesk

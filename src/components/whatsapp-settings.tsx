@@ -12,9 +12,17 @@ type Template = {
   position: number;
 };
 
+type EventTemplate = {
+  id: string;
+  event_type: "booking" | "confirmation" | "cancellation";
+  message_template: string;
+  enabled: boolean;
+};
+
 type WhatsAppSettingsProps = {
   initialStatus: string | null;
   initialTemplates: Template[];
+  initialEventTemplates: EventTemplate[];
 };
 
 const AVAILABLE_VARS = [
@@ -28,9 +36,18 @@ const AVAILABLE_VARS = [
 const DEFAULT_TEMPLATE_MSG =
   "Olá, {{paciente}}! 👋\n\nLembramos que você tem uma consulta agendada:\n📅 Data: {{data}}\n🕐 Horário: {{horario}}\n👨‍⚕️ Profissional: {{profissional}}\n🏥 {{clinica}}\n\nAgradecemos a preferência!";
 
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  booking: "Agendamento",
+  confirmation: "Confirmação",
+  cancellation: "Cancelamento",
+};
+
+const EVENT_TYPES = ["booking", "confirmation", "cancellation"] as const;
+
 export function WhatsAppSettings({
   initialStatus,
   initialTemplates,
+  initialEventTemplates,
 }: WhatsAppSettingsProps) {
   const [status, setStatus] = useState(initialStatus ?? "disconnected");
   const [qrBase64, setQrBase64] = useState<string | null>(null);
@@ -41,6 +58,38 @@ export function WhatsAppSettings({
 
   const [templates, setTemplates] = useState<Template[]>(initialTemplates);
   const [saving, setSaving] = useState<string | null>(null);
+
+  const [eventTemplates, setEventTemplates] = useState<EventTemplate[]>(
+    initialEventTemplates,
+  );
+  const [savingEvent, setSavingEvent] = useState<string | null>(null);
+  const eventInitRef = useRef(false);
+
+  // Lazy-create default event templates if none exist
+  useEffect(() => {
+    if (eventInitRef.current || initialEventTemplates.length > 0) return;
+    eventInitRef.current = true;
+
+    (async () => {
+      const created: EventTemplate[] = [];
+      for (const et of EVENT_TYPES) {
+        try {
+          const res = await fetch("/api/whatsapp/event-templates", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ event_type: et }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            created.push(data);
+          }
+        } catch {
+          // ignore init errors
+        }
+      }
+      if (created.length > 0) setEventTemplates(created);
+    })();
+  }, [initialEventTemplates.length]);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -203,6 +252,30 @@ export function WhatsAppSettings({
     }
   };
 
+  const handleUpdateEventTemplate = async (
+    id: string,
+    updates: Partial<EventTemplate>,
+  ) => {
+    setSavingEvent(id);
+    try {
+      const res = await fetch(`/api/whatsapp/event-templates/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setEventTemplates((prev) => prev.map((t) => (t.id === id ? data : t)));
+      } else {
+        setError(data.error ?? "Erro ao salvar template de evento.");
+      }
+    } catch {
+      setError("Erro de rede.");
+    } finally {
+      setSavingEvent(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Connection Section */}
@@ -352,6 +425,36 @@ export function WhatsAppSettings({
               saving={saving === tpl.id}
               onUpdate={(updates) => handleUpdateTemplate(tpl.id, updates)}
               onDelete={() => handleDeleteTemplate(tpl.id)}
+            />
+          ))}
+        </div>
+      </article>
+
+      {/* Event Templates Section */}
+      <article className="surface-card p-6">
+        <div>
+          <h3 className="text-lg font-semibold text-secondary">
+            Mensagens de evento
+          </h3>
+          <p className="mt-1 text-sm text-muted">
+            Mensagens enviadas automaticamente ao paciente quando uma consulta é
+            agendada, confirmada ou cancelada.
+          </p>
+        </div>
+
+        {eventTemplates.length === 0 && (
+          <p className="mt-4 text-sm text-muted">
+            Carregando templates de evento...
+          </p>
+        )}
+
+        <div className="mt-4 space-y-4">
+          {eventTemplates.map((et) => (
+            <EventTemplateCard
+              key={et.id}
+              template={et}
+              saving={savingEvent === et.id}
+              onUpdate={(updates) => handleUpdateEventTemplate(et.id, updates)}
             />
           ))}
         </div>
@@ -545,6 +648,111 @@ function TemplateCard({
             className="btn-gradient px-4 py-1.5 text-sm disabled:opacity-50"
           >
             {saving ? "Salvando..." : "Salvar template"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EventTemplateCard({
+  template,
+  saving,
+  onUpdate,
+}: {
+  template: EventTemplate;
+  saving: boolean;
+  onUpdate: (updates: Partial<EventTemplate>) => void;
+}) {
+  const [msg, setMsg] = useState(template.message_template);
+  const [enabled, setEnabled] = useState(template.enabled);
+  const [dirty, setDirty] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertVar = (varKey: string) => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const text = `{{${varKey}}}`;
+    const newVal = msg.slice(0, start) + text + msg.slice(end);
+    setMsg(newVal);
+    setDirty(true);
+    requestAnimationFrame(() => {
+      ta.focus();
+      ta.setSelectionRange(start + text.length, start + text.length);
+    });
+  };
+
+  const handleSave = () => {
+    onUpdate({ message_template: msg, enabled });
+    setDirty(false);
+  };
+
+  const handleToggle = () => {
+    const next = !enabled;
+    setEnabled(next);
+    onUpdate({ enabled: next });
+  };
+
+  const label = EVENT_TYPE_LABELS[template.event_type] ?? template.event_type;
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h4 className="text-sm font-semibold text-foreground">{label}</h4>
+        <button
+          type="button"
+          onClick={handleToggle}
+          disabled={saving}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+            enabled ? "bg-green-500" : "bg-slate-300"
+          }`}
+          title={enabled ? "Ativo" : "Inativo"}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+              enabled ? "translate-x-6" : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+
+      <div className="mt-3">
+        <span className="mb-1 block text-sm text-foreground">Mensagem</span>
+        <div className="mb-2 flex flex-wrap gap-1">
+          {AVAILABLE_VARS.map((v) => (
+            <button
+              key={v.key}
+              type="button"
+              onClick={() => insertVar(v.key)}
+              className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-200"
+            >
+              {`{{${v.key}}}`}
+            </button>
+          ))}
+        </div>
+        <textarea
+          ref={textareaRef}
+          value={msg}
+          onChange={(e) => {
+            setMsg(e.target.value);
+            setDirty(true);
+          }}
+          rows={6}
+          className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
+        />
+      </div>
+
+      {dirty && (
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-gradient px-4 py-1.5 text-sm disabled:opacity-50"
+          >
+            {saving ? "Salvando..." : "Salvar"}
           </button>
         </div>
       )}
