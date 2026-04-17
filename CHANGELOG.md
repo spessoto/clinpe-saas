@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-04-17
+
+### Fixed
+
+- **Fix User-Agent nos cron workflows (email-queue e whatsapp-reminders)**: WAF/ModSecurity da Hostinger bloqueava requests com UA contendo "Bot" (erro 403); trocado para UA padrão de navegador, adicionado retry com backoff, e steps de status agora são `continue-on-error` para não bloquear processamento
+
 ## [2.1.1] - 2026-04-17
 
 ### Fixed
