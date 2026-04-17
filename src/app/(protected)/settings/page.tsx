@@ -1,5 +1,6 @@
 import { saveSettingsAction } from "@/app/(protected)/settings/actions";
 import { ImageUpload } from "@/components/image-upload";
+import { WhatsAppSettings } from "@/components/whatsapp-settings";
 import { requireActiveTenant } from "@/lib/auth";
 import { formatBrazilTaxId } from "@/lib/brazil-tax-id";
 import { createClient } from "@/lib/supabase/server";
@@ -80,6 +81,12 @@ export default async function SettingsPage({ searchParams }: Props) {
     lunch_start_time: null,
     lunch_end_time: null,
   };
+
+  const { data: whatsappTemplates } = await supabase
+    .from("whatsapp_reminder_templates")
+    .select("*")
+    .eq("tenant_id", tenant.id)
+    .order("position");
 
   const hasLunchBreak = Boolean(userSettings.lunch_start_time);
 
@@ -359,6 +366,11 @@ export default async function SettingsPage({ searchParams }: Props) {
           Salvar configurações
         </button>
       </form>
+
+      <WhatsAppSettings
+        initialStatus={tenant.whatsapp_status}
+        initialTemplates={whatsappTemplates ?? []}
+      />
     </section>
   );
 }

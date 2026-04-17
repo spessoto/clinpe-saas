@@ -36,6 +36,9 @@ export type Tenant = {
   billing_tier: "free_trial" | "tier_1" | "tier_2" | "tier_3";
   max_patients_allowed: number;
   logo_url: string | null;
+  evolution_instance_name: string | null;
+  evolution_instance_token: string | null;
+  whatsapp_status: string | null;
 };
 
 export function isConfiguredAdminEmail(email: string) {
@@ -143,7 +146,7 @@ export async function requireActiveTenant() {
   const withSlugResult = await supabase
     .from("tenants")
     .select(
-      "id, name, slug, cpf_cnpj, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_expires_at, subscription_status, subscription_billing_method, billing_tier, max_patients_allowed, logo_url",
+      "id, name, slug, cpf_cnpj, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_expires_at, subscription_status, subscription_billing_method, billing_tier, max_patients_allowed, logo_url, evolution_instance_name, evolution_instance_token, whatsapp_status",
     )
     .eq("id", appUser.tenant_id)
     .single();
@@ -169,6 +172,9 @@ export async function requireActiveTenant() {
           | "billing_tier"
           | "max_patients_allowed"
           | "logo_url"
+          | "evolution_instance_name"
+          | "evolution_instance_token"
+          | "whatsapp_status"
         >),
         cpf_cnpj: null,
         trial_extension_days: 0,
@@ -178,6 +184,9 @@ export async function requireActiveTenant() {
         billing_tier: "free_trial",
         max_patients_allowed: 10,
         logo_url: null,
+        evolution_instance_name: null,
+        evolution_instance_token: null,
+        whatsapp_status: null,
       };
     } else {
       const fallback2Result = await supabase
@@ -199,6 +208,9 @@ export async function requireActiveTenant() {
             | "billing_tier"
             | "max_patients_allowed"
             | "logo_url"
+            | "evolution_instance_name"
+            | "evolution_instance_token"
+            | "whatsapp_status"
           >),
           slug: "",
           cpf_cnpj: null,
@@ -209,6 +221,9 @@ export async function requireActiveTenant() {
           billing_tier: "free_trial",
           max_patients_allowed: 10,
           logo_url: null,
+          evolution_instance_name: null,
+          evolution_instance_token: null,
+          whatsapp_status: null,
         };
       }
     }

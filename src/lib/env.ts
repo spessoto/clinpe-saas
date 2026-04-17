@@ -33,6 +33,16 @@ const asaasEnvSchema = z.object({
   ASAAS_API_BASE: z.string().url().default("https://api.asaas.com/v3"),
 });
 
+const evolutionEnvSchema = z.object({
+  EVOLUTION_API_URL: z.string().url(),
+  EVOLUTION_API_KEY: z.string().min(1),
+  EVOLUTION_WEBHOOK_SECRET: z.string().min(1),
+});
+
+const whatsappReminderEnvSchema = z.object({
+  WHATSAPP_REMINDER_CRON_SECRET: z.string().min(1),
+});
+
 const PRODUCTION_APP_URL = "https://pododesk.com.br";
 
 export type AppEnv = z.infer<typeof serverEnvSchema>;
@@ -156,6 +166,41 @@ export function getAsaasEnv() {
 
     throw new Error(
       `Variáveis do Asaas ausentes: ${missing}. Configure ASAAS_API_KEY, ASAAS_WEBHOOK_SECRET e ASAAS_API_BASE no .env.local.`,
+    );
+  }
+
+  return parsed.data;
+}
+
+export function getEvolutionEnv() {
+  const parsed = evolutionEnvSchema.safeParse({
+    EVOLUTION_API_URL: process.env.EVOLUTION_API_URL,
+    EVOLUTION_API_KEY: process.env.EVOLUTION_API_KEY,
+    EVOLUTION_WEBHOOK_SECRET: process.env.EVOLUTION_WEBHOOK_SECRET,
+  });
+
+  if (!parsed.success) {
+    const missing = parsed.error.issues
+      .map((issue) => issue.path.join("."))
+      .filter(Boolean)
+      .join(", ");
+
+    throw new Error(
+      `Variáveis da Evolution API ausentes: ${missing}. Configure EVOLUTION_API_URL, EVOLUTION_API_KEY e EVOLUTION_WEBHOOK_SECRET no .env.local.`,
+    );
+  }
+
+  return parsed.data;
+}
+
+export function getWhatsAppReminderEnv() {
+  const parsed = whatsappReminderEnvSchema.safeParse({
+    WHATSAPP_REMINDER_CRON_SECRET: process.env.WHATSAPP_REMINDER_CRON_SECRET,
+  });
+
+  if (!parsed.success) {
+    throw new Error(
+      "Variável ausente: WHATSAPP_REMINDER_CRON_SECRET. Configure-a no .env.local para habilitar lembretes de consulta via WhatsApp.",
     );
   }
 

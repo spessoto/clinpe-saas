@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-04-17
+
+### Added
+
+- **Integração WhatsApp via Evolution API (WHATSAPP-BAILEYS)**
+  - Conexão de instância por QR Code na página de Configurações
+  - Desconexão e reconexão com polling automático de status
+
+- **Lembretes automáticos de consulta via WhatsApp**
+  - Até 3 templates de lembrete configuráveis por tenant
+  - Variáveis dinâmicas: `{{paciente}}`, `{{clinica}}`, `{{profissional}}`, `{{data}}`, `{{horario}}`
+  - Tipo de disparo configurável: horas ou dias antes da consulta
+  - Toggle de ativação/desativação por template
+  - Deduplicação por appointment + template (tabela `whatsapp_reminders_sent`)
+
+- **CRUD de templates de lembrete**
+  - `GET/POST /api/whatsapp/templates` — listagem e criação (limite de 3)
+  - `PUT/DELETE /api/whatsapp/templates/[id]` — edição e exclusão
+
+- **GitHub Actions cron para processamento de lembretes**
+  - Workflow `whatsapp-reminders-cron.yml` executando a cada 1 hora
+  - Chamada autenticada via `WHATSAPP_REMINDER_CRON_SECRET`
+
+- **UI de templates no painel de Configurações**
+  - Editor visual com botões de inserção de variáveis
+  - Configuração de timing (ex: 24h antes, 2 dias antes)
+  - Toggle ativo/inativo e preview em tempo real
+
+### Changed
+
+- **Migração Supabase `20260417000044_whatsapp_simplify_reminders.sql`**
+  - Tabelas `whatsapp_reminder_templates` e `whatsapp_reminders_sent` com RLS
+  - Seed automático de template padrão "Lembrete 24h" para tenants conectados
+  - Remoção de tabelas obsoletas (`whatsapp_messages`, `whatsapp_contacts`)
+  - Coluna `whatsapp_reminder_sent_at` removida de `appointments`
+
+- **`evolution-api.ts` simplificado** — apenas `createInstance`, `deleteInstance`, `connectionState`, `getQRCode`, `sendTextMessage`
+- **Instância criada sem webhook** — sistema outbound-only (envia, não recebe)
+
 ## [1.4.4] - 2026-04-09
 
 ### Changed
