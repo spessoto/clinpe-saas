@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2026-04-17
+
+### Fixed
+
+- **Correção de conectividade com a Evolution API**
+  - `EVOLUTION_API_URL` corrigida para `http://evolution.pododesk.com.br:8080` (porta 8080, HTTP)
+  - Registro DNS A criado para `evolution.pododesk.com.br` → `147.15.18.67`
+  - Resolve o erro "Falha ao criar instância WhatsApp" causado por DNS não resolvido
+
 ## [2.0.0] - 2026-04-17
 
 ### Added
