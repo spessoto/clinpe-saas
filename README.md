@@ -1,10 +1,10 @@
 # ClinPe App
 
-SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuários, autoagendamento, notificações por e-mail e push web.
+SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuários, autoagendamento, notificações por e-mail, push web e lembretes de consulta via WhatsApp.
 
 ## Status do projeto
 
-- Versão publicada: `v1.4.4`
+- Versão publicada: `v2.0.2`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -58,6 +58,9 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Central de ajuda pública (`/helpdesk`)**: guia prático de operação por módulo para uso diário do SaaS
 - **Página pública de contato (`/contato`)**: formulário com envio SMTP para `master@pododesk.com.br` e canais oficiais de atendimento
 - **Modelo POP regulatório completo**: novo template do manual de boas práticas em `/pop-documents`, com substituição de estabelecimento/profissional/registro e fallback para CPF/CNPJ, além dos botões de imprimir e baixar
+- **Lembretes de consulta via WhatsApp**: integração com Evolution API para envio automático de lembretes 24h antes da consulta, com configuração de instância, conexão via QR Code, templates personalizáveis e cron de disparo
+- **Configurações de WhatsApp por profissional**: painel em `/settings` para criar/excluir instância, visualizar QR Code, acompanhar status da conexão e testar envio de mensagem
+- **Retry e diagnóstico de QR Code**: contador de tentativas com orientação de upgrade quando a API não retorna o QR (bug conhecido do Evolution API < v2.3.7)
 
 ## Requisitos locais
 
@@ -110,6 +113,13 @@ EMAIL_QUEUE_CRON_SECRET=um-segredo-forte
 NEXT_PUBLIC_SANITY_PROJECT_ID=mzldy58m
 NEXT_PUBLIC_SANITY_DATASET=production
 NEXT_PUBLIC_SANITY_API_VERSION=2025-01-01
+
+# Evolution API (lembretes WhatsApp)
+EVOLUTION_API_URL=http://evolution.pododesk.com.br:8080
+EVOLUTION_API_KEY=xxxxxxxx
+
+# Cron de lembretes WhatsApp
+WHATSAPP_REMINDER_CRON_SECRET=um-segredo-forte
 ```
 
 Observacoes:
@@ -121,6 +131,8 @@ Observacoes:
 - `EMAIL_QUEUE_CRON_SECRET` protege o endpoint interno `POST /api/internal/email-queue/process` para processamento da fila.
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` e `VAPID_SUBJECT` habilitam push web para avisar o podologo sobre novas consultas.
 - `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET` e `NEXT_PUBLIC_SANITY_API_VERSION` habilitam a leitura de artigos do blog via Sanity.
+- `EVOLUTION_API_URL` e `EVOLUTION_API_KEY` conectam a aplicação ao servidor Evolution API para envio de mensagens WhatsApp. Requer Evolution API **v2.3.7+** (imagem `evoapicloud/evolution-api`).
+- `WHATSAPP_REMINDER_CRON_SECRET` protege o endpoint interno `POST /api/internal/whatsapp-reminders/process` para disparo automático de lembretes.
 
 ### Push web: onde configurar
 
@@ -191,6 +203,28 @@ Sem cron nativo no provedor (ex.: alguns planos Hostinger):
 - Opcional: defina a repository variable `EMAIL_QUEUE_BATCH_LIMIT` (padrao: `20`)
 - O workflow roda em `*/5 * * * *` (limite minimo do scheduler do GitHub Actions) e tambem pode ser executado manualmente via `workflow_dispatch`
 
+### Operacao dos lembretes WhatsApp
+
+Endpoint interno protegido por secret:
+
+- `POST /api/internal/whatsapp-reminders/process` dispara lembretes para consultas das próximas 24h
+
+Cron recomendado em producao:
+
+- Frequencia: a cada 1 hora (ou `/6 * * * *` via GitHub Actions)
+- Metodo: `POST`
+- URL: `https://seu-dominio.com/api/internal/whatsapp-reminders/process`
+- Header: `Authorization: Bearer <WHATSAPP_REMINDER_CRON_SECRET>`
+
+Sem cron nativo no provedor:
+
+- Use GitHub Actions com o workflow `/.github/workflows/whatsapp-reminder-cron.yml`
+- Defina os secrets do repositório:
+  - `APP_URL` (ex.: `https://pododesk.com.br`)
+  - `WHATSAPP_REMINDER_CRON_SECRET` (mesmo valor da variável de ambiente da aplicação)
+
+> **Requisito**: Evolution API **v2.3.7+** (imagem Docker `evoapicloud/evolution-api`). Versões anteriores possuem bug no endpoint de QR Code (issue #2504).
+
 ## Banco de dados e migrations
 
 As migrations SQL estao em `supabase/migrations`:
@@ -218,6 +252,7 @@ As migrations SQL estao em `supabase/migrations`:
 - `20260323000034_prevent_reassign_deleted_professional_appointments.sql` — impede reatribuição posterior de consultas órfãs de profissionais removidos
 - `20260409000040_pop_manual_template.sql` — adiciona template completo de POP, botão de download e seed para tenants existentes/novos
 - `20260409000041_pop_manual_ptbr_format.sql` — corrige placeholders de cadastro do POP e revisa conteúdo/formatação em pt-BR
+- `20260417000044_whatsapp_simplify_reminders.sql` — tabelas de templates e log de lembretes WhatsApp com RLS por tenant
   Garanta que todas foram aplicadas no projeto Supabase antes de testar os fluxos de booking, configuracoes e notificações.
 
 > **Atencao:** O nome dos arquivos de migration usa o formato `YYYYMMDDNNNNNN` (14 digitos sem underscore entre data e sequencia). Arquivos com o formato antigo `YYYYMMDD_NNNNNN` causam conflito de versao na CLI do Supabase.
@@ -340,4 +375,6 @@ npm run test:watch
 - `src/lib/email.ts`: utilitario SMTP para envio de notificacoes ao paciente
 - `src/lib/notifications.ts`: notificacoes internas e disparo de push web
 - `src/lib/supabase`: clients server/browser/admin
+- `src/lib/evolution-api.ts`: client da Evolution API (criar/excluir instância, QR Code, enviar mensagem)
+- `src/components/whatsapp-settings.tsx`: painel de configuração WhatsApp para o profissional
 - `src/components/brand-logo.tsx`: logotipo da PodoDesk
