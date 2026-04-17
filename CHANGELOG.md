@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-04-17
+
+### Fixed
+
+- **Auto-criar template de evento WhatsApp quando não existir**: corrige envio em novo agendamento para profissionais que nunca abriram `/settings` após a migration; template default é criado automaticamente via upsert no momento do envio
+
 ## [2.1.0] - 2026-04-17
 
 ### Added
