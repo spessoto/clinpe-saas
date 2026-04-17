@@ -3,6 +3,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 type EventType = "booking" | "confirmation" | "cancellation";
 
+const DEFAULT_MESSAGES: Record<EventType, string> = {
+  booking:
+    "Olá, {{paciente}}! 👋\n\nSua consulta foi agendada com sucesso!\n\n📅 Data: {{data}}\n🕐 Horário: {{horario}}\n👨‍⚕️ Profissional: {{profissional}}\n🏥 {{clinica}}\n\nAguardamos sua confirmação. Obrigado!",
+  confirmation:
+    "Olá, {{paciente}}! ✅\n\nSua consulta foi confirmada!\n\n📅 Data: {{data}}\n🕐 Horário: {{horario}}\n👨‍⚕️ Profissional: {{profissional}}\n🏥 {{clinica}}\n\nAguardamos você!",
+  cancellation:
+    "Olá, {{paciente}}.\n\nInformamos que sua consulta foi cancelada.\n\n📅 Data: {{data}}\n🕐 Horário: {{horario}}\n👨‍⚕️ Profissional: {{profissional}}\n🏥 {{clinica}}\n\nCaso deseje reagendar, entre em contato conosco.",
+};
+
 function substituteVars(
   template: string,
   vars: Record<string, string>,
@@ -56,7 +65,27 @@ export async function sendWhatsAppEventNotification(input: {
       .eq("event_type", input.eventType)
       .single();
 
-    if (!template || !template.enabled) return;
+    // Auto-create with defaults if not found
+    let resolved = template;
+    if (!resolved) {
+      const { data: created } = await supabase
+        .from("whatsapp_event_templates")
+        .upsert(
+          {
+            tenant_id: input.tenantId,
+            event_type: input.eventType,
+            message_template: DEFAULT_MESSAGES[input.eventType],
+            enabled: true,
+          },
+          { onConflict: "tenant_id,event_type" },
+        )
+        .select("message_template, enabled")
+        .single();
+
+      resolved = created;
+    }
+
+    if (!resolved || !resolved.enabled) return;
 
     const apptDate = new Date(input.scheduledAt);
     const dateStr = apptDate.toLocaleDateString("pt-BR", {
@@ -70,7 +99,7 @@ export async function sendWhatsAppEventNotification(input: {
       timeZone: "America/Sao_Paulo",
     });
 
-    const message = substituteVars(template.message_template, {
+    const message = substituteVars(resolved.message_template, {
       paciente: input.patientName,
       clinica: input.clinicName,
       profissional: input.professionalName,
