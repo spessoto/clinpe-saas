@@ -246,8 +246,8 @@ export async function confirmAppointmentAction(formData: FormData) {
         }
       }
 
-      // WhatsApp notification (fire-and-forget)
-      sendWhatsAppEventNotification({
+      // WhatsApp notification (awaited — sendWhatsAppEventNotification has internal try/catch and never throws)
+      await sendWhatsAppEventNotification({
         tenantId: appUser.tenant_id,
         eventType: "confirmation",
         patientPhone: appointment.patient?.phone ?? null,
@@ -336,8 +336,8 @@ export async function cancelAppointmentAction(formData: FormData) {
         }
       }
 
-      // WhatsApp notification (fire-and-forget)
-      sendWhatsAppEventNotification({
+      // WhatsApp notification (awaited — sendWhatsAppEventNotification has internal try/catch and never throws)
+      await sendWhatsAppEventNotification({
         tenantId: appUser.tenant_id,
         eventType: "cancellation",
         patientPhone: appointment.patient?.phone ?? null,

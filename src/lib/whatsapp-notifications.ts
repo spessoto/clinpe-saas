@@ -39,7 +39,10 @@ export async function sendWhatsAppEventNotification(input: {
   scheduledAt: string;
 }): Promise<void> {
   try {
-    if (!input.patientPhone) return;
+    if (!input.patientPhone) {
+      console.log(`[WhatsApp:${input.eventType}] Pulado — paciente sem telefone`);
+      return;
+    }
 
     const supabase = createAdminClient();
 
@@ -54,6 +57,9 @@ export async function sendWhatsAppEventNotification(input: {
       !tenant?.evolution_instance_name ||
       tenant.whatsapp_status !== "connected"
     ) {
+      console.log(
+        `[WhatsApp:${input.eventType}] Pulado — tenant não conectado (status=${tenant?.whatsapp_status ?? "null"}, instance=${tenant?.evolution_instance_name ?? "null"})`,
+      );
       return;
     }
 
@@ -68,7 +74,10 @@ export async function sendWhatsAppEventNotification(input: {
     // Auto-create with defaults if not found
     let resolved = template;
     if (!resolved) {
-      const { data: created } = await supabase
+      console.log(
+        `[WhatsApp:${input.eventType}] Template não encontrado — criando com defaults`,
+      );
+      const { data: created, error: upsertError } = await supabase
         .from("whatsapp_event_templates")
         .upsert(
           {
@@ -82,10 +91,19 @@ export async function sendWhatsAppEventNotification(input: {
         .select("message_template, enabled")
         .single();
 
+      if (upsertError) {
+        console.error(`[WhatsApp:${input.eventType}] Erro ao criar template:`, upsertError);
+      }
+
       resolved = created;
     }
 
-    if (!resolved || !resolved.enabled) return;
+    if (!resolved || !resolved.enabled) {
+      console.log(
+        `[WhatsApp:${input.eventType}] Pulado — template desativado ou não encontrado (enabled=${resolved?.enabled ?? "null"})`,
+      );
+      return;
+    }
 
     const apptDate = new Date(input.scheduledAt);
     const dateStr = apptDate.toLocaleDateString("pt-BR", {
