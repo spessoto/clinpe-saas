@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { CouponRedemptionRow } from "@/lib/coupons";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getAsaasEnv } from "@/lib/env";
+import { safeSecretEqual } from "@/lib/utils";
 
 type AsaasWebhookBody = {
   event?: string;
@@ -113,7 +114,10 @@ export async function POST(request: NextRequest) {
     request.headers.get("x-asaas-access-token") ??
     "";
 
-  if (!webhookToken || webhookToken !== env.ASAAS_WEBHOOK_SECRET) {
+  if (
+    !webhookToken ||
+    !safeSecretEqual(webhookToken, env.ASAAS_WEBHOOK_SECRET)
+  ) {
     return NextResponse.json(
       { error: "Token de webhook inválido" },
       { status: 401 },

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-04-23
+
+### Security
+
+- **Validação server-side de tipo MIME e tamanho de arquivo em uploads**: uploads de avatar, logo e fotos de prontuário agora validam tipo MIME (whitelist `image/jpeg, image/png, image/webp, image/gif/heic/heif`) e tamanho máximo (5 MB imagens de perfil, 10 MB imagens médicas) diretamente no servidor — elimina bypass client-side via requisições diretas
+- **Comparação de segredos com timing-safe**: substituído `!==` por `safeSecretEqual()` (HMAC-SHA256 + `timingSafeEqual`) nos três endpoints que verificam segredos de webhook/cron (`/api/payments/webhook`, `/api/internal/email-queue/process`, `/api/internal/whatsapp-reminders/process`) — previne timing attacks que permitiriam deduzir o segredo
+- **Content Security Policy (CSP)**: adicionado header `Content-Security-Policy` em todas as respostas com diretivas `object-src 'none'`, `base-uri 'self'`, `form-action 'self' https:` e `frame-ancestors 'none'` — bloqueia XSS via plugins, injeção de tag `<base>` e sequestro de formulários
+- **Middleware de proteção de rotas (defense-in-depth)**: criado `src/middleware.ts` que valida o JWT Supabase via `getUser()` (verificação server-side) antes de renderizar qualquer rota protegida — garante que nenhuma página acessível sem autenticação passe despercebida por omissão de `requireActiveTenant()`
+- **Sanitização de parâmetro de busca de pacientes**: caracteres especiais do parser PostgREST (`%`, `(`, `)`, `,`) são removidos do parâmetro `q` em `GET /api/patients/search` antes de construir o filtro `.or()` — previne injeção de filtro PostgREST
+- **Aviso de reCAPTCHA ausente em produção**: `verifyRecaptchaToken()` agora emite `console.warn` quando `RECAPTCHA_SECRET_KEY` não está configurada em `NODE_ENV=production`, alertando que formulários públicos estão desprotegidos
+
 ## [2.2.0] - 2026-04-23
 
 ### Added

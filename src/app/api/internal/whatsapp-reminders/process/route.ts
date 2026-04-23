@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getWhatsAppReminderEnv } from "@/lib/env";
 import { sendTextMessage } from "@/lib/evolution-api";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { safeSecretEqual } from "@/lib/utils";
 
 type ReminderTemplate = {
   id: string;
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
 
-    if (token !== env.WHATSAPP_REMINDER_CRON_SECRET) {
+    if (!token || !safeSecretEqual(token, env.WHATSAPP_REMINDER_CRON_SECRET)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

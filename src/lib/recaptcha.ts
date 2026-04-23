@@ -5,7 +5,17 @@
  */
 export async function verifyRecaptchaToken(token: string): Promise<boolean> {
   const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-  if (!secretKey || !token) return true;
+  if (!secretKey) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn(
+        "[SECURITY] RECAPTCHA_SECRET_KEY não configurada em produção. " +
+          "Todos os formulários públicos estão sem proteção contra bots.",
+      );
+    }
+    return true;
+  }
+
+  if (!token) return true;
 
   try {
     const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {

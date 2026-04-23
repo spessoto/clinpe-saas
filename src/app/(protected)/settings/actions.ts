@@ -127,6 +127,16 @@ export async function saveSettingsAction(formData: FormData) {
 
   const profilePhoto = formData.get("profile_photo");
   if (isUploadedFile(profilePhoto) && profilePhoto.size > 0) {
+    if (!profilePhoto.type.startsWith("image/")) {
+      redirect(
+        "/settings?error=Tipo de arquivo não permitido para foto de perfil.",
+      );
+    }
+    if (profilePhoto.size > 5 * 1024 * 1024) {
+      redirect(
+        "/settings?error=Foto de perfil muito grande. O tamanho máximo é 5MB.",
+      );
+    }
     const safeName = sanitizeFileName(profilePhoto.name || "profile.jpg");
     const path = `${appUser.tenant_id}/profiles/${appUser.id}/${Date.now()}-${randomUUID()}-${safeName}`;
     const fileBytes = new Uint8Array(await profilePhoto.arrayBuffer());
@@ -149,6 +159,12 @@ export async function saveSettingsAction(formData: FormData) {
 
   const logoFile = formData.get("logo_file");
   if (isUploadedFile(logoFile) && logoFile.size > 0) {
+    if (!logoFile.type.startsWith("image/")) {
+      redirect("/settings?error=Tipo de arquivo não permitido para o logo.");
+    }
+    if (logoFile.size > 5 * 1024 * 1024) {
+      redirect("/settings?error=Logo muito grande. O tamanho máximo é 5MB.");
+    }
     const safeName = sanitizeFileName(logoFile.name || "logo.jpg");
     const path = `${tenant.id}/logos/${appUser.id}/${Date.now()}-${randomUUID()}-${safeName}`;
     const fileBytes = new Uint8Array(await logoFile.arrayBuffer());
@@ -237,6 +253,25 @@ export async function uploadProfileImageAction(formData: FormData) {
 
   if (!["avatar", "logo"].includes(type)) {
     return { error: "Tipo inválido" };
+  }
+
+  const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+  ];
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
+
+  if (!file.type || !ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return {
+      error: "Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF.",
+    };
+  }
+
+  if (file.size > MAX_IMAGE_SIZE) {
+    return { error: "Arquivo muito grande. O tamanho máximo é 5MB." };
   }
 
   try {

@@ -22,7 +22,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Sem acesso." }, { status: 403 });
   }
 
-  const q = request.nextUrl.searchParams.get("q")?.trim() ?? "";
+  const rawQ = request.nextUrl.searchParams.get("q")?.trim() ?? "";
+  // Strip PostgREST filter special characters to prevent filter injection
+  const q = rawQ.replace(/[%(),]/g, "");
 
   if (q.length < 2) {
     return NextResponse.json([]);

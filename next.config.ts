@@ -45,6 +45,18 @@ const nextConfig: NextConfig = {
         key: "Permissions-Policy",
         value: "camera=(), microphone=(), geolocation=()",
       },
+      {
+        // Prevent base-tag injection, form hijacking, and plugin/Flash execution.
+        // 'unsafe-inline' retained for Tailwind inline styles and head-scripts.
+        // Tighten script-src with nonces in a future hardening pass.
+        key: "Content-Security-Policy",
+        value: [
+          "object-src 'none'",
+          "base-uri 'self'",
+          "form-action 'self' https:",
+          "frame-ancestors 'none'",
+        ].join("; "),
+      },
     ];
 
     const headers = [...baseHeaders];

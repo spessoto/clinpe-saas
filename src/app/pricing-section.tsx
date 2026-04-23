@@ -32,9 +32,7 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
           <h2 className="mb-5 text-3xl font-extrabold tracking-tight text-secondary sm:text-4xl">
             {t("title")}
           </h2>
-          <p className="text-lg text-slate-600">
-            {t("subtitle")}
-          </p>
+          <p className="text-lg text-slate-600">{t("subtitle")}</p>
 
           <div className="mt-8 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
             <button
@@ -102,7 +100,9 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
                           : plan.annual}
                       </span>
                       <span className="pb-1 text-slate-600">
-                        {billingCycle === "monthly" ? t("monthSuffix") : t("yearSuffix")}
+                        {billingCycle === "monthly"
+                          ? t("monthSuffix")
+                          : t("yearSuffix")}
                       </span>
                     </>
                   )}

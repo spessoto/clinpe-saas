@@ -33,7 +33,11 @@ export default async function Home() {
     { title: t("feature2Title"), text: t("feature2Text"), icon: CalendarDays },
     { title: t("feature3Title"), text: t("feature3Text"), icon: AlertTriangle },
     { title: t("feature4Title"), text: t("feature4Text"), icon: MessageCircle },
-    { title: t("feature5Title"), text: t("feature5Text"), icon: ClipboardCheck },
+    {
+      title: t("feature5Title"),
+      text: t("feature5Text"),
+      icon: ClipboardCheck,
+    },
     { title: t("feature6Title"), text: t("feature6Text"), icon: TrendingUp },
   ];
 
@@ -397,7 +401,9 @@ export default async function Home() {
               </div>
 
               <div className="space-y-3">
-                <h4 className="mb-4 font-bold text-white">{t("footerColProduct")}</h4>
+                <h4 className="mb-4 font-bold text-white">
+                  {t("footerColProduct")}
+                </h4>
                 <a
                   className="block text-slate-400 transition hover:text-white"
                   href="#funcionalidades"
@@ -419,7 +425,9 @@ export default async function Home() {
               </div>
 
               <div className="space-y-3">
-                <h4 className="mb-4 font-bold text-white">{t("footerColSupport")}</h4>
+                <h4 className="mb-4 font-bold text-white">
+                  {t("footerColSupport")}
+                </h4>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/helpdesk"
@@ -441,7 +449,9 @@ export default async function Home() {
               </div>
 
               <div className="space-y-3">
-                <h4 className="mb-4 font-bold text-white">{t("footerColLegal")}</h4>
+                <h4 className="mb-4 font-bold text-white">
+                  {t("footerColLegal")}
+                </h4>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/termos-de-uso"
@@ -458,9 +468,7 @@ export default async function Home() {
             </div>
 
             <div className="flex w-full flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-sm text-slate-500 md:flex-row">
-              <span>
-                {t("footerCopyright")}
-              </span>
+              <span>{t("footerCopyright")}</span>
               <div className="flex gap-6">
                 <a className="transition hover:text-white" href="#">
                   LinkedIn

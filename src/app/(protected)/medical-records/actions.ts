@@ -193,6 +193,29 @@ export async function createMedicalRecordAction(formData: FormData) {
     );
   }
 
+  const ALLOWED_MEDICAL_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/heic",
+    "image/heif",
+  ];
+  const MAX_MEDICAL_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB por imagem
+
+  for (const file of files) {
+    if (!file.type || !ALLOWED_MEDICAL_IMAGE_TYPES.includes(file.type)) {
+      redirect(
+        `/medical-records/new?patient_id=${patientId}&error=${encodeURIComponent("Tipo de arquivo não permitido. Use imagens JPEG, PNG ou WebP.")}`,
+      );
+    }
+    if (file.size > MAX_MEDICAL_IMAGE_SIZE) {
+      redirect(
+        `/medical-records/new?patient_id=${patientId}&error=${encodeURIComponent("Imagem muito grande. O tamanho máximo por imagem é 10MB.")}`,
+      );
+    }
+  }
+
   if (sterilizationLotIds.length > 0) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 30);

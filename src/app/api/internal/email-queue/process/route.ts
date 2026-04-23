@@ -4,6 +4,7 @@ import {
   getEmailQueueStats,
   processPendingEmailQueue,
 } from "@/lib/email-queue";
+import { safeSecretEqual } from "@/lib/utils";
 
 function getCronSecretFromRequest(request: NextRequest) {
   const authHeader = request.headers.get("authorization") ?? "";
@@ -30,7 +31,7 @@ function validateCronSecret(request: NextRequest) {
   }
 
   const incomingSecret = getCronSecretFromRequest(request);
-  if (!incomingSecret || incomingSecret !== configuredSecret) {
+  if (!incomingSecret || !safeSecretEqual(incomingSecret, configuredSecret)) {
     return {
       ok: false as const,
       response: NextResponse.json({ error: "Não autorizado" }, { status: 401 }),

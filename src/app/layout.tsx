@@ -32,7 +32,9 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
           <CookieConsentBanner />
-          {headScripts.length > 0 && <HeadScriptsLoader scripts={headScripts} />}
+          {headScripts.length > 0 && (
+            <HeadScriptsLoader scripts={headScripts} />
+          )}
         </NextIntlClientProvider>
       </body>
     </html>

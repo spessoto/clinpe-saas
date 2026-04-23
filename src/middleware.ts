@@ -1,13 +1,86 @@
-import createMiddleware from "next-intl/middleware";
-import { routing } from "./i18n/routing";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
-export default createMiddleware(routing);
+/**
+ * Routes that require a valid Supabase session.
+ * This is a defense-in-depth layer — individual pages/actions also call
+ * requireActiveTenant(), but middleware provides an early redirect at the
+ * network edge before any page code runs.
+ */
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/patients",
+  "/agenda",
+  "/appointments",
+  "/settings",
+  "/medical-records",
+  "/finance",
+  "/notifications",
+  "/pop-documents",
+  "/sterilization",
+  "/admin",
+  "/billing",
+];
+
+function isProtectedPath(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Only run auth check on protected routes
+  if (!isProtectedPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          for (const { name, value } of cookiesToSet) {
+            request.cookies.set(name, value);
+          }
+          response = NextResponse.next({ request });
+          for (const { name, value, options } of cookiesToSet) {
+            response.cookies.set(name, value, options);
+          }
+        },
+      },
+    },
+  );
+
+  // getUser() validates the JWT with the Supabase Auth server (not just the cookie)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("redirect", pathname + request.nextUrl.search);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  return response;
+}
 
 export const config = {
-  // Only run on the root and public marketing pages.
-  // Excludes: _next, api, auth routes, protected routes, admin, static assets.
   matcher: [
-    "/",
-    "/(pt|en|es)/:path*",
+    /*
+     * Match all request paths EXCEPT:
+     * - _next/static (static files)
+     * - _next/image (image optimization)
+     * - favicon.ico
+     * - public assets
+     * - API routes (they handle their own auth)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$|api/).*)",
   ],
 };
