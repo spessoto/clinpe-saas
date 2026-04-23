@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.4] - 2026-04-23
+
+### Fixed
+
+- **WhatsApp não enviado ao criar consulta manual**: o fluxo `createManualAppointmentAction` cadastrava a consulta e enviava apenas e-mail; agora também dispara `sendWhatsAppEventNotification` com evento `booking`, usando o telefone do paciente resolvido no cadastro
+
 ## [2.1.3] - 2026-04-23
 
 ### Fixed
