@@ -40,7 +40,9 @@ export async function sendWhatsAppEventNotification(input: {
 }): Promise<void> {
   try {
     if (!input.patientPhone) {
-      console.log(`[WhatsApp:${input.eventType}] Pulado — paciente sem telefone`);
+      console.log(
+        `[WhatsApp:${input.eventType}] Pulado — paciente sem telefone`,
+      );
       return;
     }
 
@@ -92,7 +94,10 @@ export async function sendWhatsAppEventNotification(input: {
         .single();
 
       if (upsertError) {
-        console.error(`[WhatsApp:${input.eventType}] Erro ao criar template:`, upsertError);
+        console.error(
+          `[WhatsApp:${input.eventType}] Erro ao criar template:`,
+          upsertError,
+        );
       }
 
       resolved = created;

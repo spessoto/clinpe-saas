@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.3] - 2026-04-23
+
+### Fixed
+
+- **WhatsApp não enviado em agendamento e confirmação**: chamadas `sendWhatsAppEventNotification` eram fire-and-forget (sem `await`) antes do `redirect()`; o `NEXT_REDIRECT` do Next.js interrompia o Promise antes de completar — corrigido adicionando `await` em `confirmAppointmentAction` e `cancelAppointmentAction`
+- **Logging detalhado em `whatsapp-notifications.ts`**: adiciona `console.log` em cada ponto de saída antecipada (sem telefone, tenant desconectado, template desativado/ausente) e log de erro no upsert de template auto-criado para diagnóstico via logs do servidor
+
 ## [2.1.2] - 2026-04-17
 
 ### Fixed
