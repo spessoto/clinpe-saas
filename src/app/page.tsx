@@ -5,7 +5,7 @@ import {
   CalendarDays,
   Camera,
   ClipboardCheck,
-  FileSignature,
+  MessageCircle,
   TrendingUp,
 } from "lucide-react";
 import { getBillingPlans } from "@/app/billing/plans-server";
@@ -32,9 +32,9 @@ const featureCards = [
     icon: AlertTriangle,
   },
   {
-    title: "Termos de Consentimento",
-    text: "Assinatura digital de termos e anamneses diretamente no tablet ou celular, com validade jurídica.",
-    icon: FileSignature,
+    title: "Alertas por WhatsApp",
+    text: "Envie mensagens automáticas no registro da consulta, no cancelamento e crie até 3 lembretes de atendimento para reduzir faltas e manter a agenda mais previsível.",
+    icon: MessageCircle,
   },
   {
     title: "Controle de Autoclave",
@@ -283,11 +283,11 @@ export default async function Home() {
 
           <div className="relative">
             <div className="pointer-events-none absolute -right-10 -top-12 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
-            <div className="rounded-2xl border border-primary/15 bg-gradient-to-b from-white to-teal-50/30 p-2 shadow-[0_26px_54px_-20px_rgba(0,106,97,0.3)]">
+            <div>
               <img
                 alt="Dashboard do sistema"
-                className="h-auto w-full rounded-xl"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBNoK6H2qJ2TW4pbDb8g-XMdiTLGTlHbpR5B42KS8u4-wvhYQRM4Sx7kGHjkUjdyYWmFs8iTeV2KtTRy7SbJjnWkrD-fGwBqrVkgtDM3wLikuc9lCnZQTSrUTxgeCtBOLYcel_OiPVrJEZtMLmSw7wkpnU1DzkOgd1BLwKVzlTi51daruzD_B4rIZKOxN5nsU6GLTn7pPX_VT1EMj7rQ6EPtOIUg5e0R458zJynb699DCZy7aZlAYqtJNuaSfaX89L0devD--o"
+                className="h-auto w-full"
+                src="/sys_pododesk.png"
               />
             </div>
           </div>
@@ -452,12 +452,12 @@ export default async function Home() {
                 >
                   Central de Ajuda
                 </Link>
-                 <Link
-                   className="block text-slate-400 transition hover:text-white"
-                   href="/contato"
-                 >
-                   Contato
-                 </Link>
+                <Link
+                  className="block text-slate-400 transition hover:text-white"
+                  href="/contato"
+                >
+                  Contato
+                </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/blog"
@@ -466,13 +466,13 @@ export default async function Home() {
                 </Link>
               </div>
 
-               <div className="space-y-3">
-                 <h4 className="mb-4 font-bold text-white">Legal</h4>
-                 <Link
-                   className="block text-slate-400 transition hover:text-white"
-                   href="/termos-de-uso"
-                 >
-                   Termos de Uso
+              <div className="space-y-3">
+                <h4 className="mb-4 font-bold text-white">Legal</h4>
+                <Link
+                  className="block text-slate-400 transition hover:text-white"
+                  href="/termos-de-uso"
+                >
+                  Termos de Uso
                 </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"

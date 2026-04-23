@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.5] - 2026-04-23
+
+### Changed
+
+- **Hero da home atualizada**: substituída a imagem da segunda coluna pela arte local `public/sys_pododesk.png`, removidos efeitos de borda/sombra da imagem e ajustado o card de funcionalidades para destacar alertas e lembretes por WhatsApp
+
 ## [2.1.4] - 2026-04-23
 
 ### Fixed
