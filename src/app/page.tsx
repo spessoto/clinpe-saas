@@ -8,45 +8,14 @@ import {
   MessageCircle,
   TrendingUp,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { getBillingPlans } from "@/app/billing/plans-server";
 import { PricingSection, type PlanCard } from "@/app/pricing-section";
+import { LocaleSwitcher } from "@/components/locale-switcher";
 
 // Force server-side rendering on every request so the HTML always
 // references the correct chunk hashes from the current build.
 export const dynamic = "force-dynamic";
-
-const featureCards = [
-  {
-    title: "Evolução Fotográfica",
-    text: "Registre a evolução clínica com fotos organizadas por data e comparativos lado a lado de alta definição.",
-    icon: Camera,
-  },
-  {
-    title: "Autoagendamento",
-    text: "Link exclusivo para seus pacientes agendarem consultas 24h por dia, reduzindo interrupções no WhatsApp.",
-    icon: CalendarDays,
-  },
-  {
-    title: "Alertas de Saúde",
-    text: "Alertas automáticos para pacientes com condições de risco, como o pé diabético, garantindo segurança clínica.",
-    icon: AlertTriangle,
-  },
-  {
-    title: "Alertas por WhatsApp",
-    text: "Envie mensagens automáticas no registro da consulta, no cancelamento e crie até 3 lembretes de atendimento para reduzir faltas e manter a agenda mais previsível.",
-    icon: MessageCircle,
-  },
-  {
-    title: "Controle de Autoclave",
-    text: "Gestão rigorosa de ciclos de esterilização e validade de materiais, cumprindo normas sanitárias.",
-    icon: ClipboardCheck,
-  },
-  {
-    title: "Relatórios Financeiros",
-    text: "Fluxo de caixa, ticket médio por procedimento e indicadores de performance em tempo real.",
-    icon: TrendingUp,
-  },
-];
 
 function formatMoney(value: number) {
   return value.toLocaleString("pt-BR", {
@@ -57,47 +26,52 @@ function formatMoney(value: number) {
 
 export default async function Home() {
   const plans = await getBillingPlans();
+  const t = await getTranslations("HomePage");
+
+  const featureCards = [
+    { title: t("feature1Title"), text: t("feature1Text"), icon: Camera },
+    { title: t("feature2Title"), text: t("feature2Text"), icon: CalendarDays },
+    { title: t("feature3Title"), text: t("feature3Text"), icon: AlertTriangle },
+    { title: t("feature4Title"), text: t("feature4Text"), icon: MessageCircle },
+    { title: t("feature5Title"), text: t("feature5Text"), icon: ClipboardCheck },
+    { title: t("feature6Title"), text: t("feature6Text"), icon: TrendingUp },
+  ];
+
+  const sharedFeatures = [
+    t("planFeature1"),
+    t("planFeature2"),
+    t("planFeature3"),
+    t("planFeature4"),
+    t("planFeature5"),
+    t("planFeature6"),
+  ];
 
   const planCards: PlanCard[] = [
     {
       name: plans.tier_1.label,
       monthly: formatMoney(plans.tier_1.monthly.amount),
       annual: formatMoney(plans.tier_1.annual.amount),
-      limit: `Até ${plans.tier_1.maxPatients} pacientes`,
+      limit: t("planUpTo", { max: plans.tier_1.maxPatients }),
       featured: false,
-      ctaLabel: "Iniciar meus 7 dias Grátis",
+      ctaLabel: t("planCtaLabel"),
       ctaHref: "/sign-up",
-      features: [
-        "Prontuários ilimitados",
-        "Agenda integrada",
-        "Agendamento público online",
-        "Notificações por e-mail",
-        "Alertas web para novas consultas",
-        "Suporte por e-mail",
-      ],
+      features: sharedFeatures,
     },
     {
       name: plans.tier_2.label,
       monthly: formatMoney(plans.tier_2.monthly.amount),
       annual: formatMoney(plans.tier_2.annual.amount),
-      limit: `Até ${plans.tier_2.maxPatients} pacientes`,
+      limit: t("planUpTo", { max: plans.tier_2.maxPatients }),
       featured: true,
-      ctaLabel: "Iniciar meus 7 dias Grátis",
+      ctaLabel: t("planCtaLabel"),
       ctaHref: "/sign-up",
-      features: [
-        "Prontuários ilimitados",
-        "Agenda integrada",
-        "Agendamento público online",
-        "Notificações por e-mail",
-        "Alertas web para novas consultas",
-        "Suporte por e-mail",
-      ],
+      features: sharedFeatures,
     },
     {
       name: plans.tier_3.label,
       monthly: formatMoney(plans.tier_3.monthly.amount),
       annual: formatMoney(plans.tier_3.annual.amount),
-      limit: `Até ${plans.tier_3.maxPatients} pacientes`,
+      limit: t("planUpTo", { max: plans.tier_3.maxPatients }),
       featured: false,
       ctaLabel: "Iniciar meus 7 dias Grátis",
       ctaHref: "/sign-up",
@@ -112,17 +86,17 @@ export default async function Home() {
     },
     {
       name: "Enterprise",
-      monthly: "Sob consulta",
-      annual: "Sob consulta",
-      limit: "200+ pacientes",
+      monthly: "custom",
+      annual: "custom",
+      limit: t("planEnterpriseLimit"),
       featured: false,
-      ctaLabel: "Iniciar meus 7 dias Grátis",
+      ctaLabel: t("planCtaLabel"),
       ctaHref: "mailto:contato@pododesk.com.br",
       features: [
-        "Plano customizado para grandes operações",
-        "Suporte estratégico dedicado",
-        "Condições comerciais personalizadas",
-        "Onboarding assistido",
+        t("planEnterpriseFeature1"),
+        t("planEnterpriseFeature2"),
+        t("planEnterpriseFeature3"),
+        t("planEnterpriseFeature4"),
       ],
     },
   ];
@@ -157,32 +131,35 @@ export default async function Home() {
                   href="#funcionalidades"
                   className="rounded-lg px-3 py-2 font-semibold text-slate-700 transition hover:bg-slate-100"
                 >
-                  Funcionalidades
+                  {t("navFeatures")}
                 </a>
                 <a
                   href="#precos"
                   className="rounded-lg px-3 py-2 font-semibold text-slate-700 transition hover:bg-slate-100"
                 >
-                  Preços
+                  {t("navPricing")}
                 </a>
                 <Link
                   href="/blog"
                   className="rounded-lg px-3 py-2 font-semibold text-slate-700 transition hover:bg-slate-100"
                 >
-                  Blog
+                  {t("navBlog")}
                 </Link>
                 <Link
                   href="/sign-in"
                   className="rounded-lg px-3 py-2 font-semibold text-slate-700 transition hover:bg-slate-100"
                 >
-                  Entrar
+                  {t("navSignIn")}
                 </Link>
                 <Link
                   href="/sign-up"
                   className="btn-gradient mt-2 px-4 py-2 text-center"
                 >
-                  Começar agora
+                  {t("navSignUp")}
                 </Link>
+                <div className="mt-2 flex justify-center">
+                  <LocaleSwitcher />
+                </div>
               </nav>
             </div>
           </details>
@@ -192,29 +169,30 @@ export default async function Home() {
               href="#funcionalidades"
               className="border-b-2 border-primary pb-1 text-sm font-bold tracking-tight text-primary"
             >
-              Funcionalidades
+              {t("navFeatures")}
             </a>
             <a
               href="#precos"
               className="text-sm font-bold tracking-tight text-slate-600 transition hover:text-primary"
             >
-              Preços
+              {t("navPricing")}
             </a>
             <Link
               href="/blog"
               className="text-sm font-bold tracking-tight text-slate-600 transition hover:text-primary"
             >
-              Blog
+              {t("navBlog")}
             </Link>
             <Link
               href="/sign-in"
               className="text-sm font-bold tracking-tight text-slate-600 transition hover:text-primary"
             >
-              Entrar
+              {t("navSignIn")}
             </Link>
             <Link href="/sign-up" className="btn-gradient px-5 py-2">
-              Começar agora
+              {t("navSignUp")}
             </Link>
+            <LocaleSwitcher />
           </nav>
         </div>
       </header>
@@ -230,16 +208,15 @@ export default async function Home() {
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-2 lg:gap-16">
           <div className="space-y-8">
             <span className="inline-flex items-center rounded-full border border-primary/20 bg-gradient-to-r from-primary/20 to-secondary/20 px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">
-              O futuro da podologia é digital.
+              {t("badge")}
             </span>
 
             <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight text-secondary sm:text-5xl lg:text-6xl">
-              Foque nos seus pacientes. Deixe a gestão com o PodoDesk.
+              {t("heroTitle")}
             </h1>
 
             <p className="max-w-xl text-lg leading-relaxed text-slate-700">
-              O sistema completo para clínicas de podologia que buscam
-              excelência clínica e eficiência operacional sem burocracia.
+              {t("heroSubtitle")}
             </p>
 
             <div className="flex flex-col gap-4 sm:flex-row">
@@ -247,13 +224,13 @@ export default async function Home() {
                 href="/sign-up"
                 className="btn-gradient px-8 py-4 text-base font-bold"
               >
-                Começar meus 7 dias grátis
+                {t("heroCtaPrimary")}
               </Link>
               <a
                 href="#funcionalidades"
                 className="inline-flex items-center justify-center rounded-xl border border-secondary/20 bg-white/85 px-8 py-4 text-base font-bold text-secondary shadow-[0_10px_25px_-18px_rgba(33,66,166,0.85)] transition hover:bg-secondary/5"
               >
-                Ver demonstração
+                {t("heroCtaSecondary")}
               </a>
             </div>
 
@@ -276,7 +253,7 @@ export default async function Home() {
                 />
               </div>
               <span className="text-sm font-medium text-slate-700">
-                +500 podólogos já digitalizaram suas clínicas
+                {t("socialProof")}
               </span>
             </div>
           </div>
@@ -297,25 +274,23 @@ export default async function Home() {
       <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(236,252,250,0.85)_100%)] px-6 py-24 md:px-8 md:py-28">
         <div className="mx-auto max-w-4xl space-y-12 text-center">
           <h2 className="text-3xl font-extrabold tracking-tight text-secondary sm:text-5xl">
-            Chega de papelada, faltas e desorganização.
+            {t("statsHeading")}
           </h2>
           <p className="text-lg leading-relaxed text-slate-700">
-            Nós transformamos o caos administrativo em fluxos de trabalho
-            assepticamente limpos. Do primeiro contato ao pós-tratamento, tudo
-            em um só lugar.
+            {t("statsSubtitle")}
           </p>
 
           <div className="grid grid-cols-1 gap-8 pt-6 md:grid-cols-3">
             <div className="mx-auto flex h-44 w-44 flex-col items-center justify-center rounded-full border border-secondary/20 bg-[radial-gradient(circle_at_30%_25%,#ffffff_0%,#eef6ff_65%,#e2ecff_100%)] shadow-[0_22px_40px_-24px_rgba(33,66,166,0.65)]">
               <div className="text-4xl font-extrabold text-secondary">98%</div>
               <p className="mt-2 px-5 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
-                Redução de Papel
+                {t("stat1Label")}
               </p>
             </div>
             <div className="mx-auto flex h-44 w-44 flex-col items-center justify-center rounded-full border border-secondary/20 bg-[radial-gradient(circle_at_30%_25%,#ffffff_0%,#eef6ff_65%,#e2ecff_100%)] shadow-[0_22px_40px_-24px_rgba(33,66,166,0.65)]">
               <div className="text-4xl font-extrabold text-secondary">45%</div>
               <p className="mt-2 px-5 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
-                Menos Faltas
+                {t("stat2Label")}
               </p>
             </div>
             <div className="mx-auto flex h-44 w-44 flex-col items-center justify-center rounded-full border border-secondary/20 bg-[radial-gradient(circle_at_30%_25%,#ffffff_0%,#eef6ff_65%,#e2ecff_100%)] shadow-[0_22px_40px_-24px_rgba(33,66,166,0.65)]">
@@ -323,7 +298,7 @@ export default async function Home() {
                 2h/dia
               </div>
               <p className="mt-2 px-5 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
-                Economia de Tempo
+                {t("stat3Label")}
               </p>
             </div>
           </div>
@@ -337,10 +312,10 @@ export default async function Home() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center md:text-left">
             <h3 className="mb-4 text-sm font-bold uppercase tracking-[0.2em] text-primary">
-              Potencialize sua prática
+              {t("featuresTagline")}
             </h3>
             <h2 className="text-3xl font-extrabold tracking-tight text-secondary sm:text-4xl">
-              Recursos projetados para a clínica moderna.
+              {t("featuresHeading")}
             </h2>
           </div>
 
@@ -397,13 +372,13 @@ export default async function Home() {
           <div className="flex flex-col items-center space-y-10 text-center">
             <div className="space-y-6">
               <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-                Pronto para elevar o padrão da sua clínica?
+                {t("footerCta")}
               </h2>
               <Link
                 href="/sign-up"
                 className="btn-gradient inline-flex rounded-full px-10 py-5 text-xl font-black"
               >
-                Quero testar o PodoDesk por 7 dias
+                {t("footerCtaBtn")}
               </Link>
             </div>
 
@@ -417,75 +392,74 @@ export default async function Home() {
                   className="h-auto w-40"
                 />
                 <p className="text-sm leading-relaxed text-slate-400">
-                  Gestão clínica com precisão asséptica. Desenvolvido por
-                  especialistas para profissionais de alto rendimento.
+                  {t("footerTagline")}
                 </p>
               </div>
 
               <div className="space-y-3">
-                <h4 className="mb-4 font-bold text-white">Produto</h4>
+                <h4 className="mb-4 font-bold text-white">{t("footerColProduct")}</h4>
                 <a
                   className="block text-slate-400 transition hover:text-white"
                   href="#funcionalidades"
                 >
-                  Funcionalidades
+                  {t("footerLinkFeatures")}
                 </a>
                 <a
                   className="block text-slate-400 transition hover:text-white"
                   href="#"
                 >
-                  Segurança de Dados
+                  {t("footerLinkSecurity")}
                 </a>
                 <a
                   className="block text-slate-400 transition hover:text-white"
                   href="#precos"
                 >
-                  Preços
+                  {t("footerLinkPricing")}
                 </a>
               </div>
 
               <div className="space-y-3">
-                <h4 className="mb-4 font-bold text-white">Suporte</h4>
+                <h4 className="mb-4 font-bold text-white">{t("footerColSupport")}</h4>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/helpdesk"
                 >
-                  Central de Ajuda
+                  {t("footerLinkHelp")}
                 </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/contato"
                 >
-                  Contato
+                  {t("footerLinkContact")}
                 </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/blog"
                 >
-                  Blog
+                  {t("footerLinkBlog")}
                 </Link>
               </div>
 
               <div className="space-y-3">
-                <h4 className="mb-4 font-bold text-white">Legal</h4>
+                <h4 className="mb-4 font-bold text-white">{t("footerColLegal")}</h4>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/termos-de-uso"
                 >
-                  Termos de Uso
+                  {t("footerLinkTerms")}
                 </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/politica-de-privacidade"
                 >
-                  Privacidade
+                  {t("footerLinkPrivacy")}
                 </Link>
               </div>
             </div>
 
             <div className="flex w-full flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-sm text-slate-500 md:flex-row">
               <span>
-                © 2024 PodoDesk. Gestão clínica com precisão asséptica.
+                {t("footerCopyright")}
               </span>
               <div className="flex gap-6">
                 <a className="transition hover:text-white" href="#">

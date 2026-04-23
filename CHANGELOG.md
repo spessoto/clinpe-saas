@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-04-23
+
+### Added
+
+- **Suporte multilingual (PT / EN / ES)**: site público agora exibe conteúdo em Português, Inglês e Espanhol; idioma detectado automaticamente pelo browser e persistido em cookie `NEXT_LOCALE`
+- **Seletor de idioma no header**: botões PT 🇧🇷 / EN 🇺🇸 / ES 🇪🇸 exibidos no canto superior direito, visíveis em desktop e mobile
+- **Arquivos de tradução**: criados `messages/pt.json`, `messages/en.json` e `messages/es.json` cobrindo todos os textos da home e da seção de preços
+- **Middleware next-intl**: detecta locale do header `Accept-Language` na primeira visita e define cookie; página recarrega no idioma preferido do visitante
+
 ## [2.1.5] - 2026-04-23
 
 ### Changed

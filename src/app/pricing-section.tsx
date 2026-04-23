@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export type PlanCard = {
   name: string;
@@ -19,6 +20,7 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
     "monthly",
   );
+  const t = useTranslations("PricingSection");
 
   return (
     <section
@@ -28,11 +30,10 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
       <div className="mx-auto flex max-w-7xl flex-col items-center">
         <div className="mb-14 max-w-2xl text-center">
           <h2 className="mb-5 text-3xl font-extrabold tracking-tight text-secondary sm:text-4xl">
-            Um sistema que cresce no mesmo ritmo que a sua clínica.
+            {t("title")}
           </h2>
           <p className="text-lg text-slate-600">
-            Escolha transparência. Sem taxas de instalação, sem fidelidade,
-            apenas resultados clínicos superiores.
+            {t("subtitle")}
           </p>
 
           <div className="mt-8 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
@@ -46,7 +47,7 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
                   : "text-slate-600 hover:bg-slate-100",
               ].join(" ")}
             >
-              Mensal
+              {t("billingMonthly")}
             </button>
             <button
               type="button"
@@ -58,7 +59,7 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
                   : "text-slate-600 hover:bg-slate-100",
               ].join(" ")}
             >
-              Anual
+              {t("billingAnnual")}
             </button>
           </div>
         </div>
@@ -76,7 +77,7 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
             >
               {plan.featured ? (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-primary px-4 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white">
-                  Mais escolhido
+                  {t("mostChosen")}
                 </div>
               ) : null}
 
@@ -88,9 +89,9 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
                   {plan.limit}
                 </p>
                 <div className="mt-4 flex items-end justify-center gap-1">
-                  {plan.monthly === "Sob consulta" ? (
+                  {plan.monthly === "custom" ? (
                     <span className="text-3xl font-black tracking-tight text-secondary">
-                      Sob consulta
+                      {t("customPrice")}
                     </span>
                   ) : (
                     <>
@@ -101,17 +102,17 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
                           : plan.annual}
                       </span>
                       <span className="pb-1 text-slate-600">
-                        {billingCycle === "monthly" ? "/mês" : "/ano"}
+                        {billingCycle === "monthly" ? t("monthSuffix") : t("yearSuffix")}
                       </span>
                     </>
                   )}
                 </div>
                 <p className="mt-2 text-xs text-slate-500">
-                  {plan.monthly === "Sob consulta"
-                    ? "Condições personalizadas"
+                  {plan.monthly === "custom"
+                    ? t("customPriceNote")
                     : billingCycle === "monthly"
-                      ? `Anual: R$ ${plan.annual} (10% de economia)`
-                      : "Pagamento anual com 10% de economia"}
+                      ? t("annualNote", { annual: plan.annual })
+                      : t("monthlyNoteAlt")}
                 </p>
               </div>
 
@@ -157,7 +158,7 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
         </div>
 
         <p className="mt-8 text-center text-sm text-slate-500">
-          Sem fidelidade. Cancele quando quiser.
+          {t("noCommitment")}
         </p>
       </div>
     </section>
