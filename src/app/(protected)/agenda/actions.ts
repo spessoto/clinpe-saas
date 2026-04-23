@@ -554,7 +554,7 @@ export async function createManualAppointmentAction(formData: FormData) {
 
   const { data: patientRecord } = await adminClient
     .from("patients")
-    .select("name, email")
+    .select("name, email, phone")
     .eq("id", patientId)
     .eq("tenant_id", appUser.tenant_id)
     .maybeSingle();
@@ -601,6 +601,7 @@ export async function createManualAppointmentAction(formData: FormData) {
 
   const patientName = patientRecord?.name ?? newPatientName;
   const patientEmail = patientRecord?.email ?? newPatientEmail;
+  const patientPhone = patientRecord?.phone ?? newPatientPhone;
 
   if (!patientEmail) {
     warningMessage = appendWarning(
@@ -620,6 +621,16 @@ export async function createManualAppointmentAction(formData: FormData) {
       warningMessage = appendWarning(warningMessage, getFriendlyEmailWarning());
     }
   }
+
+  await sendWhatsAppEventNotification({
+    tenantId: appUser.tenant_id,
+    eventType: "booking",
+    patientPhone,
+    patientName,
+    clinicName: tenant.name,
+    professionalName: appUser.full_name,
+    scheduledAt,
+  });
 
   revalidatePath("/agenda");
 
