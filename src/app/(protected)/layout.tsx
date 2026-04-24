@@ -43,10 +43,14 @@ function SidebarContent({
   canAccessAdmin,
   billingCtaLabel,
   unreadNotificationCount,
+  isOwner,
+  isTier3,
 }: {
   canAccessAdmin: boolean;
   billingCtaLabel: string;
   unreadNotificationCount: number;
+  isOwner: boolean;
+  isTier3: boolean;
 }) {
   const linkClass =
     "rounded-xl px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/18 [@media(max-height:860px)]:px-2.5 [@media(max-height:860px)]:py-1.5 [@media(max-height:860px)]:text-[13px] [@media(max-height:720px)]:px-2 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:text-xs";
@@ -87,15 +91,22 @@ function SidebarContent({
             ) : null}
           </span>
         </Link>
-        <Link href="/finance" className={linkClass}>
-          Financeiro
-        </Link>
+        {isOwner ? (
+          <Link href="/finance" className={linkClass}>
+            Financeiro
+          </Link>
+        ) : null}
         <Link href="/sterilization" className={linkClass}>
           Esterilização
         </Link>
         <Link href="/settings" className={linkClass}>
           Configurações
         </Link>
+        {isOwner && isTier3 ? (
+          <Link href="/settings/team" className={linkClass}>
+            Equipe
+          </Link>
+        ) : null}
         <Link href="/pop-documents" className={linkClass}>
           POPs
         </Link>
@@ -134,6 +145,8 @@ export default async function ProtectedLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
+  const isOwner = appUser.role === "owner";
+  const isTier3 = tenant.billing_tier === "tier_3";
   const canAccessAdmin =
     process.env.ADMIN_EMAIL?.trim().toLowerCase() ===
     appUser.email.trim().toLowerCase();
@@ -155,6 +168,8 @@ export default async function ProtectedLayout({
         canAccessAdmin={canAccessAdmin}
         billingCtaLabel={billingCtaLabel}
         unreadNotificationCount={unreadNotificationCount ?? 0}
+        isOwner={isOwner}
+        isTier3={isTier3}
       />
 
       <div className="md:flex">
@@ -167,6 +182,8 @@ export default async function ProtectedLayout({
             canAccessAdmin={canAccessAdmin}
             billingCtaLabel={billingCtaLabel}
             unreadNotificationCount={unreadNotificationCount ?? 0}
+            isOwner={isOwner}
+            isTier3={isTier3}
           />
         </aside>
 

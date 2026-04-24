@@ -85,6 +85,8 @@ export default async function Home() {
         "Agendamento público online",
         "Notificações por e-mail",
         "Alertas web para novas consultas",
+        "Até 10 profissionais por clínica",
+        "Convite de profissionais por e-mail",
         "Suporte por e-mail",
       ],
     },

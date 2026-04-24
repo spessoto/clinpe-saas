@@ -241,3 +241,27 @@ export async function requireActiveTenant() {
 
   return { appUser, tenant: tenant as Tenant };
 }
+
+export async function requireOwnerAccess() {
+  const result = await requireActiveTenant();
+  if (result.appUser.role !== "owner") {
+    redirect(
+      "/dashboard?error=" +
+        encodeURIComponent("Acesso restrito ao proprietário da clínica."),
+    );
+  }
+  return result;
+}
+
+export async function requireTier3Owner() {
+  const result = await requireOwnerAccess();
+  if (result.tenant.billing_tier !== "tier_3") {
+    redirect(
+      "/billing?error=" +
+        encodeURIComponent(
+          "Funcionalidade exclusiva do plano Clínica. Faça upgrade para acessar.",
+        ),
+    );
+  }
+  return result;
+}

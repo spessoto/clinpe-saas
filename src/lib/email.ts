@@ -224,3 +224,57 @@ export async function sendAppointmentDecisionEmailWithTimeout(
 
   return timedResult;
 }
+
+// ─── Staff invite ─────────────────────────────────────────────────────────────
+
+export type StaffInviteEmailInput = {
+  to: string;
+  inviteeName: string;
+  clinicName: string;
+  ownerName: string;
+  joinUrl: string;
+};
+
+export async function sendStaffInviteEmail(input: StaffInviteEmailInput) {
+  const env = getEmailEnv();
+  const subject = `${input.clinicName}: você foi convidado para usar o PodoDesk`;
+
+  const text = [
+    `Convite para ${input.clinicName}`,
+    "",
+    `Olá, ${input.inviteeName}!`,
+    `${input.ownerName} convidou você para fazer parte da equipe da clínica ${input.clinicName} no PodoDesk.`,
+    "",
+    "Para aceitar o convite e criar sua conta, acesse o link abaixo:",
+    input.joinUrl,
+    "",
+    "O link expira em 7 dias. Se você não esperava este convite, pode ignorar este e-mail.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #334155; line-height: 1.6;">
+      <h1 style="color: #0D9488; font-size: 24px; margin-bottom: 16px;">Convite para ${input.clinicName}</h1>
+      <p>Olá, ${input.inviteeName}!</p>
+      <p><strong>${input.ownerName}</strong> convidou você para fazer parte da equipe da clínica
+         <strong>${input.clinicName}</strong> no PodoDesk.</p>
+      <div style="margin: 24px 0;">
+        <a href="${input.joinUrl}"
+           style="display: inline-block; background: #0D9488; color: #fff; padding: 12px 24px;
+                  border-radius: 8px; text-decoration: none; font-weight: bold;">
+          Aceitar convite
+        </a>
+      </div>
+      <p style="font-size: 13px; color: #64748B;">
+        O link expira em 7 dias. Se você não esperava este convite, pode ignorar este e-mail.
+      </p>
+    </div>
+  `;
+
+  await getTransporter().sendMail({
+    from: env.SMTP_FROM,
+    to: input.to,
+    subject,
+    text,
+    html,
+  });
+}

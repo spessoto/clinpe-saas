@@ -49,6 +49,8 @@ export default async function SettingsPage({ searchParams }: Props) {
   const params = await searchParams;
   const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
+  const isOwner = appUser.role === "owner";
+  const isTier3 = tenant.billing_tier === "tier_3";
 
   const success = typeof params.success === "string" ? params.success : null;
   const error = typeof params.error === "string" ? params.error : null;
@@ -169,60 +171,62 @@ export default async function SettingsPage({ searchParams }: Props) {
           </div>
         </article>
 
-        <article className="surface-card p-6">
-          <h3 className="text-lg font-semibold text-secondary">Clínica</h3>
+        {isOwner ? (
+          <article className="surface-card p-6">
+            <h3 className="text-lg font-semibold text-secondary">Clínica</h3>
 
-          <div className="mt-4 grid gap-6 md:grid-cols-2">
-            <ImageUpload
-              type="logo"
-              currentUrl={clinicLogoUrl}
-              label="Logo da Clínica"
-              className="md:col-span-1"
-            />
+            <div className="mt-4 grid gap-6 md:grid-cols-2">
+              <ImageUpload
+                type="logo"
+                currentUrl={clinicLogoUrl}
+                label="Logo da Clínica"
+                className="md:col-span-1"
+              />
 
-            <div>
-              <label className="block text-sm">
-                <span className="mb-1 block text-foreground">
-                  Nome da clínica
-                </span>
-                <input
-                  name="clinic_name"
-                  required
-                  defaultValue={clinicName}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-                />
-              </label>
+              <div>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-foreground">
+                    Nome da clínica
+                  </span>
+                  <input
+                    name="clinic_name"
+                    required
+                    defaultValue={clinicName}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                  />
+                </label>
 
-              <label className="block text-sm mt-4">
-                <span className="mb-1 block text-foreground">
-                  E-mail do usuário
-                </span>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  defaultValue={appUser.email}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-                />
-              </label>
+                <label className="block text-sm mt-4">
+                  <span className="mb-1 block text-foreground">
+                    E-mail do usuário
+                  </span>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    defaultValue={appUser.email}
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                  />
+                </label>
 
-              <label className="block text-sm mt-4">
-                <span className="mb-1 block text-foreground">
-                  CPF ou CNPJ para faturamento
-                </span>
-                <input
-                  name="cpf_cnpj"
-                  defaultValue={formatBrazilTaxId(billingDocument)}
-                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-                />
-                <p className="mt-1 text-xs text-muted">
-                  Obrigatório para gerar cobranças e assinaturas no Asaas.
-                </p>
-              </label>
+                <label className="block text-sm mt-4">
+                  <span className="mb-1 block text-foreground">
+                    CPF ou CNPJ para faturamento
+                  </span>
+                  <input
+                    name="cpf_cnpj"
+                    defaultValue={formatBrazilTaxId(billingDocument)}
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                  />
+                  <p className="mt-1 text-xs text-muted">
+                    Obrigatório para gerar cobranças e assinaturas no Asaas.
+                  </p>
+                </label>
+              </div>
             </div>
-          </div>
-        </article>
+          </article>
+        ) : null}
 
         <article className="surface-card p-6">
           <h3 className="text-lg font-semibold text-secondary">
@@ -373,11 +377,28 @@ export default async function SettingsPage({ searchParams }: Props) {
         </button>
       </form>
 
-      <WhatsAppSettings
-        initialStatus={tenant.whatsapp_status}
-        initialTemplates={whatsappTemplates ?? []}
-        initialEventTemplates={whatsappEventTemplates ?? []}
-      />
+      {isOwner ? (
+        <WhatsAppSettings
+          initialStatus={tenant.whatsapp_status}
+          initialTemplates={whatsappTemplates ?? []}
+          initialEventTemplates={whatsappEventTemplates ?? []}
+        />
+      ) : null}
+
+      {isOwner && isTier3 ? (
+        <article className="surface-card p-6">
+          <h3 className="text-lg font-semibold text-secondary">Equipe</h3>
+          <p className="mt-1 text-sm text-muted">
+            Convide profissionais para atender na sua clínica.
+          </p>
+          <a
+            href="/settings/team"
+            className="mt-4 inline-block rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:brightness-110"
+          >
+            Gerenciar equipe
+          </a>
+        </article>
+      ) : null}
     </section>
   );
 }

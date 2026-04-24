@@ -105,20 +105,28 @@ export default async function PublicBookingPage({
             action={`/clinic/${tenant_slug}/book`}
             method="get"
           >
-            <label className="block text-sm">
-              <span className="mb-1 block text-foreground">Profissional</span>
-              <select
+            {context.professionals.length > 1 ? (
+              <label className="block text-sm">
+                <span className="mb-1 block text-foreground">Profissional</span>
+                <select
+                  name="professional_id"
+                  defaultValue={selectedProfessional?.id ?? ""}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                >
+                  {context.professionals.map((professional) => (
+                    <option key={professional.id} value={professional.id}>
+                      {professional.full_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <input
+                type="hidden"
                 name="professional_id"
-                defaultValue={selectedProfessional?.id ?? ""}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-              >
-                {context.professionals.map((professional) => (
-                  <option key={professional.id} value={professional.id}>
-                    {professional.full_name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                value={selectedProfessional?.id ?? ""}
+              />
+            )}
             <label className="block text-sm">
               <span className="mb-1 block text-foreground">Data</span>
               <input

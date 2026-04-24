@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requireActiveTenant } from "@/lib/auth";
+import { requireOwnerAccess } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
@@ -25,7 +25,7 @@ function parseAmount(value: string) {
 }
 
 export async function createFinancialTransactionAction(formData: FormData) {
-  const { appUser } = await requireActiveTenant();
+  const { appUser } = await requireOwnerAccess();
   const supabase = await createClient();
 
   const type = getField(formData, "type");

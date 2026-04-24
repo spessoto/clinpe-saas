@@ -10,12 +10,16 @@ type MobileSidebarProps = {
   canAccessAdmin: boolean;
   billingCtaLabel: string;
   unreadNotificationCount: number;
+  isOwner: boolean;
+  isTier3: boolean;
 };
 
 export function MobileSidebar({
   canAccessAdmin,
   billingCtaLabel,
   unreadNotificationCount,
+  isOwner,
+  isTier3,
 }: MobileSidebarProps) {
   // `mounted` controls whether the overlay/aside are in the DOM.
   // `isOpen` drives the transition classes (false = animating out).
@@ -155,9 +159,15 @@ export function MobileSidebar({
                     ) : null}
                   </span>
                 </Link>
-                <Link href="/finance" className={linkClass} onClick={closeMenu}>
-                  Financeiro
-                </Link>
+                {isOwner ? (
+                  <Link
+                    href="/finance"
+                    className={linkClass}
+                    onClick={closeMenu}
+                  >
+                    Financeiro
+                  </Link>
+                ) : null}
                 <Link
                   href="/sterilization"
                   className={linkClass}
@@ -172,6 +182,15 @@ export function MobileSidebar({
                 >
                   Configurações
                 </Link>
+                {isOwner && isTier3 ? (
+                  <Link
+                    href="/settings/team"
+                    className={linkClass}
+                    onClick={closeMenu}
+                  >
+                    Equipe
+                  </Link>
+                ) : null}
                 <Link
                   href="/pop-documents"
                   className={linkClass}
