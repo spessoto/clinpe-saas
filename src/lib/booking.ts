@@ -414,6 +414,39 @@ export async function diagnosePublicProfessionalBooking(
   return { status: "ok" };
 }
 
+export async function diagnosePublicBooking(tenantSlug: string): Promise<{
+  status:
+    | "tenant_not_found"
+    | "booking_disabled"
+    | "subscription_inactive"
+    | "ok";
+  tenantName?: string;
+}> {
+  const supabase = createAdminClient();
+
+  const { data: tenant } = await supabase
+    .from("tenants")
+    .select(
+      "id, name, booking_enabled, trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at",
+    )
+    .eq("slug", tenantSlug)
+    .maybeSingle();
+
+  if (!tenant) {
+    return { status: "tenant_not_found" };
+  }
+
+  if (!tenant.booking_enabled) {
+    return { status: "booking_disabled", tenantName: tenant.name };
+  }
+
+  if (!hasTenantAccess(tenant as Tenant)) {
+    return { status: "subscription_inactive", tenantName: tenant.name };
+  }
+
+  return { status: "ok", tenantName: tenant.name };
+}
+
 export async function getAvailableSlots(input: {
   tenantSlug: string;
   professionalId: string;

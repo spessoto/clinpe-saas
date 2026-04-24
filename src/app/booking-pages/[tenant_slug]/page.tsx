@@ -1,8 +1,24 @@
-import { notFound } from "next/navigation";
 import Image from "next/image";
 
 import { createPublicBookingAction } from "@/app/public-booking-actions";
-import { getAvailableSlots, getPublicBookingContext } from "@/lib/booking";
+import {
+  diagnosePublicBooking,
+  getAvailableSlots,
+  getPublicBookingContext,
+} from "@/lib/booking";
+
+function UnavailableBookingPage({ message }: { message: string }) {
+  return (
+    <main className="bg-[radial-gradient(circle_at_top,#dbeafe,transparent_45%),linear-gradient(180deg,#f8fafc,white)] px-6 py-12">
+      <section className="surface-card mx-auto max-w-4xl border-warning/40 p-8">
+        <h1 className="text-3xl font-bold text-secondary">
+          Autoagendamento indisponível
+        </h1>
+        <p className="mt-3 text-muted">{message}</p>
+      </section>
+    </main>
+  );
+}
 
 type Props = {
   params: Promise<{ tenant_slug: string }>;
@@ -42,7 +58,18 @@ export default async function BookingPage({ params, searchParams }: Props) {
   }
 
   if (!context || !context.tenant.booking_enabled) {
-    notFound();
+    const diagnostic = await diagnosePublicBooking(tenant_slug);
+    let message =
+      "Não foi possível localizar a página de agendamento para este link.";
+    if (diagnostic.status === "tenant_not_found") {
+      message =
+        "Nenhuma clínica foi encontrada para este endereço. Verifique o link e tente novamente.";
+    } else if (diagnostic.status === "booking_disabled") {
+      message = `O autoagendamento está desativado para a clínica ${diagnostic.tenantName}. Entre em contato diretamente para agendar.`;
+    } else if (diagnostic.status === "subscription_inactive") {
+      message = `A assinatura da clínica ${diagnostic.tenantName} está vencida ou inativa. Entre em contato diretamente para agendar.`;
+    }
+    return <UnavailableBookingPage message={message} />;
   }
 
   const selectedProfessional =
