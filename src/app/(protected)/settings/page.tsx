@@ -19,15 +19,6 @@ type UserSettings = {
   lunch_end_time: string | null;
 };
 
-function slugifyProfessionalName(name: string) {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 function toTimeInput(value: string | null, fallback: string) {
   const source = value ?? fallback;
   return source.slice(0, 5);
@@ -99,14 +90,12 @@ export default async function SettingsPage({ searchParams }: Props) {
   const hasLunchBreak = Boolean(userSettings.lunch_start_time);
 
   const workingDays = userSettings.working_days ?? [1, 2, 3, 4, 5];
-  const professionalSlug =
-    appUser.booking_slug ?? slugifyProfessionalName(appUser.full_name);
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
     (process.env.NODE_ENV === "production"
       ? "https://pododesk.com.br"
       : "http://localhost:3000");
-  const publicBookingUrl = `${appUrl}/${professionalSlug}`;
+  const publicBookingUrl = `${appUrl}/booking-pages/${tenant.slug}`;
 
   return (
     <section className="space-y-6">

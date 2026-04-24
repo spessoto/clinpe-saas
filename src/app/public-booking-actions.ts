@@ -18,7 +18,7 @@ export async function createPublicBookingAction(formData: FormData) {
   const patientEmail = getField(formData, "patient_email");
   const patientPhone = getField(formData, "patient_phone");
   const recaptchaToken = getField(formData, "recaptcha_token");
-  const basePath = returnPath || `/clinic/${tenantSlug}/book`;
+  const basePath = returnPath || `/booking-pages/${tenantSlug}`;
 
   if (
     !tenantSlug ||
