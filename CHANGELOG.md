@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-04-23
+
+### Security
+
+- **Next.js 16.1.6 → 16.2.4**: corrige 6 CVEs de alta severidade — HTTP request smuggling em rewrites (GHSA-ggv3-7p47-pfv8), bypass de CSRF em Server Actions e HMR via null origin (GHSA-mq59-m269-xvcx, GHSA-jcc7-9wpm-mj36), DoS em Server Components (GHSA-q4gf-8mx6-v5v3), crescimento ilimitado de cache de imagem (GHSA-3x4c-7xq6-9pq8) e buffer de resume ilimitado (GHSA-h27x-g6w4-24gq)
+- **Atualização em lote de dependências** via `npm audit fix`: corrige `hono`, `@hono/node-server`, `nodemailer`, `dompurify`, `flatted`, `brace-expansion`, `path-to-regexp`, `vite` e `vitest`
+- **Overrides de segurança**: `picomatch ^4.0.4`, `uuid ^14.0.0` e `js-yaml ^4.1.0` adicionados em `overrides` para eliminar as últimas vulnerabilidades transitivas em cadeias de dependências de terceiros (Sanity, Vite, dotenvx)
+- **Total: 29 → 0 vulnerabilidades** após a atualização
+
+### Changed
+
+- **`middleware.ts` renomeado para `proxy.ts`**: Next.js 16 deprecia a convenção `middleware` em favor de `proxy`; arquivo e nome da função exportada atualizados
+- **`serverActions` removido de `experimental`**: condição `bodySizeLimit` movida para o nível raiz da configuração em `next.config.ts`, eliminando o aviso de `experimental.serverActions` no build
+
 ## [2.4.1] - 2026-04-23
 
 ### Changed

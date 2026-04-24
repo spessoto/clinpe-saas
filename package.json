@@ -1,6 +1,6 @@
 {
   "name": "clinpe-app",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
@@ -31,7 +31,7 @@
     "date-fns": "^4.1.0",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.577.0",
-    "next": "16.1.6",
+    "next": "16.2.4",
     "next-intl": "^4.9.1",
     "next-sanity": "^12.2.2",
     "nodemailer": "^8.0.2",
@@ -58,10 +58,15 @@
     "@types/web-push": "^3.6.4",
     "cross-env": "^10.1.0",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.4",
     "jsdom": "^28.1.0",
     "supabase": "^2.78.1",
     "typescript": "^5",
     "vitest": "^4.1.0"
+  },
+  "overrides": {
+    "picomatch": "^4.0.4",
+    "uuid": "^14.0.0",
+    "js-yaml": "^4.1.0"
   }
 }
