@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.1] - 2026-04-23
+
+### Changed
+
+- **Redesign da página de autoagendamento público (`/booking-pages/[slug]`)**: layout migrado de dois cards lado a lado para um formulário único em coluna com três passos numerados — (1) Profissional e data, (2) Horário disponível, (3) Dados pessoais — facilitando o preenchimento em dispositivos móveis
+- **Novo componente `BookingFilters` (client)**: seletor de profissional exibe avatar/iniciais, e a alteração de profissional ou data navega automaticamente sem botão de submit separado
+- **Slots em grade visual com radio pills**: horários disponíveis exibidos em grid 3–4 colunas com botões selecionáveis em destaque, substituindo a lista com radio input textual
+- **reCAPTCHA integrado no formulário público de agendamento**: `RecaptchaForm` + `RecaptchaSubmitButton` adicionados à página pública — tokens gerados no client e verificados server-side antes de criar o agendamento
+- **Páginas de indisponibilidade centralizadas**: estados de erro/acesso negado renderizam layout centrado em tela cheia com card `max-w-lg` em vez do layout de página completa com gradiente
+
+### Fixed
+
+- **Booking page mostra mensagem amigável em vez de 404 ao acessar clínica inexistente**: rota `/booking-pages/[slug]` retorna página de indisponibilidade descritiva quando a clínica não existe ou não tem agendamento configurado
+- **Middleware restaurado**: `middleware.ts` estava renomeado para `proxy.ts`; Next.js ignorava o arquivo e todas as rotas protegidas ficavam desprotegidas — arquivo restaurado ao nome correto
+
 ## [2.4.0] - 2026-04-23
 
 ### Changed

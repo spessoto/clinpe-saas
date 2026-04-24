@@ -4,7 +4,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 
 ## Status do projeto
 
-- Versão publicada: `v2.1.5`
+- Versão publicada: `v2.4.1`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -44,7 +44,12 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - **Gestão de cupons no admin**: criação e edição de cupons com validade, limite, ciclos e escopo mensal/anual em `/admin/coupons`
 - **Preços dinâmicos no admin**: gestão de planos em `/admin/pricing`, refletindo em landing e billing
 - **Billing com cupom e dados de faturamento**: checkout com CPF/CNPJ validado, método de pagamento e prévia de desconto por ciclo
-- **Segurança reforçada com reCAPTCHA v3**: aplicado em login, cadastro e agendamento público
+- **Páginas de agendamento unificadas por clínica (`/booking-pages/[slug]`)**: URL pública migrada de `/{professional_slug}` para `/booking-pages/{tenant_slug}`; dropdown de profissional no widget quando a clínica tem mais de um profissional ativo
+- **Redesign do autoagendamento público**: formulário passo a passo (Profissional/Data → Horário → Dados), slots em grid visual com radio pills, reCAPTCHA integrado e layout mobile-first single-column
+- **Concessão de plano pago gratuito pelo admin**: admin pode atribuir qualquer plano pago (Starter, Pro, Clínica) gratuitamente a qualquer clínica com data de expiração opcional
+- **Suporte multi-profissional (plano Clínica)**: convite por e-mail para profissionais extras, cada um com login próprio; limite de 9 profissionais por clínica no plano tier_3
+- **Suporte multilingual (PT / EN / ES)**: site público e seletor de idioma no header; detecção automática pelo browser e persistência em cookie
+- **Segurança reforçada (v2.2.1)**: validação MIME/tamanho server-side em uploads, comparação timing-safe em webhooks, Content Security Policy, middleware de proteção de rotas e sanitização de busca de pacientes
 - **Registro fotográfico mobile no prontuário**: captura direta da câmera, seleção por galeria, preview com remoção e limite de até 4 imagens por prontuário
 - **Rastreabilidade por material no prontuário**: seleção individual de lote + material em `/medical-records/new` com exibição detalhada no prontuário salvo
 - **Recuperação de valores personalizados de "Outro"**: o novo prontuário reapresenta opções já cadastradas como `Outro: ...` para acelerar o atendimento
