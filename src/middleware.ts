@@ -26,7 +26,7 @@ function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Only run auth check on protected routes
@@ -70,8 +70,6 @@ export async function proxy(request: NextRequest) {
 
   return response;
 }
-
-export default proxy;
 
 export const config = {
   matcher: [
