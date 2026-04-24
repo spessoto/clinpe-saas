@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2026-04-23
+
+### Changed
+
+- **Páginas de agendamento unificadas por clínica (`/booking-pages/[slug]`)**: URL pública de agendamento migrada de `/[professional_slug]` para `/booking-pages/[tenant_slug]`, vinculando a página à clínica em vez de ao profissional individual
+- **Dropdown de profissional no widget de agendamento**: quando a clínica possui mais de um profissional ativo, o paciente pode escolher o profissional desejado diretamente na página de agendamento
+- **Retrocompatibilidade de URLs antigas**: rotas `/clinic/[tenant_slug]/book` e `/[professional_slug]` redirecionam automaticamente para a nova URL da clínica, preservando parâmetros de query (`professional_id`, `date`, `success`, `error`)
+- **Link de agendamento na página de Configurações** atualizado para exibir a nova URL da clínica
+
+## [2.3.1] - 2026-04-23
+
+### Added
+
+- **Concessão de plano pago gratuito pelo admin**: na tela de detalhes de usuário no painel admin, admins com `role = admin` podem atribuir qualquer plano pago (Starter, Pro ou Clínica) gratuitamente a qualquer clínica, com opção de plano permanente ou com data de expiração configurável
+- **Auditoria de planos concedidos**: colunas `free_plan_granted_at`, `free_plan_granted_by_email` e `free_plan_tier` adicionadas à tabela `tenants`; ação registrada em `admin_audit_log`
+
+## [2.3.0] - 2026-04-23
+
+### Added
+
+- **Suporte multi-profissional (plano Clínica)**: clínicas no plano Clínica (tier_3) podem convidar até 9 profissionais extras via sistema de convites por e-mail; cada profissional acessa o sistema com login próprio e vê apenas suas consultas
+- **Sistema de convites por token**: nova tabela `user_invites` — ao aceitar o convite o profissional é automaticamente vinculado à clínica do owner sem criar um novo tenant
+- **Controle de limite por plano**: coluna `max_staff_users` em `billing_plan_prices` (tier_3 = 9; demais planos = 0); trigger de criação de usuário valida o limite antes de aceitar o convite
+
 ## [2.2.1] - 2026-04-23
 
 ### Security
