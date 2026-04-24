@@ -631,3 +631,122 @@ export async function extendClientTrialAction(formData: FormData) {
     `/admin/users?${pageQuery}&success=${encodeURIComponent(`Trial estendido em ${extraDays} dia(s)`)}`,
   );
 }
+
+const TIER_MAX_PATIENTS: Record<string, number> = {
+  tier_1: 30,
+  tier_2: 80,
+  tier_3: 150,
+};
+
+const TIER_LABELS: Record<string, string> = {
+  tier_1: "Starter",
+  tier_2: "Pro",
+  tier_3: "Clínica",
+};
+
+export async function grantFreePlanAction(formData: FormData) {
+  const adminUser = await requireAdminAccess();
+  const adminClient = createAdminClient();
+
+  const tenantId = String(formData.get("tenant_id") ?? "").trim();
+  const tier = String(formData.get("tier") ?? "").trim() as
+    | "tier_1"
+    | "tier_2"
+    | "tier_3";
+  const expiryInput = String(formData.get("expires_at") ?? "").trim();
+  const permanent = formData.get("permanent") === "1";
+  const currentPage = Math.max(
+    1,
+    Number.parseInt(String(formData.get("page") ?? "1"), 10) || 1,
+  );
+  const pageQuery = `page=${currentPage}`;
+
+  if (!tenantId) {
+    redirect(`/admin/users?${pageQuery}&error=Cliente%20inválido`);
+  }
+
+  if (!["tier_1", "tier_2", "tier_3"].includes(tier)) {
+    redirect(`/admin/users?${pageQuery}&error=Plano%20inválido`);
+  }
+
+  let expiresAt: string | null = null;
+  if (!permanent) {
+    if (!expiryInput) {
+      redirect(
+        `/admin/users?${pageQuery}&error=Informe%20a%20data%20de%20expiração%20ou%20marque%20como%20permanente`,
+      );
+    }
+    const parsed = new Date(expiryInput);
+    if (Number.isNaN(parsed.getTime()) || parsed <= new Date()) {
+      redirect(
+        `/admin/users?${pageQuery}&error=Data%20de%20expiração%20inválida`,
+      );
+    }
+    expiresAt = parsed.toISOString();
+  }
+
+  const { data: tenant, error: tenantError } = await adminClient
+    .from("tenants")
+    .select(
+      "id, billing_tier, max_patients_allowed, subscription_status, subscription_expires_at, is_permanent_free_plan",
+    )
+    .eq("id", tenantId)
+    .single();
+
+  if (tenantError || !tenant) {
+    redirect(`/admin/users?${pageQuery}&error=Cliente%20não%20encontrado`);
+  }
+
+  // Fetch max_patients from billing_plan_prices if available, fallback to hardcoded map
+  const { data: planPrice } = await adminClient
+    .from("billing_plan_prices")
+    .select("max_patients")
+    .eq("tier", tier)
+    .maybeSingle();
+
+  const maxPatients = planPrice?.max_patients ?? TIER_MAX_PATIENTS[tier] ?? 30;
+
+  const nextState = {
+    billing_tier: tier,
+    max_patients_allowed: maxPatients,
+    subscription_status: "active" as const,
+    subscription_expires_at: expiresAt,
+    is_permanent_free_plan: false,
+    free_plan_granted_at: new Date().toISOString(),
+    free_plan_granted_by_email: adminUser.email,
+    free_plan_tier: tier,
+  };
+
+  const { error: updateError } = await adminClient
+    .from("tenants")
+    .update(nextState)
+    .eq("id", tenantId);
+
+  if (updateError) {
+    redirect(
+      `/admin/users?${pageQuery}&error=${encodeURIComponent(`Falha ao conceder plano: ${updateError.message}`)}`,
+    );
+  }
+
+  await adminClient.from("admin_audit_log").insert({
+    admin_user_id: adminUser.id,
+    admin_user_email: adminUser.email,
+    tenant_id: tenantId,
+    action: "grant_free_paid_plan",
+    previous_state: {
+      billing_tier: tenant.billing_tier,
+      max_patients_allowed: tenant.max_patients_allowed,
+      subscription_status: tenant.subscription_status,
+      subscription_expires_at: tenant.subscription_expires_at,
+      is_permanent_free_plan: tenant.is_permanent_free_plan,
+    },
+    next_state: nextState,
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/users");
+  revalidatePath("/billing");
+  redirect(
+    `/admin/users?${pageQuery}&success=${encodeURIComponent(`Plano ${TIER_LABELS[tier]} concedido gratuitamente${permanent ? " (sem expiração)" : ""}`)}`,
+  );
+}

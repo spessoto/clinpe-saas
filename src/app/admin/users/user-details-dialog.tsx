@@ -6,6 +6,7 @@ import { Pencil } from "lucide-react";
 import {
   enableClientPermanentFreeFromUsersAction,
   extendClientTrialAction,
+  grantFreePlanAction,
   revokeClientPermanentFreeFromUsersAction,
 } from "@/app/admin/users/actions";
 
@@ -76,6 +77,8 @@ export function UserDetailsDialog({
 }: UserDetailsDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [trialOpen, setTrialOpen] = useState(false);
+  const [grantPlanOpen, setGrantPlanOpen] = useState(false);
+  const [isPermanent, setIsPermanent] = useState(false);
 
   return (
     <>
@@ -267,6 +270,95 @@ export function UserDetailsDialog({
               </form>
             )}
           </div>
+
+          {/* Conceder plano pago gratuito */}
+          {user.client && (
+            <div>
+              <button
+                type="button"
+                onClick={() => setGrantPlanOpen((v) => !v)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-slate-100"
+              >
+                {grantPlanOpen ? "Cancelar" : "Conceder plano gratuito"}
+              </button>
+
+              {grantPlanOpen && (
+                <form
+                  action={grantFreePlanAction}
+                  className="mt-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <input
+                    type="hidden"
+                    name="tenant_id"
+                    value={user.tenant_id}
+                  />
+                  <input
+                    type="hidden"
+                    name="page"
+                    value={String(currentPage)}
+                  />
+
+                  <label className="block text-sm">
+                    <span className="mb-1 block font-semibold text-foreground">
+                      Plano
+                    </span>
+                    <select
+                      name="tier"
+                      required
+                      defaultValue="tier_1"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
+                    >
+                      <option value="tier_1">Starter (Básico)</option>
+                      <option value="tier_2">Pro (Profissional)</option>
+                      <option value="tier_3">Clínica</option>
+                    </select>
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="grant-permanent"
+                      name="permanent"
+                      value="1"
+                      checked={isPermanent}
+                      onChange={(e) => setIsPermanent(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300"
+                    />
+                    <label
+                      htmlFor="grant-permanent"
+                      className="text-sm font-semibold text-foreground"
+                    >
+                      Sem data de expiração
+                    </label>
+                  </div>
+
+                  {!isPermanent && (
+                    <label className="block text-sm">
+                      <span className="mb-1 block font-semibold text-foreground">
+                        Expira em
+                      </span>
+                      <input
+                        type="date"
+                        name="expires_at"
+                        required
+                        min={new Date(Date.now() + 86400000)
+                          .toISOString()
+                          .slice(0, 10)}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
+                      />
+                    </label>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/15"
+                  >
+                    Conceder plano gratuito
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
         </div>
       </dialog>
     </>
