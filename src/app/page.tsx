@@ -290,20 +290,32 @@ export default async function Home() {
           </p>
 
           <div className="grid grid-cols-1 gap-6 pt-6 md:grid-cols-3">
-            <div className="rounded-2xl border border-red-200/60 bg-white p-6 text-left shadow-sm">
-              <span className="text-2xl">❌</span>
-              <h3 className="mt-3 font-bold text-secondary">{t("stat1Label")}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{t("stat1Text")}</p>
+            <div className="rounded-2xl border border-primary/20 bg-white p-6 text-left shadow-sm">
+              <span className="text-2xl">⚡️</span>
+              <h3 className="mt-3 font-bold text-secondary">
+                {t("stat1Label")}
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                {t("stat1Text")}
+              </p>
             </div>
-            <div className="rounded-2xl border border-red-200/60 bg-white p-6 text-left shadow-sm">
-              <span className="text-2xl">❌</span>
-              <h3 className="mt-3 font-bold text-secondary">{t("stat2Label")}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{t("stat2Text")}</p>
+            <div className="rounded-2xl border border-primary/20 bg-white p-6 text-left shadow-sm">
+              <span className="text-2xl">📊</span>
+              <h3 className="mt-3 font-bold text-secondary">
+                {t("stat2Label")}
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                {t("stat2Text")}
+              </p>
             </div>
-            <div className="rounded-2xl border border-red-200/60 bg-white p-6 text-left shadow-sm">
-              <span className="text-2xl">❌</span>
-              <h3 className="mt-3 font-bold text-secondary">{t("stat3Label")}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-slate-600">{t("stat3Text")}</p>
+            <div className="rounded-2xl border border-primary/20 bg-white p-6 text-left shadow-sm">
+              <span className="text-2xl">📈</span>
+              <h3 className="mt-3 font-bold text-secondary">
+                {t("stat3Label")}
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                {t("stat3Text")}
+              </p>
             </div>
           </div>
         </div>
@@ -379,11 +391,15 @@ export default async function Home() {
           <div className="space-y-4">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
               <h3 className="font-bold text-secondary">{t("faq1Q")}</h3>
-              <p className="mt-2 leading-relaxed text-slate-700">{t("faq1A")}</p>
+              <p className="mt-2 leading-relaxed text-slate-700">
+                {t("faq1A")}
+              </p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
               <h3 className="font-bold text-secondary">{t("faq2Q")}</h3>
-              <p className="mt-2 leading-relaxed text-slate-700">{t("faq2A")}</p>
+              <p className="mt-2 leading-relaxed text-slate-700">
+                {t("faq2A")}
+              </p>
             </div>
           </div>
         </div>
