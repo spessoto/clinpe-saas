@@ -2,7 +2,7 @@ import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { requireAdminAccess } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getEffectiveTrialEnd, hasTenantAccess } from "@/lib/tenant-access";
+import { getEffectiveTrialEnd } from "@/lib/tenant-access";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
@@ -123,12 +123,13 @@ export default async function AdminDashboardPage({
   const next30Days = new Date(now);
   next30Days.setDate(next30Days.getDate() + 30);
 
-  const [clients, usersCountResult] = await Promise.all([
+  const [clients, usersCountResult, adminTenantsResult] = await Promise.all([
     fetchAllTenantsForKpis(),
     adminClient
       .from("users")
       .select("id", { count: "exact", head: true })
       .eq("is_admin", false),
+    adminClient.from("users").select("tenant_id").eq("is_admin", true),
   ]);
 
   if (usersCountResult.error) {
@@ -139,9 +140,47 @@ export default async function AdminDashboardPage({
 
   const usersCount = usersCountResult.count ?? 0;
 
-  const activeTenantIds = clients
-    .filter((client) => hasTenantAccess(client))
-    .map((client) => client.id);
+  // Tenants que pertencem a usuários admin — excluídos de "clientes ativos"
+  const adminTenantIds = new Set(
+    (adminTenantsResult.data ?? [])
+      .map((u) => u.tenant_id)
+      .filter(Boolean) as string[],
+  );
+
+  // Clientes ativos = tiveram pelo menos 1 agendamento ou 1 paciente criado nos últimos 15 dias
+  // e não pertencem a usuários admin
+  const last15Days = new Date(now);
+  last15Days.setDate(last15Days.getDate() - 15);
+  const last15DaysIso = last15Days.toISOString();
+
+  const allTenantIds = clients
+    .map((c) => c.id)
+    .filter((id) => !adminTenantIds.has(id));
+  const activeTenantsSet = new Set<string>();
+
+  for (let i = 0; i < allTenantIds.length; i += TENANT_IN_BATCH_SIZE) {
+    const batch = allTenantIds.slice(i, i + TENANT_IN_BATCH_SIZE);
+
+    const [apptResult, patientResult] = await Promise.all([
+      adminClient
+        .from("appointments")
+        .select("tenant_id")
+        .in("tenant_id", batch)
+        .gte("created_at", last15DaysIso),
+      adminClient
+        .from("patients")
+        .select("tenant_id")
+        .in("tenant_id", batch)
+        .gte("created_at", last15DaysIso),
+    ]);
+
+    for (const row of apptResult.data ?? [])
+      activeTenantsSet.add(row.tenant_id);
+    for (const row of patientResult.data ?? [])
+      activeTenantsSet.add(row.tenant_id);
+  }
+
+  const activeTenantIds = [...activeTenantsSet];
 
   // UTC-safe month boundaries — avoids off-by-one when server timezone ≠ database UTC
   const utcMonthStart = new Date(

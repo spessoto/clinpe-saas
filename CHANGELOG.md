@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.2] - 2026-05-05
+
+### Added
+
+- **Script de limpeza de tenants órfãos (`scripts/cleanup-orphaned-tenants.mjs`)**: utilitário de manutenção que identifica e remove tenants sem usuário `owner` associado, apagando em cascata todos os dados relacionados (pacientes, consultas, agendas etc.); modo `--execute` exige confirmação explícita para evitar deleções acidentais
+
+### Changed
+
+- **Métrica "Clientes ativos" no painel admin redefinida**: passa a considerar apenas tenants que tiveram pelo menos 1 agendamento ou 1 paciente criado nos **últimos 15 dias**, substituindo a lógica anterior baseada em status de trial/assinatura
+- **Tenants de usuários admin excluídos de "Clientes ativos"**: tenants pertencentes a contas com `is_admin = true` não são contabilizados nas métricas de clientes ativos, evitando distorção dos números por uso interno
+- **Deleção de owner apaga o tenant inteiro**: ao deletar um usuário com `role = 'owner'` no admin, o tenant e todos os seus dados são removidos em cascata; deleção de usuários `staff` mantém o comportamento anterior
+
 ## [2.6.1] - 2026-05-05
 
 ### Added
