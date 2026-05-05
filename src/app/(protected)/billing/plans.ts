@@ -38,7 +38,7 @@ export const BILLING_PLANS: BillingPlanConfig = {
   },
   tier_2: {
     label: "Pro",
-    maxPatients: 100,
+    maxPatients: 150,
     monthly: {
       amount: 99.9,
       description: "PodoDesk Pro – até 100 pacientes (mensal)",

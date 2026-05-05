@@ -13,5 +13,6 @@ update public.billing_plan_prices
 set
   monthly_amount      = 99.90,
   annual_amount       = 1078.90,
-  overage_slot_amount = 1.50
+  overage_slot_amount = 1.50,
+  max_patients        = 150
 where tier = 'tier_2';
