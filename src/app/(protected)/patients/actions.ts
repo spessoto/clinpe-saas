@@ -156,6 +156,7 @@ export async function getPatientCountStatus(): Promise<PatientLimitStatus> {
       isLimitReached: false,
       remainingSlots: tenant.max_patients_allowed,
       overagePatients: 0,
+      overageMonthlyAmount: 0,
     };
   }
 
