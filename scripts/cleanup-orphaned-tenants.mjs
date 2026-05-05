@@ -7,7 +7,9 @@ if (!url || !key) {
   console.error(
     "Erro: defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no ambiente.",
   );
-  console.error("  Exemplo: dotenv -e .env.local -- node scripts/cleanup-orphaned-tenants.mjs");
+  console.error(
+    "  Exemplo: dotenv -e .env.local -- node scripts/cleanup-orphaned-tenants.mjs",
+  );
   process.exit(1);
 }
 
