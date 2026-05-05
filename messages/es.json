@@ -53,7 +53,19 @@
     "planFeaturePops": "POPs",
     "planFeatureFinance": "Control financiero",
     "planFeatureSterilization": "Esterilización",
-    "planFeatureCommissions": "Comisiones por profesional"
+    "planFeatureCommissions": "Comisiones por profesional",
+    "planDescEssencial": "Ideal para quien atiende solo.",
+    "planDescPro": "Para quienes quieren gestión total y seguridad.",
+    "planFeatureTier1Patients": "50 pacientes incluidos",
+    "planFeatureTier2Patients": "Pacientes ilimitados",
+    "planFeatureScheduleAndRecords": "Agenda e Historial Clínico",
+    "planFeatureWhatsApp1Click": "WhatsApp en 1 clic",
+    "planFeaturePhotoEvolution": "Evolución Fotográfica",
+    "planFeatureAllEssencial": "Todo de Essencial",
+    "planFeatureSterilizationBio": "Control de Autoclave (Bioseguridad)",
+    "planFeatureFinanceModule": "Módulo Financiero Completo",
+    "planFeatureOverageTier1": "R$ 2,00 por paciente extra",
+    "planFeatureOverageTier2": "R$ 1,50 por paciente extra"
   },
   "PricingSection": {
     "title": "Un sistema que crece al mismo ritmo que tu clínica.",

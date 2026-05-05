@@ -21,44 +21,34 @@ function getPlanFeatureLabels(
   t: Awaited<ReturnType<typeof getTranslations>>,
   tier: "tier_1" | "tier_2" | "tier_3",
 ) {
-  const labels = {
-    medical_records: t("planFeatureMedicalRecords"),
-    schedule: t("planFeatureSchedule"),
-    whatsapp: t("planFeatureWhatsApp"),
-    pops: t("planFeaturePops"),
-    finance: t("planFeatureFinance"),
-    sterilization: t("planFeatureSterilization"),
-    commissions: t("planFeatureCommissions"),
-  };
-
   if (tier === "tier_1") {
     return [
-      labels.schedule,
-      labels.whatsapp,
-      labels.medical_records,
-      labels.pops,
+      t("planFeatureTier1Patients"),
+      t("planFeatureScheduleAndRecords"),
+      t("planFeatureWhatsApp1Click"),
+      t("planFeaturePhotoEvolution"),
+      t("planFeatureOverageTier1"),
     ];
   }
 
   if (tier === "tier_2") {
     return [
-      labels.schedule,
-      labels.whatsapp,
-      labels.medical_records,
-      labels.pops,
-      labels.finance,
-      labels.sterilization,
+      t("planFeatureTier2Patients"),
+      t("planFeatureAllEssencial"),
+      t("planFeatureSterilizationBio"),
+      t("planFeatureFinanceModule"),
+      t("planFeatureOverageTier2"),
     ];
   }
 
   return [
-    labels.schedule,
-    labels.whatsapp,
-    labels.medical_records,
-    labels.pops,
-    labels.finance,
-    labels.sterilization,
-    labels.commissions,
+    t("planFeatureSchedule"),
+    t("planFeatureWhatsApp"),
+    t("planFeatureMedicalRecords"),
+    t("planFeaturePops"),
+    t("planFeatureFinance"),
+    t("planFeatureSterilization"),
+    t("planFeatureCommissions"),
   ];
 }
 
@@ -91,7 +81,7 @@ export default async function Home() {
       name: plans.tier_1.label,
       monthly: formatMoney(plans.tier_1.monthly.amount),
       annual: formatMoney(plans.tier_1.annual.amount),
-      limit: t("planUpTo", { max: plans.tier_1.maxPatients }),
+      limit: t("planDescEssencial"),
       featured: false,
       ctaLabel: t("planCtaLabel"),
       ctaHref: "/sign-up",
@@ -101,7 +91,7 @@ export default async function Home() {
       name: plans.tier_2.label,
       monthly: formatMoney(plans.tier_2.monthly.amount),
       annual: formatMoney(plans.tier_2.annual.amount),
-      limit: t("planUpTo", { max: plans.tier_2.maxPatients }),
+      limit: t("planDescPro"),
       featured: true,
       ctaLabel: t("planCtaLabel"),
       ctaHref: "/sign-up",

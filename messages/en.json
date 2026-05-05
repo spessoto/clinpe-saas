@@ -53,7 +53,19 @@
     "planFeaturePops": "SOPs",
     "planFeatureFinance": "Financial control",
     "planFeatureSterilization": "Sterilization",
-    "planFeatureCommissions": "Professional commissions"
+    "planFeatureCommissions": "Professional commissions",
+    "planDescEssencial": "Ideal for solo practitioners.",
+    "planDescPro": "For those who want full control and security.",
+    "planFeatureTier1Patients": "50 patients included",
+    "planFeatureTier2Patients": "Unlimited patients",
+    "planFeatureScheduleAndRecords": "Schedule & Medical Records",
+    "planFeatureWhatsApp1Click": "WhatsApp in 1 click",
+    "planFeaturePhotoEvolution": "Photo Progress Tracking",
+    "planFeatureAllEssencial": "Everything in Essencial",
+    "planFeatureSterilizationBio": "Autoclave Control (Biosafety)",
+    "planFeatureFinanceModule": "Full Financial Module",
+    "planFeatureOverageTier1": "R$ 2.00 per extra patient",
+    "planFeatureOverageTier2": "R$ 1.50 per extra patient"
   },
   "PricingSection": {
     "title": "A system that grows at the same pace as your clinic.",

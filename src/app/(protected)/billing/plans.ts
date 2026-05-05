@@ -26,28 +26,28 @@ export const BILLING_PLANS: BillingPlanConfig = {
     label: "Essencial",
     maxPatients: 50,
     monthly: {
-      amount: 99.9,
+      amount: 49.9,
       description: "PodoDesk Essencial – até 50 pacientes (mensal)",
     },
     annual: {
-      amount: 1078.9,
+      amount: 538.9,
       description: "PodoDesk Essencial – até 50 pacientes (anual)",
     },
-    overageMonthlyAmount: null,
+    overageMonthlyAmount: 2.0,
     capabilities: ["schedule", "whatsapp", "medical_records", "pops"],
   },
   tier_2: {
     label: "Pro",
     maxPatients: 100,
     monthly: {
-      amount: 149.9,
+      amount: 99.9,
       description: "PodoDesk Pro – até 100 pacientes (mensal)",
     },
     annual: {
-      amount: 1618.9,
+      amount: 1078.9,
       description: "PodoDesk Pro – até 100 pacientes (anual)",
     },
-    overageMonthlyAmount: null,
+    overageMonthlyAmount: 1.5,
     capabilities: [
       "schedule",
       "whatsapp",

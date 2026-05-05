@@ -47,12 +47,12 @@ interface BillingPlansGridProps {
 }
 
 const CAPABILITY_LABELS: Record<BillingCapability, string> = {
-  medical_records: "Prontuários de pacientes",
+  medical_records: "Prontuário de pacientes",
   schedule: "Agenda",
-  whatsapp: "WhatsApp",
+  whatsapp: "WhatsApp em 1 clique",
   pops: "POPs",
-  finance: "Controle financeiro",
-  sterilization: "Esterilização",
+  finance: "Módulo Financeiro Completo",
+  sterilization: "Controle de Autoclave (Biossegurança)",
   commissions: "Comissão por profissional",
 };
 
