@@ -225,19 +225,22 @@ export default async function Home() {
               {t("heroSubtitle")}
             </p>
 
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <Link
-                href="/sign-up"
-                className="btn-gradient px-8 py-4 text-base font-bold"
-              >
-                {t("heroCtaPrimary")}
-              </Link>
-              <a
-                href="#funcionalidades"
-                className="inline-flex items-center justify-center rounded-xl border border-secondary/20 bg-white/85 px-8 py-4 text-base font-bold text-secondary shadow-[0_10px_25px_-18px_rgba(33,66,166,0.85)] transition hover:bg-secondary/5"
-              >
-                {t("heroCtaSecondary")}
-              </a>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <Link
+                  href="/sign-up"
+                  className="btn-gradient px-8 py-4 text-base font-bold"
+                >
+                  {t("heroCtaPrimary")}
+                </Link>
+                <a
+                  href="#funcionalidades"
+                  className="inline-flex items-center justify-center rounded-xl border border-secondary/20 bg-white/85 px-8 py-4 text-base font-bold text-secondary shadow-[0_10px_25px_-18px_rgba(33,66,166,0.85)] transition hover:bg-secondary/5"
+                >
+                  {t("heroCtaSecondary")}
+                </a>
+              </div>
+              <p className="text-sm text-slate-500">{t("heroCtaNote")}</p>
             </div>
 
             <div className="flex items-center gap-4 pt-2">
@@ -286,26 +289,21 @@ export default async function Home() {
             {t("statsSubtitle")}
           </p>
 
-          <div className="grid grid-cols-1 gap-8 pt-6 md:grid-cols-3">
-            <div className="mx-auto flex h-44 w-44 flex-col items-center justify-center rounded-full border border-secondary/20 bg-[radial-gradient(circle_at_30%_25%,#ffffff_0%,#eef6ff_65%,#e2ecff_100%)] shadow-[0_22px_40px_-24px_rgba(33,66,166,0.65)]">
-              <div className="text-4xl font-extrabold text-secondary">98%</div>
-              <p className="mt-2 px-5 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
-                {t("stat1Label")}
-              </p>
+          <div className="grid grid-cols-1 gap-6 pt-6 md:grid-cols-3">
+            <div className="rounded-2xl border border-red-200/60 bg-white p-6 text-left shadow-sm">
+              <span className="text-2xl">❌</span>
+              <h3 className="mt-3 font-bold text-secondary">{t("stat1Label")}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">{t("stat1Text")}</p>
             </div>
-            <div className="mx-auto flex h-44 w-44 flex-col items-center justify-center rounded-full border border-secondary/20 bg-[radial-gradient(circle_at_30%_25%,#ffffff_0%,#eef6ff_65%,#e2ecff_100%)] shadow-[0_22px_40px_-24px_rgba(33,66,166,0.65)]">
-              <div className="text-4xl font-extrabold text-secondary">45%</div>
-              <p className="mt-2 px-5 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
-                {t("stat2Label")}
-              </p>
+            <div className="rounded-2xl border border-red-200/60 bg-white p-6 text-left shadow-sm">
+              <span className="text-2xl">❌</span>
+              <h3 className="mt-3 font-bold text-secondary">{t("stat2Label")}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">{t("stat2Text")}</p>
             </div>
-            <div className="mx-auto flex h-44 w-44 flex-col items-center justify-center rounded-full border border-secondary/20 bg-[radial-gradient(circle_at_30%_25%,#ffffff_0%,#eef6ff_65%,#e2ecff_100%)] shadow-[0_22px_40px_-24px_rgba(33,66,166,0.65)]">
-              <div className="text-4xl font-extrabold text-secondary">
-                2h/dia
-              </div>
-              <p className="mt-2 px-5 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-slate-600">
-                {t("stat3Label")}
-              </p>
+            <div className="rounded-2xl border border-red-200/60 bg-white p-6 text-left shadow-sm">
+              <span className="text-2xl">❌</span>
+              <h3 className="mt-3 font-bold text-secondary">{t("stat3Label")}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-600">{t("stat3Text")}</p>
             </div>
           </div>
         </div>
@@ -372,6 +370,24 @@ export default async function Home() {
       </section>
 
       <PricingSection planCards={planCards} />
+
+      <section className="bg-white px-6 py-24 md:px-8 md:py-28">
+        <div className="mx-auto max-w-3xl space-y-10">
+          <h2 className="text-center text-3xl font-extrabold tracking-tight text-secondary sm:text-4xl">
+            {t("faqTitle")}
+          </h2>
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+              <h3 className="font-bold text-secondary">{t("faq1Q")}</h3>
+              <p className="mt-2 leading-relaxed text-slate-700">{t("faq1A")}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+              <h3 className="font-bold text-secondary">{t("faq2Q")}</h3>
+              <p className="mt-2 leading-relaxed text-slate-700">{t("faq2A")}</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <footer className="bg-slate-900 px-6 pb-12 pt-20 md:px-8 md:pt-24">
         <div className="mx-auto max-w-7xl">
