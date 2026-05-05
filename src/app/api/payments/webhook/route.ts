@@ -148,13 +148,7 @@ async function processOverageBilling(input: {
   apiBase: string;
   apiKey: string;
 }) {
-  const {
-    tenantId,
-    subscriptionId,
-    supabase,
-    apiBase,
-    apiKey,
-  } = input;
+  const { tenantId, subscriptionId, supabase, apiBase, apiKey } = input;
 
   let currentValue = input.currentSubscriptionValue;
   const now = new Date();
@@ -174,7 +168,10 @@ async function processOverageBilling(input: {
     .maybeSingle();
 
   if (resetFetchError) {
-    console.error("[WEBHOOK][OVERAGE] Falha ao buscar registro para reset:", resetFetchError);
+    console.error(
+      "[WEBHOOK][OVERAGE] Falha ao buscar registro para reset:",
+      resetFetchError,
+    );
     // Non-fatal: log and continue — tenant status was already updated.
   } else if (toReset && toReset.asaas_base_amount !== null) {
     const rec = toReset as OverageRecord;
@@ -185,8 +182,7 @@ async function processOverageBilling(input: {
 
     // Recovery check: if Asaas already shows the base value, the reset happened
     // but the DB update failed on a previous attempt — just record it.
-    const alreadyReset =
-      Math.abs(currentValue - baseAmount) < AMOUNT_TOLERANCE;
+    const alreadyReset = Math.abs(currentValue - baseAmount) < AMOUNT_TOLERANCE;
     const stillBumped =
       Math.abs(currentValue - expectedBumped) < AMOUNT_TOLERANCE;
 
@@ -200,7 +196,10 @@ async function processOverageBilling(input: {
         });
         currentValue = baseAmount;
       } catch (err) {
-        console.error("[WEBHOOK][OVERAGE] Falha ao resetar assinatura Asaas:", err);
+        console.error(
+          "[WEBHOOK][OVERAGE] Falha ao resetar assinatura Asaas:",
+          err,
+        );
         // Do NOT mark reset_at — let the next webhook retry.
         return;
       }
@@ -241,7 +240,10 @@ async function processOverageBilling(input: {
     .maybeSingle();
 
   if (applyFetchError) {
-    console.error("[WEBHOOK][OVERAGE] Falha ao buscar registro para apply:", applyFetchError);
+    console.error(
+      "[WEBHOOK][OVERAGE] Falha ao buscar registro para apply:",
+      applyFetchError,
+    );
     return;
   }
 
@@ -317,6 +319,8 @@ async function processOverageBilling(input: {
     );
   }
 }
+
+export async function POST(request: NextRequest) {
   const env = getAsaasEnv();
   const webhookToken =
     request.headers.get("asaas-access-token") ??
