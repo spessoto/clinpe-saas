@@ -292,14 +292,12 @@ export default async function Home() {
           <div className="grid grid-cols-1 gap-6 pt-6 md:grid-cols-3">
             <div className="rounded-2xl border border-primary/20 bg-gradient-to-b from-white to-teal-50/70 p-8 text-left shadow-[0_20px_35px_-20px_rgba(15,23,42,0.22)]">
               <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-primary/15">
-                <MessageCircle className="h-7 w-7 text-primary" />
+                <ClipboardCheck className="h-7 w-7 text-primary" />
               </div>
               <h3 className="mb-3 text-xl font-bold text-secondary">
                 {t("stat1Label")}
               </h3>
-              <p className="leading-relaxed text-slate-700">
-                {t("stat1Text")}
-              </p>
+              <p className="leading-relaxed text-slate-700">{t("stat1Text")}</p>
             </div>
             <div className="rounded-2xl border border-secondary/20 bg-gradient-to-b from-white to-blue-50/70 p-8 text-left shadow-[0_20px_35px_-20px_rgba(15,23,42,0.22)]">
               <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-secondary/15">
@@ -308,9 +306,7 @@ export default async function Home() {
               <h3 className="mb-3 text-xl font-bold text-secondary">
                 {t("stat2Label")}
               </h3>
-              <p className="leading-relaxed text-slate-700">
-                {t("stat2Text")}
-              </p>
+              <p className="leading-relaxed text-slate-700">{t("stat2Text")}</p>
             </div>
             <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-b from-white to-emerald-50/70 p-8 text-left shadow-[0_20px_35px_-20px_rgba(15,23,42,0.22)]">
               <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-emerald-500/15">
@@ -319,9 +315,7 @@ export default async function Home() {
               <h3 className="mb-3 text-xl font-bold text-secondary">
                 {t("stat3Label")}
               </h3>
-              <p className="leading-relaxed text-slate-700">
-                {t("stat3Text")}
-              </p>
+              <p className="leading-relaxed text-slate-700">{t("stat3Text")}</p>
             </div>
           </div>
         </div>
