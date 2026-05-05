@@ -281,15 +281,15 @@ export default async function Home() {
       </section>
 
       <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(236,252,250,0.85)_100%)] px-6 py-24 md:px-8 md:py-28">
-        <div className="mx-auto max-w-4xl space-y-12 text-center">
+        <div className="mx-auto max-w-7xl space-y-12 text-center">
           <h2 className="text-3xl font-extrabold tracking-tight text-secondary sm:text-5xl">
             {t("statsHeading")}
           </h2>
-          <p className="text-lg leading-relaxed text-slate-700">
+          <p className="mx-auto max-w-3xl text-lg leading-relaxed text-slate-700">
             {t("statsSubtitle")}
           </p>
 
-          <div className="grid grid-cols-1 gap-6 pt-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 pt-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-2xl border border-primary/20 bg-gradient-to-b from-white to-teal-50/70 p-8 text-left shadow-[0_20px_35px_-20px_rgba(15,23,42,0.22)]">
               <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-primary/15">
                 <ClipboardCheck className="h-7 w-7 text-primary" />
