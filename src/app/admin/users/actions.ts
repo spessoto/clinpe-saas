@@ -632,6 +632,72 @@ export async function extendClientTrialAction(formData: FormData) {
   );
 }
 
+export async function removeClientTrialExtensionAction(formData: FormData) {
+  const adminUser = await requireAdminAccess();
+  const adminClient = createAdminClient();
+
+  const tenantId = String(formData.get("tenant_id") ?? "").trim();
+  const currentPage = Math.max(
+    1,
+    Number.parseInt(String(formData.get("page") ?? "1"), 10) || 1,
+  );
+  const pageQuery = `page=${currentPage}`;
+
+  if (!tenantId) {
+    redirect(`/admin/users?${pageQuery}&error=Cliente%20inválido`);
+  }
+
+  const { data: tenant, error: tenantError } = await adminClient
+    .from("tenants")
+    .select("id, trial_extension_days, subscription_status")
+    .eq("id", tenantId)
+    .single();
+
+  if (tenantError || !tenant) {
+    redirect(`/admin/users?${pageQuery}&error=Cliente%20não%20encontrado`);
+  }
+
+  const currentExtensionDays = (tenant.trial_extension_days as number) ?? 0;
+
+  if (currentExtensionDays === 0) {
+    redirect(
+      `/admin/users?${pageQuery}&success=Cliente%20não%20possui%20extensão%20de%20trial%20para%20remover`,
+    );
+  }
+
+  const nextState = {
+    trial_extension_days: 0,
+    trial_last_extended_at: null,
+    trial_last_extended_by_email: null,
+  };
+
+  const { error: updateError } = await adminClient
+    .from("tenants")
+    .update(nextState)
+    .eq("id", tenantId);
+
+  if (updateError) {
+    redirect(
+      `/admin/users?${pageQuery}&error=${encodeURIComponent(`Falha ao remover extensão de trial: ${updateError.message}`)}`,
+    );
+  }
+
+  await adminClient.from("admin_audit_log").insert({
+    admin_user_id: adminUser.id,
+    admin_user_email: adminUser.email,
+    tenant_id: tenantId,
+    action: "remove_trial_extension",
+    previous_state: { trial_extension_days: currentExtensionDays },
+    next_state: { trial_extension_days: 0 },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/users");
+  redirect(
+    `/admin/users?${pageQuery}&success=${encodeURIComponent(`Extensão de trial removida (dias restantes resetados para 0)`)}`,
+  );
+}
+
 const TIER_MAX_PATIENTS: Record<string, number> = {
   tier_1: 30,
   tier_2: 80,

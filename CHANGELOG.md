@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.1] - 2026-05-05
+
+### Added
+
+- **Ação para remover extensão de trial (`removeClientTrialExtensionAction`)**: nova ação no admin para resetar `trial_extension_days` para 0, permitindo limpeza de testes e extensões incorretas
+- **Botão "Remover Extensão de Trial" no dialog de usuários**: exibido apenas quando `trial_extension_days > 0`, mostra quantidade de dias a remover com interface intuitiva
+
+### Changed
+
+- **Melhor controle de trial no admin**: admins podem agora adicionar OU remover extensões de trial, aumentando flexibilidade no gerenciamento de clientes em teste
+
 ## [2.6.0] - 2026-05-05
 
 ### Added

@@ -7,6 +7,7 @@ import {
   enableClientPermanentFreeFromUsersAction,
   extendClientTrialAction,
   grantFreePlanAction,
+  removeClientTrialExtensionAction,
   revokeClientPermanentFreeFromUsersAction,
 } from "@/app/admin/users/actions";
 
@@ -266,6 +267,21 @@ export function UserDetailsDialog({
                   className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/15"
                 >
                   Adicionar
+                </button>
+              </form>
+            )}
+
+            {/* Remover extensão de trial */}
+            {user.client && user.client.trial_extension_days > 0 && (
+              <form action={removeClientTrialExtensionAction}>
+                <input type="hidden" name="tenant_id" value={user.tenant_id} />
+                <input type="hidden" name="page" value={String(currentPage)} />
+                <button
+                  type="submit"
+                  className="w-full rounded-xl border border-orange-300/50 bg-orange-50/50 px-4 py-2.5 text-sm font-semibold text-orange-700 hover:bg-orange-100/50"
+                >
+                  🗑️ Remover Extensão de Trial (
+                  {user.client.trial_extension_days}d)
                 </button>
               </form>
             )}
