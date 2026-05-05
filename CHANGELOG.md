@@ -7,7 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.6.3] - 2026-05-05
+## [2.7.0] - 2026-05-05
+
+### Added
+
+- **Plano Clínica com features completas**: 300 pacientes inclusos, tudo do Pro, até 10 profissionais cadastrados, gestão de comissão e R$ 1,00 por paciente extra
+- **Seção FAQ na landing page**: duas perguntas freqüentes sobre excedente de pacientes e cancelamento
+- **Novos campos de tradução (pt/en/es)**: chaves para descrição dos planos, features por tier, FAQ e copy da landing page
+
+### Changed
+
+- **Precificação dos planos atualizada**: Essencial R$ 49,90/mês (50 pacientes, excedente R$ 2,00), Pro R$ 99,90/mês (150 pacientes, excedente R$ 1,50), Clínica (300 pacientes, excedente R$ 1,00)
+- **Copy da landing page reescrita com foco em negócio**: novo headline “Transforme sua gestão em lucro e sua agenda em um ativo de alta performance”, badge de acelerador de negócios, CTA “Iniciar meus 14 dias grátis”
+- **Seção de pilares de valor (seção 2)**: cards redesenhados com ícones Lucide e gradiente, idênticos ao estilo da seção de funcionalidades; conteúdo focado em Automação, Prontuário de Autoridade e Visão Executiva
+- **Funcionalidades destacadas reformuladas**: Confirmações Inteligentes (WhatsApp), Prontuário de Autoridade (evolução fotográfica), Controle Financeiro Total
+- **Tagline do rodapé**: “PodoDesk – O acelerador de negócios para quem leva a Podologia a sério”
+- **`billing-plans-grid.tsx` CAPABILITY_LABELS**: rótulos atualizados para refletir os novos nomes de funcionalidades
+
+### Fixed
+
+- **Restaurada exportação `POST` no webhook Asaas** (`/api/payments/webhook/route.ts`): declaração `export async function POST` havia sido removida acidentalmente, causando erro de build
+- **Pro plan com 150 pacientes inclusos** (era exibido como “Pacientes ilimitados”)
+- **JSON inválido em `es.json`**: vírgula duplicada em `statsSubtitle` corrigida
+
+### Database
+
+- **Migration `20260505000052`**: atualiza `billing_plan_prices` — Essencial e Pro com novos preços mensais, anuais e valores de excedente
+- **Migration `20260505000053`**: corrige `max_patients = 150` para o plano Pro (`tier_2`)
+
 
 ### Added
 
