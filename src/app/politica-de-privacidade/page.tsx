@@ -42,7 +42,7 @@ export default function PrivacyPolicyPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-secondary md:text-4xl">
             Política de Privacidade – PodoDesk
           </h1>
-          <p className="text-sm text-muted">Última atualização: 23/03/2026</p>
+          <p className="text-sm text-muted">Última atualização: 05/05/2026</p>
         </header>
 
         <div className="space-y-6 text-sm leading-7 text-foreground md:text-base">
@@ -97,10 +97,19 @@ export default function PrivacyPolicyPage() {
             <p>
               <strong>Dados Inseridos pelo Usuário (Dados de Saúde):</strong>
               Armazenamos as informações que você insere no sistema sobre seus
-              pacientes (prontuários, anamneses, agendamentos e registros de
-              esterilização). O PodoDesk garante que o acesso a esses dados é
-              estritamente isolado (Multi-Tenant) e exclusivo do profissional
-              que os inseriu.
+              pacientes: prontuários, anamneses, <strong>fotografias de evolução
+              clínica</strong> (que constituem dados sensíveis de saúde),
+              agendamentos, registros de esterilização e controle de autoclave.
+              O PodoDesk garante que o acesso a esses dados é estritamente
+              isolado (Multi-Tenant) e exclusivo do profissional que os inseriu.
+            </p>
+            <p>
+              <strong>Dados Financeiros e de Gestão:</strong> Movimentações
+              financeiras lançadas pelo usuário, dados de comissões por
+              profissional e informações de assinatura do plano contratado
+              (processadas pelo gateway de pagamento Asaas). O PodoDesk não
+              armazena números de cartão de crédito; esses dados trafegam
+              exclusivamente na infraestrutura do Asaas.
             </p>
             <p>
               <strong>Dados de Autenticação:</strong> Credenciais de login e
@@ -117,12 +126,22 @@ export default function PrivacyPolicyPage() {
               Fornecer, operar e manter o software funcionando adequadamente.
             </p>
             <p>
-              Permitir a criação de prontuários eletrônicos e controle
-              financeiro por parte da clínica.
+              Permitir a criação de prontuários eletrônicos, evolução
+              fotográfica e controle financeiro por parte da clínica.
             </p>
             <p>
               Enviar avisos técnicos, atualizações de segurança e mensagens de
               suporte.
+            </p>
+            <p>
+              Enviar notificações operacionais via WhatsApp (confirmações de
+              consulta, lembretes e avisos), quando a integração com WhatsApp
+              for expressamente ativada pelo Usuário.
+            </p>
+            <p>
+              Emitir alertas automáticos de saúde para pacientes com condições
+              de risco cadastradas (ex: pé diabético), exclusivamente ao
+              profissional responsável.
             </p>
             <p>
               Sincronizar sua agenda de atendimentos podológicos com calendários
@@ -136,19 +155,32 @@ export default function PrivacyPolicyPage() {
             </h2>
             <p>
               Para facilitar a operação da clínica, o PodoDesk pode enviar
-              notificações por e-mail e push web relacionadas a novas consultas,
-              confirmações e cancelamentos de agendamentos.
+              notificações por e-mail, push web e WhatsApp relacionadas a novas
+              consultas, confirmações e cancelamentos de agendamentos.
             </p>
             <p>
               <strong>Quais dados utilizamos:</strong> Nome do paciente, e-mail,
-              telefone, data e horário do atendimento e dados do profissional
-              responsável, estritamente para compor os avisos operacionais da
-              plataforma.
+              número de telefone, data e horário do atendimento e dados do
+              profissional responsável, estritamente para compor os avisos
+              operacionais da plataforma.
             </p>
             <p>
               <strong>Como usamos esses dados:</strong> Essas informações são
-              usadas unicamente para enviar e-mails transacionais e notificações
-              ao profissional autenticado no navegador que autorizou o push web.
+              usadas unicamente para enviar e-mails transacionais, notificações
+              push ao profissional autenticado e mensagens de WhatsApp quando
+              essa integração for ativada.
+            </p>
+            <p>
+              <strong>Integração WhatsApp via Evolution API:</strong> Quando o
+              Usuário ativa a funcionalidade de notificações via WhatsApp, dados
+              limitados (nome e telefone do paciente, data e texto da mensagem)
+              são transmitidos à <strong>Evolution API</strong>, um serviço
+              externo de automação de mensagens. Essa transmissão é feita
+              exclusivamente para cumprir o envio da mensagem solicitada pelo
+              Usuário e está sujeita à Política de Privacidade da própria
+              Evolution API. O Usuário (Controlador) é responsável por garantir
+              que seus pacientes estejam cientes e tenham dado consentimento
+              para receber mensagens automáticas via WhatsApp.
             </p>
             <p>
               <strong>O que NÃO fazemos:</strong> O PodoDesk não comercializa
@@ -169,10 +201,34 @@ export default function PrivacyPolicyPage() {
             <p>
               Suas informações são compartilhadas apenas com provedores de
               infraestrutura de tecnologia essenciais para o funcionamento do
-              SaaS (como nossos servidores de banco de dados e serviços de
-              hospedagem), que também estão sujeitos a obrigações rigorosas de
-              confidencialidade e segurança em nível global.
+              SaaS, que também estão sujeitos a obrigações rigorosas de
+              confidencialidade e segurança. Os principais suboperadores que
+              recebem dados são:
             </p>
+            <ul className="list-inside list-disc space-y-1 pl-2">
+              <li>
+                <strong>Supabase</strong> — banco de dados e autenticação;
+              </li>
+              <li>
+                <strong>Hostinger</strong> — hospedagem e infraestrutura do
+                servidor;
+              </li>
+              <li>
+                <strong>Asaas</strong> — processamento de pagamentos (dados
+                financeiros da assinatura, sem armazenamento de cartões pelo
+                PodoDesk);
+              </li>
+              <li>
+                <strong>Evolution API</strong> — transmissão de mensagens via
+                WhatsApp, quando essa integração for ativada pelo Usuário
+                (dados limitados: nome e telefone do paciente + texto da
+                mensagem);
+              </li>
+              <li>
+                <strong>Provedores de e-mail transacional</strong> — envio de
+                notificações operacionais (ex: confirmações de agendamento).
+              </li>
+            </ul>
           </section>
 
           <section className="space-y-3">
@@ -207,9 +263,18 @@ export default function PrivacyPolicyPage() {
             </p>
             <p>
               Revogar a qualquer momento o consentimento para integrações de
-              terceiros (desconectando o Google Agenda diretamente no painel do
-              sistema ou através da sua conta Google).
+              terceiros, como:
             </p>
+            <ul className="list-inside list-disc space-y-1 pl-2">
+              <li>
+                <strong>Google Agenda</strong>: desconectando diretamente no
+                painel do sistema ou através da sua conta Google;
+              </li>
+              <li>
+                <strong>WhatsApp (Evolution API)</strong>: desativando a
+                integração nas configurações da clínica dentro da Plataforma.
+              </li>
+            </ul>
           </section>
 
           <section id="cookies" className="space-y-3">
