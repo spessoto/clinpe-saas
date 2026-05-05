@@ -42,13 +42,11 @@ function getPlanFeatureLabels(
   }
 
   return [
-    t("planFeatureSchedule"),
-    t("planFeatureWhatsApp"),
-    t("planFeatureMedicalRecords"),
-    t("planFeaturePops"),
-    t("planFeatureFinance"),
-    t("planFeatureSterilization"),
-    t("planFeatureCommissions"),
+    t("planFeatureTier3Patients"),
+    t("planFeatureAllPro"),
+    t("planFeatureProfessionals"),
+    t("planFeatureCommissionManagement"),
+    t("planFeatureOverageTier3"),
   ];
 }
 
@@ -101,7 +99,7 @@ export default async function Home() {
       name: plans.tier_3.label,
       monthly: formatMoney(plans.tier_3.monthly.amount),
       annual: formatMoney(plans.tier_3.annual.amount),
-      limit: t("planUpTo", { max: plans.tier_3.maxPatients }),
+      limit: t("planDescClinica"),
       featured: false,
       ctaLabel: t("planCtaLabel"),
       ctaHref: "/sign-up",

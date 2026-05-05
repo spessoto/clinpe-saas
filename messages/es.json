@@ -65,7 +65,13 @@
     "planFeatureSterilizationBio": "Control de Autoclave (Bioseguridad)",
     "planFeatureFinanceModule": "Módulo Financiero Completo",
     "planFeatureOverageTier1": "R$ 2,00 por paciente extra",
-    "planFeatureOverageTier2": "R$ 1,50 por paciente extra"
+    "planFeatureOverageTier2": "R$ 1,50 por paciente extra",
+    "planDescClinica": "Para clínicas con múltiples profesionales.",
+    "planFeatureTier3Patients": "300 pacientes incluidos",
+    "planFeatureAllPro": "Todo de Pro",
+    "planFeatureProfessionals": "Hasta 10 profesionales registrados",
+    "planFeatureCommissionManagement": "Gestión de comisiones",
+    "planFeatureOverageTier3": "R$ 1,00 por paciente extra"
   },
   "PricingSection": {
     "title": "Un sistema que crece al mismo ritmo que tu clínica.",
