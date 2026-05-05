@@ -361,7 +361,7 @@ export async function deleteUserAction(formData: FormData) {
 
   const { data: targetUser, error: targetUserError } = await adminClient
     .from("users")
-    .select("id, email, full_name, tenant_id, is_admin")
+    .select("id, email, full_name, tenant_id, role, is_admin")
     .eq("id", userId)
     .single();
 
@@ -374,6 +374,8 @@ export async function deleteUserAction(formData: FormData) {
       `/admin/users?${pageQuery}&error=Admins%20não%20podem%20ser%20excluídos.%20Desative%20o%20admin%20no%20switch%20primeiro`,
     );
   }
+
+  const isOwner = targetUser.role === "owner";
 
   const { error: appointmentSnapshotError } = await adminClient
     .from("appointments")
@@ -397,6 +399,19 @@ export async function deleteUserAction(formData: FormData) {
     );
   }
 
+  // Se for o owner, deleta o tenant (cascata remove pacientes, consultas, etc.)
+  if (isOwner && targetUser.tenant_id) {
+    const { error: deleteTenantError } = await adminClient
+      .from("tenants")
+      .delete()
+      .eq("id", targetUser.tenant_id);
+
+    if (deleteTenantError) {
+      // Loga o erro mas não bloqueia — o usuário já foi deletado
+      console.error("Falha ao deletar tenant:", deleteTenantError.message);
+    }
+  }
+
   await adminClient.from("admin_audit_log").insert({
     admin_user_id: currentAdmin.id,
     admin_user_email: currentAdmin.email,
@@ -406,13 +421,17 @@ export async function deleteUserAction(formData: FormData) {
       target_user_id: targetUser.id,
       target_user_email: targetUser.email,
       is_admin: targetUser.is_admin,
+      tenant_deleted: isOwner,
     },
     next_state: null,
   });
 
   revalidatePath("/admin/users");
+  const successMsg = isOwner
+    ? "Cliente e todos os dados (pacientes, consultas, registros) excluídos com sucesso."
+    : "Usuário excluído com sucesso.";
   redirect(
-    `/admin/users?${pageQuery}&success=${encodeURIComponent("Usuário excluído com sucesso. Consultas e pacientes foram preservados sem reatribuição para outros profissionais.")}`,
+    `/admin/users?${pageQuery}&success=${encodeURIComponent(successMsg)}`,
   );
 }
 
