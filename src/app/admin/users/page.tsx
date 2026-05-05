@@ -7,7 +7,7 @@ import { ToggleAdminButton } from "@/app/admin/users/toggle-admin-button";
 import { UserDetailsDialog } from "@/app/admin/users/user-details-dialog";
 import { requireAdminAccess } from "@/lib/auth";
 
-export const revalidate = 300;
+export const revalidate = 0;
 const ADMIN_USERS_PAGE_SIZE = 50;
 
 type SearchParams = Promise<{

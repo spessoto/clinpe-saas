@@ -34,3 +34,31 @@ export function hasTenantAccess(tenant: TenantAccessState) {
 
   return inTrialWindow || hasActiveSubscription;
 }
+
+export type PaymentAccessState = "active" | "past_due" | "no_access";
+
+export function checkTenantPaymentStatus(
+  tenant: TenantAccessState,
+): PaymentAccessState {
+  if (tenant.is_permanent_free_plan) {
+    return "active";
+  }
+
+  const now = Date.now();
+  const inTrialWindow = getEffectiveTrialEnd(tenant).getTime() >= now;
+  const hasActiveSubscription =
+    tenant.subscription_status === "active" &&
+    (!tenant.subscription_expires_at ||
+      new Date(tenant.subscription_expires_at).getTime() >= now);
+
+  if (inTrialWindow || hasActiveSubscription) {
+    return "active";
+  }
+
+  // Check if subscription is past_due (irregular payment)
+  if (tenant.subscription_status === "past_due") {
+    return "past_due";
+  }
+
+  return "no_access";
+}

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2026-05-05
+
+### Added
+
+- **Rota dedicada de regularização de pagamento (`/payment-regularization`)**: nova página full-screen para usuários com pagamento em atraso (`subscription_status = 'past_due'`) com exibição clara de status, dias em atraso, método de pagamento e CTA para Asaas
+- **Hard-block de acesso para pagamento irregular**: usuários com `past_due` são automaticamente redirecionados para `/payment-regularization` em qualquer tentativa de acessar rotas protegidas; sidebar permanece visível mas navegação é bloqueada no nível de autenticação
+- **Função `checkTenantPaymentStatus()`**: utilitário em `src/lib/tenant-access.ts` que determina estado de acesso ('active' | 'past_due' | 'no_access') baseado em status de assinatura, plano permanente e trial
+
+### Changed
+
+- **Sidebar visível na página `/billing`**: movida para dentro do route group `(protected)` (`src/app/(protected)/billing`), garantindo consistência visual em toda a jornada de pagamento
+- **`/admin/users` sem cache**: alterado `revalidate` de 300 para 0 segundos, garantindo que alterações de usuários (promoção admin, deleção, extensão de trial, concessão de planos) sejam refletidas imediatamente na listagem
+
+### Fixed
+
+- **Remoção de abordagem modal**: descontinuada a sobreposição modal de pagamento em favor de rota dedicada, simplificando lógica de UI e reduzindo complexidade de estado
+
+### Security
+
+- **Redirecionamento de `no_access` para `/billing`**: usuários sem acesso são direcionados para a página de cobrança em vez de serem totalmente bloqueados
+
 ## [2.5.0] - 2026-04-23
 
 ### Security

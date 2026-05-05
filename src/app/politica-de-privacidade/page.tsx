@@ -294,7 +294,7 @@ export default function PrivacyPolicyPage() {
                 href="/sign-up"
                 className="btn-gradient inline-flex rounded-full px-10 py-5 text-xl font-black"
               >
-                Quero testar o PodoDesk por 7 dias
+                Quero testar o PodoDesk por 14 dias
               </Link>
             </div>
 
@@ -343,12 +343,12 @@ export default function PrivacyPolicyPage() {
                 >
                   Central de Ajuda
                 </Link>
-                 <Link
-                   className="block text-slate-400 transition hover:text-white"
-                   href="/contato"
-                 >
-                   Contato
-                 </Link>
+                <Link
+                  className="block text-slate-400 transition hover:text-white"
+                  href="/contato"
+                >
+                  Contato
+                </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/blog"

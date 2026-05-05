@@ -6,7 +6,7 @@ import {
   createSterilizationCycleAction,
   updateBiologicalTestResultAction,
 } from "@/app/(protected)/sterilization/actions";
-import { requireActiveTenant } from "@/lib/auth";
+import { requirePlanCapability } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { MaterialsDialog } from "./materials-dialog";
 import { SterilizedMaterialsField } from "./sterilized-materials-field";
@@ -106,7 +106,10 @@ function splitCycleMaterials(materialName: string) {
 }
 
 export default async function SterilizationPage({ searchParams }: Props) {
-  const { appUser, tenant } = await requireActiveTenant();
+  const { appUser, tenant } = await requirePlanCapability(
+    "sterilization",
+    "O módulo de Esterilização está disponível apenas nos planos Pro e Clínica.",
+  );
   const supabase = await createClient();
   const params = await searchParams;
 

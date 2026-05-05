@@ -158,7 +158,7 @@ export default async function BlogPage() {
                 href="/sign-up"
                 className="btn-gradient inline-flex rounded-full px-10 py-5 text-xl font-black"
               >
-                Quero testar o PodoDesk por 7 dias
+                Quero testar o PodoDesk por 14 dias
               </Link>
             </div>
 
@@ -207,12 +207,12 @@ export default async function BlogPage() {
                 >
                   Central de Ajuda
                 </Link>
-                 <Link
-                   className="block text-slate-400 transition hover:text-white"
-                   href="/contato"
-                 >
-                   Contato
-                 </Link>
+                <Link
+                  className="block text-slate-400 transition hover:text-white"
+                  href="/contato"
+                >
+                  Contato
+                </Link>
               </div>
 
               <div className="space-y-3">
@@ -233,7 +233,9 @@ export default async function BlogPage() {
             </div>
 
             <div className="flex w-full flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-sm text-slate-500 md:flex-row">
-              <span>© 2024 PodoDesk. Gestão clínica com precisão asséptica.</span>
+              <span>
+                © 2024 PodoDesk. Gestão clínica com precisão asséptica.
+              </span>
               <div className="flex gap-6">
                 <a className="transition hover:text-white" href="#">
                   LinkedIn

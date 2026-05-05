@@ -1,4 +1,4 @@
-import { requireActiveTenant } from "@/lib/auth";
+import { requirePlanCapability } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { SterilizationReportPrintButton } from "@/app/(protected)/sterilization/report/print-button";
 
@@ -88,7 +88,10 @@ function splitCycleMaterials(materialName: string) {
 }
 
 export default async function SterilizationReportPage({ searchParams }: Props) {
-  const { appUser, tenant } = await requireActiveTenant();
+  const { appUser, tenant } = await requirePlanCapability(
+    "sterilization",
+    "O módulo de Esterilização está disponível apenas nos planos Pro e Clínica.",
+  );
   const supabase = await createClient();
   const params = await searchParams;
 

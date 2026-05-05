@@ -4,7 +4,7 @@ import {
   getAdminPricingData,
   updateBillingPlanPriceAction,
 } from "@/app/admin/pricing/actions";
-import type { BillingTier } from "@/app/billing/plans";
+import type { BillingTier } from "@/app/(protected)/billing/plans";
 
 export const revalidate = 60;
 
@@ -35,8 +35,9 @@ export default async function AdminPricingPage({
       <div>
         <h1 className="text-3xl font-bold">Gestão de preços</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Edite os valores dos planos e propague automaticamente para landing,
-          página de billing e checkout.
+          Edite os valores, os limites de pacientes e o preço do slot de
+          excedente por plano. As alterações propagam automaticamente para
+          landing, página de billing e checkout.
         </p>
       </div>
 
@@ -73,6 +74,12 @@ export default async function AdminPricingPage({
               <p className="mt-1 text-xs text-muted-foreground">
                 Atual: {formatCurrency(plan.monthly.amount)} / mês •{" "}
                 {formatCurrency(plan.annual.amount)} / ano
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Excedente por paciente:{" "}
+                {plan.overageMonthlyAmount === null
+                  ? "não configurado"
+                  : `${formatCurrency(plan.overageMonthlyAmount)} / mês`}
               </p>
 
               <div className="mt-4 space-y-3">
@@ -127,6 +134,21 @@ export default async function AdminPricingPage({
                     min={1}
                     required
                     defaultValue={plan.annual.amount}
+                    className="w-full"
+                  />
+                </label>
+
+                <label className="block text-sm">
+                  <span className="mb-1 block text-foreground">
+                    Slot excedente por paciente (R$ / mês)
+                  </span>
+                  <input
+                    type="number"
+                    name="overage_slot_amount"
+                    step="0.01"
+                    min={0.01}
+                    defaultValue={plan.overageMonthlyAmount ?? undefined}
+                    placeholder="Ex.: 4,90"
                     className="w-full"
                   />
                 </label>

@@ -62,7 +62,7 @@ export function PricingSection({ planCards }: { planCards: PlanCard[] }) {
           </div>
         </div>
 
-        <div className="grid w-full max-w-7xl grid-cols-1 gap-6 lg:grid-cols-4">
+        <div className="grid w-full max-w-6xl grid-cols-1 gap-6 lg:grid-cols-3">
           {planCards.map((plan) => (
             <article
               key={plan.name}

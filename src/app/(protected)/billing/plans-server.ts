@@ -13,6 +13,7 @@ type BillingPlanPriceRow = {
   max_patients: number;
   monthly_amount: number;
   annual_amount: number;
+  overage_slot_amount: number | null;
 };
 
 function makePlanDescription(
@@ -49,6 +50,11 @@ function withFallback(
         amount: Number(row.annual_amount),
         description: makePlanDescription(row.label, row.max_patients, "annual"),
       },
+      overageMonthlyAmount:
+        row.overage_slot_amount === null
+          ? resolved[row.tier].overageMonthlyAmount
+          : Number(row.overage_slot_amount),
+      capabilities: resolved[row.tier].capabilities,
     };
   }
 
@@ -60,7 +66,9 @@ export async function getBillingPlans(): Promise<BillingPlanConfig> {
     const adminClient = createAdminClient();
     const { data, error } = await adminClient
       .from("billing_plan_prices")
-      .select("tier, label, max_patients, monthly_amount, annual_amount");
+      .select(
+        "tier, label, max_patients, monthly_amount, annual_amount, overage_slot_amount",
+      );
 
     if (error) {
       return BILLING_PLANS;

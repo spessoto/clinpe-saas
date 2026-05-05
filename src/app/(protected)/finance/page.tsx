@@ -1,5 +1,5 @@
 import { createFinancialTransactionAction } from "@/app/(protected)/finance/actions";
-import { requireOwnerAccess } from "@/lib/auth";
+import { requireOwnerPlanCapability } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = {
@@ -25,7 +25,10 @@ function formatCurrency(value: number) {
 }
 
 export default async function FinancePage({ searchParams }: Props) {
-  const { appUser } = await requireOwnerAccess();
+  const { appUser } = await requireOwnerPlanCapability(
+    "finance",
+    "O módulo Financeiro está disponível apenas nos planos Pro e Clínica.",
+  );
   const supabase = await createClient();
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;

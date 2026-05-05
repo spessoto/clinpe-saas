@@ -11,7 +11,12 @@ import {
   type CouponRow,
 } from "@/lib/coupons";
 import { continueBillingCheckout, createCheckoutAction } from "./actions";
-import type { BillingPeriod, BillingPlanConfig, BillingTier } from "./plans";
+import type {
+  BillingCapability,
+  BillingPeriod,
+  BillingPlanConfig,
+  BillingTier,
+} from "./plans";
 import { SelectPlanModal } from "./select-plan-modal";
 import type { TenantBillingStatus } from "@/lib/tenant-access";
 
@@ -41,14 +46,15 @@ interface BillingPlansGridProps {
   };
 }
 
-const PLAN_FEATURES = [
-  "Prontuários ilimitados",
-  "Agenda integrada",
-  "Agendamento público online",
-  "Notificações por e-mail",
-  "Alertas web para novas consultas",
-  "Suporte por e-mail",
-];
+const CAPABILITY_LABELS: Record<BillingCapability, string> = {
+  medical_records: "Prontuários de pacientes",
+  schedule: "Agenda",
+  whatsapp: "WhatsApp",
+  pops: "POPs",
+  finance: "Controle financeiro",
+  sterilization: "Esterilização",
+  commissions: "Comissão por profissional",
+};
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -121,6 +127,9 @@ export function BillingPlansGrid({
               : null;
           const isCurrent =
             trialStatus.type === "active" && tenant?.billing_tier === tier;
+          const featureList = plan.capabilities.map(
+            (capability) => CAPABILITY_LABELS[capability],
+          );
 
           return (
             <div
@@ -148,6 +157,11 @@ export function BillingPlansGrid({
                 </h2>
                 <p className="text-sm text-muted">
                   Até {plan.maxPatients} pacientes
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {plan.overageMonthlyAmount === null
+                    ? "Paciente adicional com preço configurável no admin"
+                    : `Paciente adicional: ${formatBRL(plan.overageMonthlyAmount)}/mês`}
                 </p>
               </div>
 
@@ -216,7 +230,7 @@ export function BillingPlansGrid({
               ) : null}
 
               <ul className="my-6 flex-1 space-y-2">
-                {PLAN_FEATURES.map((feature) => (
+                {featureList.map((feature) => (
                   <li
                     key={feature}
                     className="flex items-center gap-2 text-sm text-muted"

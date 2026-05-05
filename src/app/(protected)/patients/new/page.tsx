@@ -15,46 +15,8 @@ export default async function NewPatientPage({ searchParams }: Props) {
   const { tenant } = await requireActiveTenant();
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;
-  const isLimitReached = params.limitReached === "true";
 
   const limitStatus = await getPatientCountStatus();
-
-  if (isLimitReached) {
-    return (
-      <section className="surface-card max-w-xl p-6">
-        <div className="rounded-lg border-2 border-destructive bg-destructive/5 p-6 text-center">
-          <h2 className="text-2xl font-bold text-destructive">
-            Limite de Pacientes Atingido
-          </h2>
-          <p className="mt-3 text-sm text-destructive/80">
-            Você atingiu o limite de{" "}
-            <strong>{tenant.max_patients_allowed} pacientes</strong> para seu
-            plano {tenant.billing_tier}.
-          </p>
-
-          <div className="mt-6 space-y-3">
-            <p className="text-xs text-muted">
-              Pacientes atuais:{" "}
-              <strong>
-                {limitStatus.current}/{limitStatus.max}
-              </strong>
-            </p>
-
-            <button
-              onClick={() => (window.location.href = "/billing")}
-              className="btn-gradient w-full"
-            >
-              Fazer Upgrade Now
-            </button>
-
-            <Link href="/patients" className="btn-outline-modern block">
-              Voltar aos Pacientes
-            </Link>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="surface-card mx-auto max-w-5xl p-6 md:p-8">
@@ -63,19 +25,40 @@ export default async function NewPatientPage({ searchParams }: Props) {
         Cadastre o paciente para iniciar o histórico clínico.
       </p>
 
-      {limitStatus.remainingSlots <= 3 && !isLimitReached ? (
+      {limitStatus.isLimitReached ? (
         <div className="mt-4 rounded-md border border-warning/30 bg-warning/5 px-3 py-2">
-          <p className="text-xs font-semibold text-warning">
-            ⚠️ Você tem apenas {limitStatus.remainingSlots} slot
-            {limitStatus.remainingSlots !== 1 ? "s" : ""} de paciente
-            {limitStatus.remainingSlots !== 1 ? "s" : ""} restante
-            {limitStatus.remainingSlots !== 1 ? "s" : ""}.
+          <p className="text-sm font-semibold text-warning">
+            O limite base do seu plano foi atingido. Novos pacientes entram como
+            excedente mensal enquanto permanecerem ativos.
+          </p>
+          <p className="mt-1 text-xs text-warning/80">
+            Base incluída: <strong>{tenant.max_patients_allowed}</strong>
+            {" · "}
+            pacientes atuais: <strong>{limitStatus.current}</strong>
+            {limitStatus.overagePatients > 0
+              ? ` · excedente ativo: ${limitStatus.overagePatients}`
+              : ""}
           </p>
           <Link
             href="/billing"
-            className="mt-2 inline-text-sm font-semibold text-warning hover:underline"
+            className="mt-2 inline-flex text-xs font-semibold text-warning hover:underline"
           >
-            Fazer upgrade →
+            Ver plano e excedentes →
+          </Link>
+        </div>
+      ) : limitStatus.remainingSlots <= 3 ? (
+        <div className="mt-4 rounded-md border border-warning/30 bg-warning/5 px-3 py-2">
+          <p className="text-xs font-semibold text-warning">
+            Você tem apenas {limitStatus.remainingSlots} slot
+            {limitStatus.remainingSlots !== 1 ? "s" : ""} de paciente
+            {limitStatus.remainingSlots !== 1 ? "s" : ""} restante
+            {limitStatus.remainingSlots !== 1 ? "s" : ""} antes do excedente.
+          </p>
+          <Link
+            href="/billing"
+            className="mt-2 inline-flex text-xs font-semibold text-warning hover:underline"
+          >
+            Ver plano e excedentes →
           </Link>
         </div>
       ) : null}

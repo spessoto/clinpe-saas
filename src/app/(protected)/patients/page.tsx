@@ -36,9 +36,11 @@ export default async function PatientsPage({ searchParams }: Props) {
           <h2 className="text-3xl font-bold">Pacientes</h2>
           <p className="mt-1 text-muted">
             {limitStatus.current}/{limitStatus.max} •{" "}
-            {limitStatus.remainingSlots > 0
-              ? `${limitStatus.remainingSlots} slot${limitStatus.remainingSlots !== 1 ? "s" : ""} disponível${limitStatus.remainingSlots !== 1 ? "s" : ""}`
-              : "Limite atingido"}
+            {limitStatus.overagePatients > 0
+              ? `${limitStatus.overagePatients} paciente${limitStatus.overagePatients !== 1 ? "s" : ""} em excedente`
+              : limitStatus.remainingSlots > 0
+                ? `${limitStatus.remainingSlots} slot${limitStatus.remainingSlots !== 1 ? "s" : ""} disponível${limitStatus.remainingSlots !== 1 ? "s" : ""}`
+                : "Próximo cadastro entra em excedente"}
           </p>
         </div>
 
@@ -47,15 +49,14 @@ export default async function PatientsPage({ searchParams }: Props) {
             Pacientes para retorno
           </Link>
 
+          <Link href="/patients/new" className="btn-gradient">
+            Novo paciente
+          </Link>
           {limitStatus.isLimitReached ? (
             <Link href="/billing" className="btn-outline-modern">
-              Fazer Upgrade
+              Ver excedentes
             </Link>
-          ) : (
-            <Link href="/patients/new" className="btn-gradient">
-              Novo paciente
-            </Link>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -78,19 +79,42 @@ export default async function PatientsPage({ searchParams }: Props) {
         </p>
       ) : null}
 
-      {limitStatus.remainingSlots <= 3 && !limitStatus.isLimitReached && (
-        <div className="mb-4 rounded-md border border-warning/30 bg-warning/5 px-3 py-2">
-          <p className="text-sm font-semibold text-warning">
-            ⚠️ Você tem apenas <strong>{limitStatus.remainingSlots}</strong>{" "}
-            slot{limitStatus.remainingSlots !== 1 ? "s" : ""} restante
-            {limitStatus.remainingSlots !== 1 ? "s" : ""} no seu plano{" "}
-            {tenant.billing_tier}.{" "}
-            <Link href="/billing" className="font-bold hover:underline">
-              Fazer upgrade →
+      {limitStatus.isLimitReached ? (
+        <div className="mb-4 rounded-md border border-success/30 bg-success/5 px-3 py-2">
+          <p className="text-sm font-semibold text-success">
+            ✨ Parabéns! Você já atingiu o limite de pacientes do seu plano.
+          </p>
+          <p className="mt-1 text-xs text-success/90">
+            A partir de agora, cada novo paciente que você cadastrar é uma
+            assinatura de{" "}
+            <strong>
+              {limitStatus.overageMonthlyAmount
+                ? `R$ ${limitStatus.overageMonthlyAmount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mês`
+                : "um slot adicional"}
+            </strong>
+            . Não se preocupe, você só pagará pelo que realmente usar! 🚀
+          </p>
+          <p className="mt-2 text-xs text-success/75">
+            Ótima oportunidade para crescer seu negócio. Ou considere fazer
+            upgrade do plano na seção de{" "}
+            <Link href="/billing" className="underline hover:no-underline">
+              Assinatura
             </Link>
+            .
           </p>
         </div>
-      )}
+      ) : limitStatus.remainingSlots <= 3 ? (
+        <div className="mb-4 rounded-md border border-warning/30 bg-warning/5 px-3 py-2">
+          <p className="text-sm font-semibold text-warning">
+            Você tem apenas <strong>{limitStatus.remainingSlots}</strong> slot
+            {limitStatus.remainingSlots !== 1 ? "s" : ""} restante
+            {limitStatus.remainingSlots !== 1 ? "s" : ""} antes do excedente.
+          </p>
+          <p className="mt-1 text-xs text-warning/80">
+            Plano atual: <strong>{tenant.billing_tier}</strong>
+          </p>
+        </div>
+      ) : null}
 
       {/* Mobile: cards */}
       <div className="sm:hidden">

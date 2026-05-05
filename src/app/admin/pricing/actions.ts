@@ -9,7 +9,7 @@ import {
   BILLING_PLANS,
   type BillingPlanConfig,
   type BillingTier,
-} from "@/app/billing/plans";
+} from "@/app/(protected)/billing/plans";
 
 type BillingPlanPriceRow = {
   tier: BillingTier;
@@ -17,6 +17,7 @@ type BillingPlanPriceRow = {
   max_patients: number;
   monthly_amount: number;
   annual_amount: number;
+  overage_slot_amount: number | null;
   updated_at: string;
   updated_by_email: string | null;
 };
@@ -45,6 +46,25 @@ function getNumberField(formData: FormData, key: string, min: number) {
   return Math.round(parsed * 100) / 100;
 }
 
+function getOptionalNumberField(formData: FormData, key: string, min: number) {
+  const raw = String(formData.get(key) ?? "")
+    .trim()
+    .replace(",", ".");
+
+  if (!raw) {
+    return null;
+  }
+
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < min) {
+    redirect(
+      `/admin/pricing?error=${encodeURIComponent(`Valor inválido para ${key}`)}`,
+    );
+  }
+
+  return Math.round(parsed * 100) / 100;
+}
+
 function toBillingPlanConfig(rows: BillingPlanPriceRow[]): BillingPlanConfig {
   const resolved: BillingPlanConfig = structuredClone(BILLING_PLANS);
 
@@ -60,6 +80,11 @@ function toBillingPlanConfig(rows: BillingPlanPriceRow[]): BillingPlanConfig {
         amount: Number(row.annual_amount),
         description: `PodoDesk ${row.label} – até ${row.max_patients} pacientes (anual)`,
       },
+      overageMonthlyAmount:
+        row.overage_slot_amount === null
+          ? resolved[row.tier].overageMonthlyAmount
+          : Number(row.overage_slot_amount),
+      capabilities: resolved[row.tier].capabilities,
     };
   }
 
@@ -73,7 +98,7 @@ export async function getAdminPricingData() {
   const { data, error } = await adminClient
     .from("billing_plan_prices")
     .select(
-      "tier, label, max_patients, monthly_amount, annual_amount, updated_at, updated_by_email",
+      "tier, label, max_patients, monthly_amount, annual_amount, overage_slot_amount, updated_at, updated_by_email",
     )
     .order("tier", { ascending: true });
 
@@ -96,6 +121,11 @@ export async function updateBillingPlanPriceAction(formData: FormData) {
   const maxPatients = getNumberField(formData, "max_patients", 1);
   const monthlyAmount = getNumberField(formData, "monthly_amount", 1);
   const annualAmount = getNumberField(formData, "annual_amount", 1);
+  const overageSlotAmount = getOptionalNumberField(
+    formData,
+    "overage_slot_amount",
+    0.01,
+  );
   const label = String(formData.get("label") ?? "").trim();
 
   if (!label) {
@@ -110,6 +140,7 @@ export async function updateBillingPlanPriceAction(formData: FormData) {
       max_patients: Math.round(maxPatients),
       monthly_amount: monthlyAmount,
       annual_amount: annualAmount,
+      overage_slot_amount: overageSlotAmount,
       updated_by_email: adminUser.email,
     },
     { onConflict: "tier" },
@@ -120,6 +151,14 @@ export async function updateBillingPlanPriceAction(formData: FormData) {
       `/admin/pricing?error=${encodeURIComponent(`Falha ao salvar plano: ${error.message}`)}`,
     );
   }
+
+  // Propagate the new patient limit to all tenants currently on this tier,
+  // except those on a permanent_free_plan (which have a custom limit set by the admin).
+  await adminClient
+    .from("tenants")
+    .update({ max_patients_allowed: Math.round(maxPatients) })
+    .eq("billing_tier", tier)
+    .eq("is_permanent_free_plan", false);
 
   revalidatePath("/");
   revalidatePath("/billing");

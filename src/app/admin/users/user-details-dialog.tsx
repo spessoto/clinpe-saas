@@ -308,7 +308,7 @@ export function UserDetailsDialog({
                       defaultValue="tier_1"
                       className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
                     >
-                      <option value="tier_1">Starter (Básico)</option>
+                      <option value="tier_1">Essencial</option>
                       <option value="tier_2">Pro (Profissional)</option>
                       <option value="tier_3">Clínica</option>
                     </select>

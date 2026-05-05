@@ -372,7 +372,7 @@ export default function HelpdeskPage() {
                 href="/sign-up"
                 className="btn-gradient inline-flex rounded-full px-10 py-5 text-xl font-black"
               >
-                Quero testar o PodoDesk por 7 dias
+                Quero testar o PodoDesk por 14 dias
               </Link>
             </div>
 

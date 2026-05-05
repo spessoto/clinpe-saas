@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requireActiveTenant } from "@/lib/auth";
+import { requirePlanCapability } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
@@ -42,7 +42,10 @@ function validatePositiveNumber(value: string) {
 }
 
 export async function createSterilizationCycleAction(formData: FormData) {
-  const { appUser } = await requireActiveTenant();
+  const { appUser } = await requirePlanCapability(
+    "sterilization",
+    "O módulo de Esterilização está disponível apenas nos planos Pro e Clínica.",
+  );
   const supabase = await createClient();
 
   const month = getField(formData, "month");
@@ -133,7 +136,10 @@ export async function createSterilizationCycleAction(formData: FormData) {
 }
 
 export async function createSterilizationMaterialAction(formData: FormData) {
-  const { appUser } = await requireActiveTenant();
+  const { appUser } = await requirePlanCapability(
+    "sterilization",
+    "O módulo de Esterilização está disponível apenas nos planos Pro e Clínica.",
+  );
   const supabase = await createClient();
 
   const month = getField(formData, "month");
@@ -184,7 +190,10 @@ export async function createSterilizationMaterialAction(formData: FormData) {
 }
 
 export async function createBiologicalTestAction(formData: FormData) {
-  const { appUser } = await requireActiveTenant();
+  const { appUser } = await requirePlanCapability(
+    "sterilization",
+    "O módulo de Esterilização está disponível apenas nos planos Pro e Clínica.",
+  );
   const supabase = await createClient();
 
   const month = getField(formData, "month");
@@ -241,7 +250,10 @@ export async function createBiologicalTestAction(formData: FormData) {
 }
 
 export async function updateBiologicalTestResultAction(formData: FormData) {
-  const { appUser } = await requireActiveTenant();
+  const { appUser } = await requirePlanCapability(
+    "sterilization",
+    "O módulo de Esterilização está disponível apenas nos planos Pro e Clínica.",
+  );
   const supabase = await createClient();
 
   const month = getField(formData, "month");

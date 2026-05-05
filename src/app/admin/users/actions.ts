@@ -63,7 +63,7 @@ function getPlanLabel(tenant: TenantSummary | null) {
 
   switch (tenant.billing_tier) {
     case "tier_1":
-      return "Starter";
+      return "Essencial";
     case "tier_2":
       return "Pro";
     case "tier_3":
@@ -639,7 +639,7 @@ const TIER_MAX_PATIENTS: Record<string, number> = {
 };
 
 const TIER_LABELS: Record<string, string> = {
-  tier_1: "Starter",
+  tier_1: "Essencial",
   tier_2: "Pro",
   tier_3: "Clínica",
 };

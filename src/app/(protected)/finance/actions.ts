@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { requireOwnerAccess } from "@/lib/auth";
+import { requireOwnerPlanCapability } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
@@ -25,7 +25,10 @@ function parseAmount(value: string) {
 }
 
 export async function createFinancialTransactionAction(formData: FormData) {
-  const { appUser } = await requireOwnerAccess();
+  const { appUser } = await requireOwnerPlanCapability(
+    "finance",
+    "O módulo Financeiro está disponível apenas nos planos Pro e Clínica.",
+  );
   const supabase = await createClient();
 
   const type = getField(formData, "type");

@@ -9,13 +9,58 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { getBillingPlans } from "@/app/billing/plans-server";
+import { getBillingPlans } from "@/app/(protected)/billing/plans-server";
 import { PricingSection, type PlanCard } from "@/app/pricing-section";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 
 // Force server-side rendering on every request so the HTML always
 // references the correct chunk hashes from the current build.
 export const dynamic = "force-dynamic";
+
+function getPlanFeatureLabels(
+  t: Awaited<ReturnType<typeof getTranslations>>,
+  tier: "tier_1" | "tier_2" | "tier_3",
+) {
+  const labels = {
+    medical_records: t("planFeatureMedicalRecords"),
+    schedule: t("planFeatureSchedule"),
+    whatsapp: t("planFeatureWhatsApp"),
+    pops: t("planFeaturePops"),
+    finance: t("planFeatureFinance"),
+    sterilization: t("planFeatureSterilization"),
+    commissions: t("planFeatureCommissions"),
+  };
+
+  if (tier === "tier_1") {
+    return [
+      labels.schedule,
+      labels.whatsapp,
+      labels.medical_records,
+      labels.pops,
+    ];
+  }
+
+  if (tier === "tier_2") {
+    return [
+      labels.schedule,
+      labels.whatsapp,
+      labels.medical_records,
+      labels.pops,
+      labels.finance,
+      labels.sterilization,
+    ];
+  }
+
+  return [
+    labels.schedule,
+    labels.whatsapp,
+    labels.medical_records,
+    labels.pops,
+    labels.finance,
+    labels.sterilization,
+    labels.commissions,
+  ];
+}
 
 function formatMoney(value: number) {
   return value.toLocaleString("pt-BR", {
@@ -41,15 +86,6 @@ export default async function Home() {
     { title: t("feature6Title"), text: t("feature6Text"), icon: TrendingUp },
   ];
 
-  const sharedFeatures = [
-    t("planFeature1"),
-    t("planFeature2"),
-    t("planFeature3"),
-    t("planFeature4"),
-    t("planFeature5"),
-    t("planFeature6"),
-  ];
-
   const planCards: PlanCard[] = [
     {
       name: plans.tier_1.label,
@@ -59,7 +95,7 @@ export default async function Home() {
       featured: false,
       ctaLabel: t("planCtaLabel"),
       ctaHref: "/sign-up",
-      features: sharedFeatures,
+      features: getPlanFeatureLabels(t, "tier_1"),
     },
     {
       name: plans.tier_2.label,
@@ -69,7 +105,7 @@ export default async function Home() {
       featured: true,
       ctaLabel: t("planCtaLabel"),
       ctaHref: "/sign-up",
-      features: sharedFeatures,
+      features: getPlanFeatureLabels(t, "tier_2"),
     },
     {
       name: plans.tier_3.label,
@@ -77,33 +113,9 @@ export default async function Home() {
       annual: formatMoney(plans.tier_3.annual.amount),
       limit: t("planUpTo", { max: plans.tier_3.maxPatients }),
       featured: false,
-      ctaLabel: "Iniciar meus 7 dias Grátis",
-      ctaHref: "/sign-up",
-      features: [
-        "Prontuários ilimitados",
-        "Agenda integrada",
-        "Agendamento público online",
-        "Notificações por e-mail",
-        "Alertas web para novas consultas",
-        "Até 10 profissionais por clínica",
-        "Convite de profissionais por e-mail",
-        "Suporte por e-mail",
-      ],
-    },
-    {
-      name: "Enterprise",
-      monthly: "custom",
-      annual: "custom",
-      limit: t("planEnterpriseLimit"),
-      featured: false,
       ctaLabel: t("planCtaLabel"),
-      ctaHref: "mailto:contato@pododesk.com.br",
-      features: [
-        t("planEnterpriseFeature1"),
-        t("planEnterpriseFeature2"),
-        t("planEnterpriseFeature3"),
-        t("planEnterpriseFeature4"),
-      ],
+      ctaHref: "/sign-up",
+      features: getPlanFeatureLabels(t, "tier_3"),
     },
   ];
 

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle, AlertCircle, Info, Mail } from "lucide-react";
+import { CheckCircle, AlertCircle, Info, TrendingUp } from "lucide-react";
 
 import { isConfiguredAdminEmail, requireAuthenticatedUser } from "@/lib/auth";
 import { couponSupportsPeriod, formatCouponValue } from "@/lib/coupons";
@@ -9,7 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { TenantBillingStatus } from "@/lib/tenant-access";
 import { getEffectiveTrialEnd } from "@/lib/tenant-access";
-import { type BillingPeriod } from "./plans";
+import { BILLING_PLANS, type BillingPeriod, type BillingTier } from "./plans";
 import { getBillingPlans } from "./plans-server";
 import { PeriodToggle } from "./period-toggle";
 import { BillingPlansGrid } from "./billing-plans-grid";
@@ -110,6 +110,73 @@ export default async function BillingPage({
   const canAccessAdmin = isConfiguredAdminEmail(appUser.email);
   const feedback = statusFeedback(statusParam);
   const plans = await getBillingPlans();
+
+  // --- Overage usage summary (only for tenants with an active paid plan) ---
+  const NEXT_TIER: Partial<Record<BillingTier, BillingTier>> = {
+    tier_1: "tier_2",
+    tier_2: "tier_3",
+  };
+  const now = new Date();
+  const periodStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .slice(0, 10);
+
+  let overageUsage: {
+    peak_patients: number;
+    included_patients: number;
+    overage_patients: number;
+    overage_slot_amount: number | null;
+  } | null = null;
+
+  if (tenant?.billing_tier) {
+    const { data } = await supabase
+      .from("patient_overage_usage_monthly")
+      .select(
+        "peak_patients, included_patients, overage_patients, overage_slot_amount",
+      )
+      .eq("tenant_id", appUser.tenant_id)
+      .eq("billing_period_start", periodStart)
+      .maybeSingle();
+    if (data) {
+      overageUsage = {
+        ...data,
+        overage_slot_amount: data.overage_slot_amount
+          ? Number(data.overage_slot_amount)
+          : null,
+      };
+    }
+  }
+
+  type UpgradeSuggestion = {
+    nextTier: BillingTier;
+    nextLabel: string;
+    nextMonthly: number;
+    estimatedOverage: number;
+  };
+  let upgradeSuggestion: UpgradeSuggestion | null = null;
+  if (overageUsage && tenant?.billing_tier) {
+    const currentTier = tenant.billing_tier as BillingTier;
+    const nextTier = NEXT_TIER[currentTier];
+    if (
+      nextTier &&
+      overageUsage.overage_slot_amount &&
+      overageUsage.overage_patients > 0
+    ) {
+      const estimatedOverage =
+        overageUsage.overage_patients * overageUsage.overage_slot_amount;
+      const nextPlan = BILLING_PLANS[nextTier];
+      if (estimatedOverage >= nextPlan.monthly.amount) {
+        upgradeSuggestion = {
+          nextTier,
+          nextLabel: nextPlan.label,
+          nextMonthly: nextPlan.monthly.amount,
+          estimatedOverage,
+        };
+      }
+    }
+  }
+  // -------------------------------------------------------------------------
+
   const couponRelation = couponRedemption
     ? Array.isArray(couponRedemption.coupon)
       ? (couponRedemption.coupon[0] ?? null)
@@ -223,7 +290,7 @@ export default async function BillingPage({
               ? "Seu período gratuito terminou. Selecione um plano para voltar a usar o PodoDesk."
               : trialStatus.type === "free_permanent"
                 ? "Seu tenant está operando em free permanente. Você ainda pode migrar para um plano pago a qualquer momento."
-                : "Acesso completo a prontuários, agenda e agendamento online."}
+                : "Escolha o plano com os recursos e o limite de pacientes ideais para sua operação."}
           </p>
           {canAccessAdmin ? (
             <div className="mt-4 flex justify-center">
@@ -241,6 +308,90 @@ export default async function BillingPage({
           </Suspense>
         </div>
 
+        {/* Overage summary */}
+        {overageUsage && overageUsage.overage_patients > 0 ? (
+          <div className="mb-8 rounded-xl border border-warning/30 bg-warning/5 p-5">
+            <div className="flex items-start gap-3">
+              <TrendingUp className="mt-0.5 size-5 shrink-0 text-warning" />
+              <div className="flex-1">
+                <p className="font-semibold text-warning">
+                  Excedente de pacientes este m\u00eas
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  Seu plano inclui{" "}
+                  <strong>{overageUsage.included_patients}</strong> pacientes.
+                  Pico deste ciclo:{" "}
+                  <strong>{overageUsage.peak_patients}</strong> \u2014{" "}
+                  <strong>{overageUsage.overage_patients}</strong> em excedente.
+                </p>
+                {overageUsage.overage_slot_amount ? (
+                  <p className="mt-1 text-sm font-semibold text-warning">
+                    Estimativa de cobran\u00e7a adicional:{" "}
+                    {(
+                      overageUsage.overage_patients *
+                      overageUsage.overage_slot_amount
+                    ).toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}{" "}
+                    <span className="font-normal text-muted">
+                      ({overageUsage.overage_patients} \u00d7{" "}
+                      {overageUsage.overage_slot_amount.toLocaleString(
+                        "pt-BR",
+                        {
+                          style: "currency",
+                          currency: "BRL",
+                        },
+                      )}
+                      /paciente)
+                    </span>
+                  </p>
+                ) : null}
+                {!overageUsage.overage_slot_amount ? (
+                  <p className="mt-1 text-xs text-muted">
+                    O valor por slot ainda n\u00e3o foi configurado. Entre em
+                    contato com o suporte.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Smart upgrade suggestion */}
+        {upgradeSuggestion ? (
+          <div className="mb-8 rounded-xl border border-primary/30 bg-primary/10 p-5">
+            <div className="flex items-start gap-3">
+              <TrendingUp className="mt-0.5 size-5 shrink-0 text-primary" />
+              <div className="flex-1">
+                <p className="font-semibold text-primary">
+                  Upgrade Inteligente: voc\u00ea economiza no plano{" "}
+                  {upgradeSuggestion.nextLabel}
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  Seu excedente este m\u00eas est\u00e1 custando{" "}
+                  <strong>
+                    {upgradeSuggestion.estimatedOverage.toLocaleString(
+                      "pt-BR",
+                      {
+                        style: "currency",
+                        currency: "BRL",
+                      },
+                    )}
+                  </strong>{" "}
+                  \u2014 o mesmo que a mensalidade do plano{" "}
+                  <strong>{upgradeSuggestion.nextLabel}</strong> (
+                  {upgradeSuggestion.nextMonthly.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                  /m\u00eas). Faça o upgrade e elimine os excedentes.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {/* Plan cards grid with modal */}
         <BillingPlansGrid
           appUser={appUser}
@@ -250,23 +401,6 @@ export default async function BillingPage({
           trialStatus={trialStatus}
           plans={plans}
         />
-
-        {/* Enterprise CTA */}
-        <div className="mt-8 flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-surface p-5 text-center">
-          <p className="text-sm text-muted">
-            <span className="font-medium text-foreground">
-              Mais de 200 pacientes?
-            </span>{" "}
-            Entre em contato para um plano personalizado.
-          </p>
-          <a
-            href="mailto:contato@pododesk.com.br"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-foreground hover:bg-gray-50"
-          >
-            <Mail className="size-4" />
-            Fale conosco
-          </a>
-        </div>
 
         {/* Security note */}
         <p className="mt-6 text-center text-xs text-muted">

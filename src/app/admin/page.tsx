@@ -224,7 +224,7 @@ export default async function AdminDashboardPage({
       tone: "bg-success/10 text-success",
     },
     {
-      title: "Trials vencendo em 7 dias",
+      title: "Trials vencendo em 14 dias",
       value: trialsEndingSoon,
       tone: "bg-warning/10 text-warning",
     },

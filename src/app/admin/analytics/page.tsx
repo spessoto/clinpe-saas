@@ -281,7 +281,7 @@ async function fetchAnalyticsData() {
   }
   const planDistribution: PlanDistribution[] = [
     { name: "Trial", value: planCounts.trial, color: "#64748B" },
-    { name: "Starter", value: planCounts.tier_1, color: "#0D9488" },
+    { name: "Essencial", value: planCounts.tier_1, color: "#0D9488" },
     { name: "Pro", value: planCounts.tier_2, color: "#1E3A8A" },
     { name: "Clínica", value: planCounts.tier_3, color: "#7C3AED" },
     { name: "Free", value: planCounts.free, color: "#10B981" },

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { requireActiveTenant } from "@/lib/auth";
+import { requirePlanCapability } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = {
@@ -40,7 +40,10 @@ function indicatorClassName(status: string) {
 }
 
 export default async function SterilizationCycleDetailsPage({ params }: Props) {
-  const { appUser } = await requireActiveTenant();
+  const { appUser } = await requirePlanCapability(
+    "sterilization",
+    "O módulo de Esterilização está disponível apenas nos planos Pro e Clínica.",
+  );
   const supabase = await createClient();
   const { id } = await params;
 

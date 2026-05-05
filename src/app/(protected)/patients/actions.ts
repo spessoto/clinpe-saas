@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import {
+  BILLING_PLANS,
+  type BillingTier,
+} from "@/app/(protected)/billing/plans";
 import { requireActiveTenant } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -71,7 +75,69 @@ export type PatientLimitStatus = {
   max: number;
   isLimitReached: boolean;
   remainingSlots: number;
+  overagePatients: number;
+  overageMonthlyAmount: number | null;
 };
+
+function getCurrentMonthBounds() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .slice(0, 10);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    .toISOString()
+    .slice(0, 10);
+
+  return { start, end };
+}
+
+async function syncMonthlyPatientUsage(input: {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  tenantId: string;
+  billingTier: "free_trial" | BillingTier;
+  maxPatientsAllowed: number;
+  nextCount: number;
+}) {
+  const { start, end } = getCurrentMonthBounds();
+  const overagePatients = Math.max(
+    0,
+    input.nextCount - input.maxPatientsAllowed,
+  );
+
+  const { data: existing } = await input.supabase
+    .from("patient_overage_usage_monthly")
+    .select("peak_patients")
+    .eq("tenant_id", input.tenantId)
+    .eq("billing_period_start", start)
+    .maybeSingle();
+
+  const planTier =
+    input.billingTier === "free_trial" ? null : input.billingTier;
+  const peakPatients = Math.max(existing?.peak_patients ?? 0, input.nextCount);
+  const overageSlotAmount = planTier
+    ? BILLING_PLANS[planTier].overageMonthlyAmount
+    : null;
+
+  const { error } = await input.supabase
+    .from("patient_overage_usage_monthly")
+    .upsert(
+      {
+        tenant_id: input.tenantId,
+        billing_period_start: start,
+        billing_period_end: end,
+        plan_tier: input.billingTier,
+        included_patients: input.maxPatientsAllowed,
+        peak_patients: peakPatients,
+        overage_patients: overagePatients,
+        overage_slot_amount: overageSlotAmount,
+      },
+      { onConflict: "tenant_id,billing_period_start" },
+    );
+
+  if (error) {
+    console.error("Erro ao sincronizar uso mensal de pacientes:", error);
+  }
+}
 
 export async function getPatientCountStatus(): Promise<PatientLimitStatus> {
   const { appUser, tenant } = await requireActiveTenant();
@@ -89,22 +155,33 @@ export async function getPatientCountStatus(): Promise<PatientLimitStatus> {
       max: tenant.max_patients_allowed,
       isLimitReached: false,
       remainingSlots: tenant.max_patients_allowed,
+      overagePatients: 0,
     };
   }
 
   const currentCount = count ?? 0;
   const isLimitReached = currentCount >= tenant.max_patients_allowed;
+  const overagePatients = Math.max(
+    0,
+    currentCount - tenant.max_patients_allowed,
+  );
+  const overageAmount =
+    tenant.billing_tier !== "free_trial"
+      ? BILLING_PLANS[tenant.billing_tier]?.overageMonthlyAmount
+      : null;
 
   return {
     current: currentCount,
     max: tenant.max_patients_allowed,
     isLimitReached,
     remainingSlots: Math.max(0, tenant.max_patients_allowed - currentCount),
+    overagePatients,
+    overageMonthlyAmount: overageAmount ?? null,
   };
 }
 
 export async function createPatientAction(formData: FormData) {
-  const { appUser } = await requireActiveTenant();
+  const { appUser, tenant } = await requireActiveTenant();
   const supabase = await createClient();
 
   const name = getField(formData, "name");
@@ -183,13 +260,7 @@ export async function createPatientAction(formData: FormData) {
     redirect("/patients/new?error=Nome e telefone sao obrigatorios");
   }
 
-  // Verificar limite de pacientes
   const limitStatus = await getPatientCountStatus();
-  if (limitStatus.isLimitReached) {
-    redirect(
-      `/patients/new?error=Limite de pacientes atingido (${limitStatus.current}/${limitStatus.max}). Faça upgrade para adicionar mais.&limitReached=true`,
-    );
-  }
 
   const insertPayload = {
     tenant_id: appUser.tenant_id,
@@ -230,8 +301,17 @@ export async function createPatientAction(formData: FormData) {
     redirect(`/patients/new?error=${encodeURIComponent(error.message)}`);
   }
 
+  await syncMonthlyPatientUsage({
+    supabase,
+    tenantId: appUser.tenant_id,
+    billingTier: tenant.billing_tier,
+    maxPatientsAllowed: tenant.max_patients_allowed,
+    nextCount: limitStatus.current + 1,
+  });
+
   revalidatePath("/patients");
   revalidatePath("/dashboard");
+  revalidatePath("/billing");
   redirect("/patients");
 }
 
@@ -342,7 +422,7 @@ export async function updatePatientAction(formData: FormData) {
     referral_source: referralSourceResolved,
   };
 
-  let updateQuery = supabase
+  const updateQuery = supabase
     .from("patients")
     .update(updatePayload)
     .eq("id", id)

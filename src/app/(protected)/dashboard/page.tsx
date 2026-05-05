@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { requireActiveTenant } from "@/lib/auth";
+import { requireActiveTenant, tenantHasCapability } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 function monthBoundaries() {
@@ -27,11 +27,13 @@ function slugifyProfessionalName(name: string) {
 }
 
 export default async function DashboardPage() {
-  const { appUser } = await requireActiveTenant();
+  const { appUser, tenant } = await requireActiveTenant();
   const professionalSlug = slugifyProfessionalName(appUser.full_name);
   const bookingPath = professionalSlug ? `/${professionalSlug}` : null;
   const supabase = await createClient();
   const { start, end, startDate, endDate } = monthBoundaries();
+  const canAccessFinance = tenantHasCapability(tenant, "finance");
+  const canAccessSterilization = tenantHasCapability(tenant, "sterilization");
 
   const [
     appointmentsResult,
@@ -55,17 +57,21 @@ export default async function DashboardPage() {
       .from("materials")
       .select("id, quantity, minimum_stock")
       .eq("tenant_id", appUser.tenant_id),
-    supabase
-      .from("financial_transactions")
-      .select("type, amount")
-      .eq("tenant_id", appUser.tenant_id)
-      .gte("occurred_on", startDate)
-      .lt("occurred_on", endDate),
-    supabase
-      .from("sterilization_biological_tests")
-      .select("id", { count: "exact", head: true })
-      .eq("tenant_id", appUser.tenant_id)
-      .eq("status", "pending"),
+    canAccessFinance
+      ? supabase
+          .from("financial_transactions")
+          .select("type, amount")
+          .eq("tenant_id", appUser.tenant_id)
+          .gte("occurred_on", startDate)
+          .lt("occurred_on", endDate)
+      : Promise.resolve({ data: [] }),
+    canAccessSterilization
+      ? supabase
+          .from("sterilization_biological_tests")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", appUser.tenant_id)
+          .eq("status", "pending")
+      : Promise.resolve({ count: 0 }),
   ]);
 
   const lowStockCount =
@@ -113,14 +119,18 @@ export default async function DashboardPage() {
       value: lowStockCount,
       tone: "bg-warning/10 text-warning",
     },
-    {
-      title: "Saldo do mês",
-      value: formattedMonthlyBalance,
-      tone:
-        monthlyBalance >= 0
-          ? "bg-success/10 text-success"
-          : "bg-destructive/10 text-destructive",
-    },
+    ...(canAccessFinance
+      ? [
+          {
+            title: "Saldo do mês",
+            value: formattedMonthlyBalance,
+            tone:
+              monthlyBalance >= 0
+                ? "bg-success/10 text-success"
+                : "bg-destructive/10 text-destructive",
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -198,18 +208,20 @@ export default async function DashboardPage() {
             Abrir documentos
           </Link>
         </article>
-        <article className="surface-card p-5">
-          <h3 className="text-lg font-semibold text-secondary">Financeiro</h3>
-          <p className="mt-2 text-sm text-muted">
-            Registre entradas e saídas e acompanhe o saldo operacional do mês.
-          </p>
-          <Link
-            href="/finance"
-            className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
-          >
-            Abrir financeiro
-          </Link>
-        </article>
+        {canAccessFinance ? (
+          <article className="surface-card p-5">
+            <h3 className="text-lg font-semibold text-secondary">Financeiro</h3>
+            <p className="mt-2 text-sm text-muted">
+              Registre entradas e saídas e acompanhe o saldo operacional do mês.
+            </p>
+            <Link
+              href="/finance"
+              className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+            >
+              Abrir financeiro
+            </Link>
+          </article>
+        ) : null}
         <article className="surface-card p-5">
           <h3 className="text-lg font-semibold text-secondary">
             Pacientes para retorno
@@ -225,22 +237,24 @@ export default async function DashboardPage() {
             Abrir régua de recall
           </Link>
         </article>
-        <article className="surface-card p-5">
-          <h3 className="text-lg font-semibold text-secondary">
-            Central de esterilização
-          </h3>
-          <p className="mt-2 text-sm text-muted">
-            {pendingBiologicalTests > 0
-              ? `Você tem ${pendingBiologicalTests} teste(s) biológico(s) aguardando leitura.`
-              : "Sem testes biológicos pendentes no momento."}
-          </p>
-          <Link
-            href="/sterilization"
-            className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
-          >
-            Abrir central
-          </Link>
-        </article>
+        {canAccessSterilization ? (
+          <article className="surface-card p-5">
+            <h3 className="text-lg font-semibold text-secondary">
+              Central de esterilização
+            </h3>
+            <p className="mt-2 text-sm text-muted">
+              {pendingBiologicalTests > 0
+                ? `Você tem ${pendingBiologicalTests} teste(s) biológico(s) aguardando leitura.`
+                : "Sem testes biológicos pendentes no momento."}
+            </p>
+            <Link
+              href="/sterilization"
+              className="mt-4 inline-flex text-sm font-semibold text-primary hover:underline"
+            >
+              Abrir central
+            </Link>
+          </article>
+        ) : null}
       </div>
     </section>
   );

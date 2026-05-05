@@ -1,8 +1,13 @@
 import { redirect } from "next/navigation";
 
+import {
+  BILLING_PLANS,
+  type BillingCapability,
+  type BillingTier,
+} from "@/app/(protected)/billing/plans";
 import { getPanelAdminEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
-import { hasTenantAccess } from "@/lib/tenant-access";
+import { checkTenantPaymentStatus, hasTenantAccess } from "@/lib/tenant-access";
 
 export type AppUser = {
   id: string;
@@ -235,8 +240,12 @@ export async function requireActiveTenant() {
     );
   }
 
-  if (!hasTenantAccess(tenant as Tenant)) {
+  const paymentStatus = checkTenantPaymentStatus(tenant as Tenant);
+  if (paymentStatus === "no_access") {
     redirect("/billing");
+  }
+  if (paymentStatus === "past_due") {
+    redirect("/payment-regularization");
   }
 
   return { appUser, tenant: tenant as Tenant };
@@ -250,6 +259,66 @@ export async function requireOwnerAccess() {
         encodeURIComponent("Acesso restrito ao proprietário da clínica."),
     );
   }
+  return result;
+}
+
+function getTenantPlanTier(
+  tenant: Pick<Tenant, "billing_tier">,
+): BillingTier | null {
+  return tenant.billing_tier === "free_trial" ? null : tenant.billing_tier;
+}
+
+export function tenantHasCapability(
+  tenant: Pick<Tenant, "billing_tier" | "is_permanent_free_plan">,
+  capability: BillingCapability,
+) {
+  if (tenant.is_permanent_free_plan || tenant.billing_tier === "free_trial") {
+    return true;
+  }
+
+  const tier = getTenantPlanTier(tenant as Pick<Tenant, "billing_tier">);
+  if (!tier) {
+    return false;
+  }
+
+  return BILLING_PLANS[tier].capabilities.includes(capability);
+}
+
+export async function requirePlanCapability(
+  capability: BillingCapability,
+  upgradeMessage?: string,
+) {
+  const result = await requireActiveTenant();
+
+  if (!tenantHasCapability(result.tenant, capability)) {
+    redirect(
+      "/billing?error=" +
+        encodeURIComponent(
+          upgradeMessage ??
+            "Seu plano atual não inclui este módulo. Faça upgrade para acessar.",
+        ),
+    );
+  }
+
+  return result;
+}
+
+export async function requireOwnerPlanCapability(
+  capability: BillingCapability,
+  upgradeMessage?: string,
+) {
+  const result = await requireOwnerAccess();
+
+  if (!tenantHasCapability(result.tenant, capability)) {
+    redirect(
+      "/billing?error=" +
+        encodeURIComponent(
+          upgradeMessage ??
+            "Seu plano atual não inclui este módulo. Faça upgrade para acessar.",
+        ),
+    );
+  }
+
   return result;
 }
 

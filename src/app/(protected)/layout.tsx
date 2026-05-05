@@ -2,7 +2,11 @@ import Link from "next/link";
 
 import { signOutAction } from "@/app/auth-actions";
 import { BrandLogoWhite } from "@/components/brand-logo";
-import { requireActiveTenant, type Tenant } from "@/lib/auth";
+import {
+  requireActiveTenant,
+  tenantHasCapability,
+  type Tenant,
+} from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { MobileSidebar } from "./mobile-sidebar";
 import { RenewalBanner } from "./renewal-banner";
@@ -45,12 +49,18 @@ function SidebarContent({
   unreadNotificationCount,
   isOwner,
   isTier3,
+  canAccessFinance,
+  canAccessSterilization,
+  canAccessCommissions,
 }: {
   canAccessAdmin: boolean;
   billingCtaLabel: string;
   unreadNotificationCount: number;
   isOwner: boolean;
   isTier3: boolean;
+  canAccessFinance: boolean;
+  canAccessSterilization: boolean;
+  canAccessCommissions: boolean;
 }) {
   const linkClass =
     "rounded-xl px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/18 [@media(max-height:860px)]:px-2.5 [@media(max-height:860px)]:py-1.5 [@media(max-height:860px)]:text-[13px] [@media(max-height:720px)]:px-2 [@media(max-height:720px)]:py-1 [@media(max-height:720px)]:text-xs";
@@ -91,14 +101,21 @@ function SidebarContent({
             ) : null}
           </span>
         </Link>
-        {isOwner ? (
+        {isOwner && canAccessFinance ? (
           <Link href="/finance" className={linkClass}>
             Financeiro
           </Link>
         ) : null}
-        <Link href="/sterilization" className={linkClass}>
-          Esterilização
-        </Link>
+        {canAccessSterilization ? (
+          <Link href="/sterilization" className={linkClass}>
+            Esterilização
+          </Link>
+        ) : null}
+        {isOwner && canAccessCommissions ? (
+          <Link href="/commissions" className={linkClass}>
+            Comissões
+          </Link>
+        ) : null}
         <Link href="/settings" className={linkClass}>
           Configurações
         </Link>
@@ -147,6 +164,9 @@ export default async function ProtectedLayout({
   const supabase = await createClient();
   const isOwner = appUser.role === "owner";
   const isTier3 = tenant.billing_tier === "tier_3";
+  const canAccessFinance = tenantHasCapability(tenant, "finance");
+  const canAccessSterilization = tenantHasCapability(tenant, "sterilization");
+  const canAccessCommissions = tenantHasCapability(tenant, "commissions");
   const canAccessAdmin =
     process.env.ADMIN_EMAIL?.trim().toLowerCase() ===
     appUser.email.trim().toLowerCase();
@@ -170,6 +190,9 @@ export default async function ProtectedLayout({
         unreadNotificationCount={unreadNotificationCount ?? 0}
         isOwner={isOwner}
         isTier3={isTier3}
+        canAccessFinance={canAccessFinance}
+        canAccessSterilization={canAccessSterilization}
+        canAccessCommissions={canAccessCommissions}
       />
 
       <div className="md:flex">
@@ -184,6 +207,9 @@ export default async function ProtectedLayout({
             unreadNotificationCount={unreadNotificationCount ?? 0}
             isOwner={isOwner}
             isTier3={isTier3}
+            canAccessFinance={canAccessFinance}
+            canAccessSterilization={canAccessSterilization}
+            canAccessCommissions={canAccessCommissions}
           />
         </aside>
 

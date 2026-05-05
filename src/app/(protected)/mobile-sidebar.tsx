@@ -12,6 +12,9 @@ type MobileSidebarProps = {
   unreadNotificationCount: number;
   isOwner: boolean;
   isTier3: boolean;
+  canAccessFinance: boolean;
+  canAccessSterilization: boolean;
+  canAccessCommissions: boolean;
 };
 
 export function MobileSidebar({
@@ -20,6 +23,9 @@ export function MobileSidebar({
   unreadNotificationCount,
   isOwner,
   isTier3,
+  canAccessFinance,
+  canAccessSterilization,
+  canAccessCommissions,
 }: MobileSidebarProps) {
   // `mounted` controls whether the overlay/aside are in the DOM.
   // `isOpen` drives the transition classes (false = animating out).
@@ -159,7 +165,7 @@ export function MobileSidebar({
                     ) : null}
                   </span>
                 </Link>
-                {isOwner ? (
+                {isOwner && canAccessFinance ? (
                   <Link
                     href="/finance"
                     className={linkClass}
@@ -168,13 +174,24 @@ export function MobileSidebar({
                     Financeiro
                   </Link>
                 ) : null}
-                <Link
-                  href="/sterilization"
-                  className={linkClass}
-                  onClick={closeMenu}
-                >
-                  Esterilização
-                </Link>
+                {canAccessSterilization ? (
+                  <Link
+                    href="/sterilization"
+                    className={linkClass}
+                    onClick={closeMenu}
+                  >
+                    Esterilização
+                  </Link>
+                ) : null}
+                {isOwner && canAccessCommissions ? (
+                  <Link
+                    href="/commissions"
+                    className={linkClass}
+                    onClick={closeMenu}
+                  >
+                    Comissões
+                  </Link>
+                ) : null}
                 <Link
                   href="/settings"
                   className={linkClass}

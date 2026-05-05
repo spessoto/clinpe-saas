@@ -1,5 +1,13 @@
 export type BillingTier = "tier_1" | "tier_2" | "tier_3";
 export type BillingPeriod = "monthly" | "annual";
+export type BillingCapability =
+  | "medical_records"
+  | "schedule"
+  | "whatsapp"
+  | "pops"
+  | "finance"
+  | "sterilization"
+  | "commissions";
 
 export type BillingPlanConfig = Record<
   BillingTier,
@@ -8,21 +16,25 @@ export type BillingPlanConfig = Record<
     maxPatients: number;
     monthly: { amount: number; description: string };
     annual: { amount: number; description: string };
+    overageMonthlyAmount: number | null;
+    capabilities: BillingCapability[];
   }
 >;
 
 export const BILLING_PLANS: BillingPlanConfig = {
   tier_1: {
-    label: "Starter",
+    label: "Essencial",
     maxPatients: 50,
     monthly: {
       amount: 99.9,
-      description: "PodoDesk Starter – até 50 pacientes (mensal)",
+      description: "PodoDesk Essencial – até 50 pacientes (mensal)",
     },
     annual: {
       amount: 1078.9,
-      description: "PodoDesk Starter – até 50 pacientes (anual)",
+      description: "PodoDesk Essencial – até 50 pacientes (anual)",
     },
+    overageMonthlyAmount: null,
+    capabilities: ["schedule", "whatsapp", "medical_records", "pops"],
   },
   tier_2: {
     label: "Pro",
@@ -35,6 +47,15 @@ export const BILLING_PLANS: BillingPlanConfig = {
       amount: 1618.9,
       description: "PodoDesk Pro – até 100 pacientes (anual)",
     },
+    overageMonthlyAmount: null,
+    capabilities: [
+      "schedule",
+      "whatsapp",
+      "medical_records",
+      "pops",
+      "finance",
+      "sterilization",
+    ],
   },
   tier_3: {
     label: "Clínica",
@@ -47,5 +68,15 @@ export const BILLING_PLANS: BillingPlanConfig = {
       amount: 2158.9,
       description: "PodoDesk Clínica – até 150 pacientes (anual)",
     },
+    overageMonthlyAmount: null,
+    capabilities: [
+      "schedule",
+      "whatsapp",
+      "medical_records",
+      "pops",
+      "finance",
+      "sterilization",
+      "commissions",
+    ],
   },
 };
