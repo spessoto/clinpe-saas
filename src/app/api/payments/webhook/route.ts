@@ -21,8 +21,18 @@ type AsaasSubscriptionResponse = {
   customer: string | null;
   externalReference: string | null;
   status: string;
+  value: number;
   nextDueDate?: string | null;
   billingType?: string | null;
+};
+
+type OverageRecord = {
+  id: string;
+  overage_patients: number;
+  overage_slot_amount: number | null;
+  asaas_base_amount: number | null;
+  asaas_applied_at: string | null;
+  asaas_reset_at: string | null;
 };
 
 const EVENTS_TO_PROCESS = new Set([
@@ -107,7 +117,206 @@ async function updateAsaasSubscriptionAmount(input: {
   }
 }
 
-export async function POST(request: NextRequest) {
+// Tolerance in BRL for floating-point subscription value comparisons
+const AMOUNT_TOLERANCE = 0.02;
+
+/**
+ * Handles overage billing on each PAYMENT_RECEIVED event.
+ *
+ * Two-phase state machine per overage record:
+ *   1. RESET  — if a previous period's bump is live (applied_at set, reset_at null),
+ *               revert the Asaas subscription to asaas_base_amount.
+ *   2. APPLY  — if last complete calendar month has overage_patients > 0 and hasn't
+ *               been applied yet, bump the subscription for the next cycle.
+ *
+ * Anti-corruption guarantees:
+ *   • asaas_base_amount is written to DB _before_ the Asaas API call so that if
+ *     the API succeeds but the DB update for applied_at fails, the next webhook
+ *     can detect the partial state and recover without double-charging.
+ *   • Recovery: when asaas_base_amount IS NOT NULL but applied_at IS NULL, compare
+ *     the live Asaas value against base + overage; if they match, the bump already
+ *     happened — just mark applied_at without another API call.
+ *   • Same recovery pattern for the reset phase.
+ *   • currentValue is tracked locally after each mutation to avoid an extra
+ *     Asaas GET between the reset and apply phases.
+ */
+async function processOverageBilling(input: {
+  tenantId: string;
+  subscriptionId: string;
+  currentSubscriptionValue: number;
+  supabase: ReturnType<typeof import("@/lib/supabase/admin").createAdminClient>;
+  apiBase: string;
+  apiKey: string;
+}) {
+  const {
+    tenantId,
+    subscriptionId,
+    supabase,
+    apiBase,
+    apiKey,
+  } = input;
+
+  let currentValue = input.currentSubscriptionValue;
+  const now = new Date();
+
+  // ─── Phase 1: RESET ────────────────────────────────────────────────────────
+  // Find the most recent period where the bump was applied but not yet reset.
+  const { data: toReset, error: resetFetchError } = await supabase
+    .from("patient_overage_usage_monthly")
+    .select(
+      "id, overage_patients, overage_slot_amount, asaas_base_amount, asaas_applied_at, asaas_reset_at",
+    )
+    .eq("tenant_id", tenantId)
+    .not("asaas_applied_at", "is", null)
+    .is("asaas_reset_at", null)
+    .order("billing_period_start", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (resetFetchError) {
+    console.error("[WEBHOOK][OVERAGE] Falha ao buscar registro para reset:", resetFetchError);
+    // Non-fatal: log and continue — tenant status was already updated.
+  } else if (toReset && toReset.asaas_base_amount !== null) {
+    const rec = toReset as OverageRecord;
+    const baseAmount = Number(rec.asaas_base_amount);
+    const overageAmount =
+      Number(rec.overage_patients) * Number(rec.overage_slot_amount ?? 0);
+    const expectedBumped = baseAmount + overageAmount;
+
+    // Recovery check: if Asaas already shows the base value, the reset happened
+    // but the DB update failed on a previous attempt — just record it.
+    const alreadyReset =
+      Math.abs(currentValue - baseAmount) < AMOUNT_TOLERANCE;
+    const stillBumped =
+      Math.abs(currentValue - expectedBumped) < AMOUNT_TOLERANCE;
+
+    if (stillBumped && !alreadyReset) {
+      try {
+        await updateAsaasSubscriptionAmount({
+          subscriptionId,
+          value: baseAmount,
+          apiBase,
+          apiKey,
+        });
+        currentValue = baseAmount;
+      } catch (err) {
+        console.error("[WEBHOOK][OVERAGE] Falha ao resetar assinatura Asaas:", err);
+        // Do NOT mark reset_at — let the next webhook retry.
+        return;
+      }
+    } else {
+      // Already at base value (recovery case) — sync currentValue.
+      currentValue = baseAmount;
+    }
+
+    const { error: resetMarkError } = await supabase
+      .from("patient_overage_usage_monthly")
+      .update({ asaas_reset_at: now.toISOString() })
+      .eq("id", rec.id);
+
+    if (resetMarkError) {
+      console.error(
+        "[WEBHOOK][OVERAGE] Falha ao gravar asaas_reset_at (será retentada no próximo webhook):",
+        resetMarkError,
+      );
+    }
+  }
+
+  // ─── Phase 2: APPLY ────────────────────────────────────────────────────────
+  // Look for the previous complete calendar month's overage (charged in arrears).
+  const prevMonthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1),
+  );
+  const prevMonthStartStr = prevMonthStart.toISOString().slice(0, 10);
+
+  const { data: toApply, error: applyFetchError } = await supabase
+    .from("patient_overage_usage_monthly")
+    .select(
+      "id, overage_patients, overage_slot_amount, asaas_base_amount, asaas_applied_at, asaas_reset_at",
+    )
+    .eq("tenant_id", tenantId)
+    .eq("billing_period_start", prevMonthStartStr)
+    .gt("overage_patients", 0)
+    .is("asaas_applied_at", null)
+    .maybeSingle();
+
+  if (applyFetchError) {
+    console.error("[WEBHOOK][OVERAGE] Falha ao buscar registro para apply:", applyFetchError);
+    return;
+  }
+
+  if (!toApply || !toApply.overage_slot_amount) {
+    return; // No overage to charge this cycle.
+  }
+
+  const applyRec = toApply as OverageRecord;
+  const overageAmount =
+    Number(applyRec.overage_patients) * Number(applyRec.overage_slot_amount);
+
+  // Recovery check: if asaas_base_amount is set from a previous partial attempt,
+  // compare the live Asaas value to detect whether the bump already happened.
+  if (applyRec.asaas_base_amount !== null) {
+    const storedBase = Number(applyRec.asaas_base_amount);
+    const expectedBumped = storedBase + overageAmount;
+
+    if (Math.abs(currentValue - expectedBumped) < AMOUNT_TOLERANCE) {
+      // Already bumped — just record applied_at and exit.
+      await supabase
+        .from("patient_overage_usage_monthly")
+        .update({ asaas_applied_at: now.toISOString() })
+        .eq("id", applyRec.id);
+      return;
+    }
+    // Asaas call failed on previous attempt — fall through to retry with currentValue as new base.
+  }
+
+  // Step A: write base_amount to DB BEFORE calling Asaas.
+  // If Asaas succeeds but the Step B update fails, the next webhook
+  // will use this stored value for recovery detection.
+  const { error: baseWriteError } = await supabase
+    .from("patient_overage_usage_monthly")
+    .update({ asaas_base_amount: currentValue })
+    .eq("id", applyRec.id);
+
+  if (baseWriteError) {
+    console.error(
+      "[WEBHOOK][OVERAGE] Falha ao gravar asaas_base_amount — Asaas NÃO será chamado:",
+      baseWriteError,
+    );
+    return; // Safe: Asaas not called, nothing corrupted.
+  }
+
+  // Step B: bump the Asaas subscription value.
+  try {
+    await updateAsaasSubscriptionAmount({
+      subscriptionId,
+      value: currentValue + overageAmount,
+      apiBase,
+      apiKey,
+    });
+  } catch (err) {
+    console.error(
+      "[WEBHOOK][OVERAGE] Falha ao aplicar bump de excedente no Asaas:",
+      err,
+    );
+    // asaas_base_amount is already set; applied_at remains NULL.
+    // Next PAYMENT_RECEIVED will retry and detect the partial state via recovery check.
+    return;
+  }
+
+  // Step C: confirm in DB that the bump is live.
+  const { error: applyMarkError } = await supabase
+    .from("patient_overage_usage_monthly")
+    .update({ asaas_applied_at: now.toISOString() })
+    .eq("id", applyRec.id);
+
+  if (applyMarkError) {
+    console.error(
+      "[WEBHOOK][OVERAGE] Falha ao gravar asaas_applied_at (será recuperado no próximo webhook via recovery check):",
+      applyMarkError,
+    );
+  }
+}
   const env = getAsaasEnv();
   const webhookToken =
     request.headers.get("asaas-access-token") ??
@@ -223,6 +432,17 @@ export async function POST(request: NextRequest) {
       paymentId &&
       (body.event === "PAYMENT_RECEIVED" || body.event === "PAYMENT_CONFIRMED")
     ) {
+      // Process overage billing: reset previous bump (if live) then apply last
+      // month's overage to the subscription for the next cycle (charged in arrears).
+      await processOverageBilling({
+        tenantId,
+        subscriptionId: subscription.id,
+        currentSubscriptionValue: subscription.value,
+        supabase,
+        apiBase: env.ASAAS_API_BASE,
+        apiKey: env.ASAAS_API_KEY,
+      });
+
       const { data: redemptionData, error: redemptionError } = await supabase
         .from("coupon_redemptions")
         .select(

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.3] - 2026-05-05
+
+### Added
+
+- **Cobrança automática de excedente de pacientes via Asaas (Opção A)**: ao receber `PAYMENT_RECEIVED`, o webhook agora executa um ciclo de dois passos — (1) **RESET**: reverte o bump do mês anterior de volta ao valor base; (2) **APPLY**: aplica o excedente do mês anterior ao valor da assinatura para o próximo ciclo (cobrança em arrears, fatura única para o cliente)
+- **Rastreamento de estado de overage no banco** (`migration 20260505000051`): adicionadas colunas `asaas_base_amount`, `asaas_applied_at` e `asaas_reset_at` em `patient_overage_usage_monthly`
+
+### Security / Reliability
+
+- **Anti-corrupção — `asaas_base_amount` gravado antes da chamada Asaas**: se a API do Asaas falhar, o DB não registra `applied_at` e o retry no próximo webhook é limpo
+- **Recovery automático por comparação de valor**: se o DB falhou após a chamada Asaas já ter sucedido, o próximo webhook compara o valor atual da assinatura com `base + overage`; se coincide, apenas marca `applied_at` sem nova chamada à API (sem double-charge)
+- **Mesmo mecanismo de recovery para fase de RESET**
+- **`currentValue` rastreado localmente** entre as fases RESET e APPLY para eliminar chamada Asaas GET adicional
+
 ## [2.6.2] - 2026-05-05
 
 ### Added
