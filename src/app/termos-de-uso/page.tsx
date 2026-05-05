@@ -42,7 +42,7 @@ export default function TermsOfUsePage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-secondary md:text-4xl">
             Termos de Uso - PodoDesk
           </h1>
-          <p className="text-sm text-muted">Última atualização: 21/03/2026</p>
+          <p className="text-sm text-muted">Última atualização: 05/05/2026</p>
         </header>
 
         <div className="space-y-6 text-sm leading-7 text-foreground md:text-base">
@@ -68,9 +68,13 @@ export default function TermsOfUsePage() {
             <p>
               O PodoDesk oferece um software SaaS (Software as a Service) de
               gestão para clínicas de podologia, incluindo funcionalidades como
-              cadastro de pacientes, agendamento (incluindo autoagendamento
-              online), prontuários eletrônicos, gestão de documentos (POPs) e
-              controle financeiro.
+              cadastro e gestão de pacientes, agendamento (incluindo
+              autoagendamento online), prontuários eletrônicos com evolução
+              fotográfica, gestão de documentos (POPs), controle de autoclave e
+              rastreabilidade de biossegurança, alertas de saúde para pacientes
+              de risco, controle financeiro, gestão de múltiplos profissionais,
+              gestão de comissões por profissional, notificações automáticas via
+              WhatsApp e notificações push via navegador (Web Push).
             </p>
           </section>
 
@@ -172,6 +176,30 @@ export default function TermsOfUsePage() {
               provedores de e-mail). O PodoDesk não se responsabiliza por
               indisponibilidades nesses serviços externos.
             </p>
+            <p>
+              6.3. <strong>Integração com WhatsApp via Evolution API (não
+              oficial).</strong> A funcionalidade de envio de mensagens via
+              WhatsApp é viabilizada pela <strong>Evolution API</strong>, uma
+              solução de automação de terceiros que não possui qualquer vínculo
+              ou aprovação oficial da Meta Platforms, Inc. (detentora do
+              WhatsApp). O PodoDesk atua exclusivamente como facilitador da
+              configuração desta integração, não sendo responsável pela
+              operação, estabilidade ou conformidade da Evolution API com os
+              Termos de Serviço do WhatsApp.
+            </p>
+            <p>
+              O Usuário reconhece e aceita expressamente que a utilização desta
+              integração é feita por sua conta e risco. Riscos incluem, mas não
+              se limitam a: bloqueio temporário ou banimento definitivo do
+              número de telefone pelo WhatsApp, instabilidades na conexão e
+              interrupção do serviço por decisão unilateral da Meta ou da
+              Evolution API. O PodoDesk isenta-se de qualquer responsabilidade
+              por suspensões, banimentos, perdas de acesso ao número de telefone
+              ou quaisquer outros danos decorrentes do uso desta integração,
+              diretos ou indiretos. É responsabilidade exclusiva do Usuário
+              verificar periodicamente a conformidade desta funcionalidade com
+              os Termos de Serviço do WhatsApp.
+            </p>
           </section>
 
           <section className="space-y-3">
@@ -180,11 +208,33 @@ export default function TermsOfUsePage() {
             </h2>
             <p>
               7.1. O uso da Plataforma é oferecido mediante modelos de
-              assinatura. Pode haver um período de teste gratuito (trial) e,
-              posteriormente, a cobrança de um plano pago.
+              assinatura. Pode haver um período de teste gratuito (trial) de 14
+              (quatorze) dias, sem necessidade de cartão de crédito, e,
+              posteriormente, a cobrança de um plano pago conforme a tabela
+              vigente disponível na Plataforma.
             </p>
             <p>
-              7.2. O PodoDesk reserva-se o direito de restringir ou suspender o
+              7.2. Cada plano inclui uma <strong>cota de pacientes
+              cadastrados</strong>. Ao ultrapassar essa cota, o sistema
+              continuará funcionando normalmente, sem interrupção de acesso.
+              Porém, cada paciente adicional além do limite do plano gerará
+              uma cobrança proporcional na próxima fatura mensal, conforme o
+              valor de excedente vigente para o plano contratado:
+            </p>
+            <ul className="list-inside list-disc space-y-1 pl-2">
+              <li>Plano Essencial: R$ 2,00 por paciente excedente/mês;</li>
+              <li>Plano Pro: R$ 1,50 por paciente excedente/mês;</li>
+              <li>Plano Clínica: R$ 1,00 por paciente excedente/mês.</li>
+            </ul>
+            <p>
+              O valor exato do excedente vigente para o seu plano está sempre
+              disponível na área de configurações de assinatura dentro da
+              Plataforma. O PodoDesk se reserva o direito de atualizar os
+              valores de excedente mediante comunicação prévia ao Usuário com
+              antecedência mínima de 30 (trinta) dias.
+            </p>
+            <p>
+              7.3. O PodoDesk reserva-se o direito de restringir ou suspender o
               acesso à conta em caso de inadimplência financeira prolongada ou
               violação comprovada destes Termos de Uso.
             </p>
