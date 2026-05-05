@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.1] - 2026-05-05
+
+### Changed
+
+- **Landing page — Seção 2 reescrita com dores da persona (Cláudia)**: novo heading "Você se reconhece nessa situação?", 3 cards de dor (15 min perdidos entre pacientes / Tratamento parece subjetivo sem dados visuais / No fim do mês, quanto você realmente lucrou?), substituindo o foco em features pelo foco em problema; ícone do card 1 alterado para `ClipboardCheck` (pt/en/es)
+- **Seção 2 — layout ajustado**: container expandido de `max-w-4xl` para `max-w-7xl` e breakpoints de grid alinhados com a Seção 3 (`md:grid-cols-2 lg:grid-cols-3`)
+- **Termos de Uso atualizados (05/05/2026)**:
+  - Seção 1: lista completa de funcionalidades (evolução fotográfica, autoclave, alertas de saúde, múltiplos profissionais, comissões, Web Push)
+  - Seção 6.3 (nova): isenção total de responsabilidade pelo uso da Evolution API (WhatsApp não oficial), incluindo suspensão e banimento de número
+  - Seção 7 expandida: trial de 14 dias sem cartão, tabela de excedentes por plano (Essencial R\$2,00 / Pro R\$1,50 / Clínica R\$1,00 por paciente/mês), aviso de atualização com 30 dias de antecedência
+- **Política de Privacidade atualizada (05/05/2026)**:
+  - Seção 2: fotografias de evolução clínica e dados financeiros/comissões adicionados
+  - Seção 3: WhatsApp e alertas de saúde adicionados como finalidades de uso
+  - Seção 4: parágrafo dedicado à Evolution API — quais dados são transmitidos (nome + telefone + texto) e responsabilidade do Controlador
+  - Seção 5: lista explícita de suboperadores (Supabase, Hostinger, Asaas, Evolution API, provedores de e-mail)
+  - Seção 7: revogação de integração WhatsApp adicionada ao lado do Google Agenda
+
+### Fixed
+
+- **`es.json`**: vírgula dupla em `feature4Text` corrigida (causava erro de build webpack)
+
 ## [2.7.0] - 2026-05-05
 
 ### Added
@@ -34,7 +55,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Migration `20260505000052`**: atualiza `billing_plan_prices` — Essencial e Pro com novos preços mensais, anuais e valores de excedente
 - **Migration `20260505000053`**: corrige `max_patients = 150` para o plano Pro (`tier_2`)
-
 
 ### Added
 
