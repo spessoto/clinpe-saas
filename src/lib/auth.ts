@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
@@ -241,10 +242,19 @@ export async function requireActiveTenant() {
   }
 
   const paymentStatus = checkTenantPaymentStatus(tenant as Tenant);
-  if (paymentStatus === "no_access") {
+
+  // Read the current path injected by middleware so we can avoid redirect
+  // loops when a past_due / no_access user is already on the target page.
+  const headersList = await headers();
+  const currentPathname = headersList.get("x-pathname") ?? "";
+
+  if (paymentStatus === "no_access" && currentPathname !== "/billing") {
     redirect("/billing");
   }
-  if (paymentStatus === "past_due") {
+  if (
+    paymentStatus === "past_due" &&
+    currentPathname !== "/payment-regularization"
+  ) {
     redirect("/payment-regularization");
   }
 
