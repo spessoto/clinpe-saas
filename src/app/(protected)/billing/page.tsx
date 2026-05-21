@@ -342,27 +342,43 @@ export default async function BillingPage({
           </h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border border-slate-100 p-3">
-              <p className="text-xs uppercase tracking-wide text-muted">Status</p>
-              <p className={`mt-2 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${paymentToneClass}`}>
+              <p className="text-xs uppercase tracking-wide text-muted">
+                Status
+              </p>
+              <p
+                className={`mt-2 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${paymentToneClass}`}
+              >
                 {paymentStatusLabel[tenant?.subscription_status ?? "trialing"]}
               </p>
             </div>
             <div className="rounded-lg border border-slate-100 p-3">
-              <p className="text-xs uppercase tracking-wide text-muted">Próximo vencimento</p>
+              <p className="text-xs uppercase tracking-wide text-muted">
+                Próximo vencimento
+              </p>
               <p className="mt-2 text-sm font-semibold text-foreground">
                 {tenant?.subscription_expires_at
-                  ? new Date(tenant.subscription_expires_at).toLocaleDateString("pt-BR")
+                  ? new Date(tenant.subscription_expires_at).toLocaleDateString(
+                      "pt-BR",
+                    )
                   : "Não disponível"}
               </p>
             </div>
             <div className="rounded-lg border border-slate-100 p-3">
-              <p className="text-xs uppercase tracking-wide text-muted">Forma de cobrança</p>
+              <p className="text-xs uppercase tracking-wide text-muted">
+                Forma de cobrança
+              </p>
               <p className="mt-2 text-sm font-semibold text-foreground">
-                {billingMethodLabel[tenant?.subscription_billing_method ?? "UNDEFINED"]}
+                {
+                  billingMethodLabel[
+                    tenant?.subscription_billing_method ?? "UNDEFINED"
+                  ]
+                }
               </p>
             </div>
             <div className="rounded-lg border border-slate-100 p-3">
-              <p className="text-xs uppercase tracking-wide text-muted">Plano atual</p>
+              <p className="text-xs uppercase tracking-wide text-muted">
+                Plano atual
+              </p>
               <p className="mt-2 text-sm font-semibold text-foreground">
                 {currentPlan ? currentPlan.label : "Trial / Free"}
               </p>

@@ -82,10 +82,18 @@ export async function GET(request: NextRequest) {
     commission.service_date,
     commission.professional_name,
     commission.service_description ?? "",
-    Number(commission.amount ?? 0).toFixed(2).replace(".", ","),
-    Number(commission.commission_rate ?? 0).toFixed(2).replace(".", ","),
-    Number(commission.commission_amount ?? 0).toFixed(2).replace(".", ","),
-    commission.paid_at ? new Date(commission.paid_at).toISOString().slice(0, 10) : "",
+    Number(commission.amount ?? 0)
+      .toFixed(2)
+      .replace(".", ","),
+    Number(commission.commission_rate ?? 0)
+      .toFixed(2)
+      .replace(".", ","),
+    Number(commission.commission_amount ?? 0)
+      .toFixed(2)
+      .replace(".", ","),
+    commission.paid_at
+      ? new Date(commission.paid_at).toISOString().slice(0, 10)
+      : "",
     commission.notes ?? "",
   ]);
 

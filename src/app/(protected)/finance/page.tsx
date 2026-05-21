@@ -1,4 +1,9 @@
-import { createFinancialTransactionAction } from "@/app/(protected)/finance/actions";
+import {
+  createFinancialTransactionAction,
+  createRecurringFinancialTransactionAction,
+  importFinancialCsvAction,
+  toggleRecurringFinancialTransactionAction,
+} from "@/app/(protected)/finance/actions";
 import { requireOwnerPlanCapability } from "@/lib/auth";
 import { FINANCIAL_CATEGORIES } from "@/lib/finance-categories";
 import { createClient } from "@/lib/supabase/server";
@@ -112,37 +117,62 @@ export default async function FinancePage({ searchParams }: Props) {
   const { start, end, range, label } = resolveRange(params);
   const startDate = new Date(`${start}T00:00:00`);
   const endDate = new Date(`${end}T00:00:00`);
-  const periodMs = Math.max(24 * 60 * 60 * 1000, endDate.getTime() - startDate.getTime());
+  const periodMs = Math.max(
+    24 * 60 * 60 * 1000,
+    endDate.getTime() - startDate.getTime(),
+  );
   const previousStart = toDateInput(new Date(startDate.getTime() - periodMs));
   const previousEnd = start;
 
-  const [transactionsResult, currentPeriodResult, previousPeriodResult] = await Promise.all([
-    supabase
-      .from("financial_transactions")
-      .select(
-        "id, type, amount, category, description, payment_method, occurred_on, created_at",
-      )
-      .eq("tenant_id", appUser.tenant_id)
-      .gte("occurred_on", start)
-      .lt("occurred_on", end)
-      .order("occurred_on", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(100),
-    supabase
-      .from("financial_transactions")
-      .select("type, amount, category")
-      .eq("tenant_id", appUser.tenant_id)
-      .gte("occurred_on", start)
-      .lt("occurred_on", end),
-    supabase
-      .from("financial_transactions")
-      .select("type, amount")
-      .eq("tenant_id", appUser.tenant_id)
-      .gte("occurred_on", previousStart)
-      .lt("occurred_on", previousEnd),
-  ]);
+  const [
+    transactionsResult,
+    currentPeriodResult,
+    previousPeriodResult,
+    recurringResult,
+    importBatchesResult,
+  ] = await Promise.all([
+      supabase
+        .from("financial_transactions")
+        .select(
+          "id, type, amount, category, description, payment_method, occurred_on, created_at",
+        )
+        .eq("tenant_id", appUser.tenant_id)
+        .gte("occurred_on", start)
+        .lt("occurred_on", end)
+        .order("occurred_on", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase
+        .from("financial_transactions")
+        .select("type, amount, category")
+        .eq("tenant_id", appUser.tenant_id)
+        .gte("occurred_on", start)
+        .lt("occurred_on", end),
+      supabase
+        .from("financial_transactions")
+        .select("type, amount")
+        .eq("tenant_id", appUser.tenant_id)
+        .gte("occurred_on", previousStart)
+        .lt("occurred_on", previousEnd),
+      supabase
+        .from("recurring_financial_transactions")
+        .select(
+          "id, type, amount, category, frequency, next_occurrence_on, active",
+        )
+        .eq("tenant_id", appUser.tenant_id)
+        .order("next_occurrence_on", { ascending: true })
+        .limit(20),
+      supabase
+        .from("financial_import_batches")
+        .select("id, source, status, imported_rows, failed_rows, created_at")
+        .eq("tenant_id", appUser.tenant_id)
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
 
   const transactions = transactionsResult.data ?? [];
+  const recurringTransactions = recurringResult.data ?? [];
+  const importBatches = importBatchesResult.data ?? [];
 
   const totals = (currentPeriodResult.data ?? []).reduce(
     (acc, transaction) => {
@@ -294,8 +324,12 @@ export default async function FinancePage({ searchParams }: Props) {
                 key={category}
                 className="rounded-lg border border-slate-100 bg-white px-4 py-3"
               >
-                <p className="text-sm font-semibold text-foreground">{category}</p>
-                <p className="mt-1 text-sm text-muted">{formatCurrency(amount)}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {category}
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  {formatCurrency(amount)}
+                </p>
               </div>
             ))}
           </div>
@@ -402,6 +436,193 @@ export default async function FinancePage({ searchParams }: Props) {
           </div>
         </form>
       </article>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <article className="surface-card p-6">
+          <h3 className="text-lg font-semibold text-secondary">
+            Lançamento recorrente
+          </h3>
+          <p className="mt-1 text-sm text-muted">
+            Cadastre receitas e despesas recorrentes para controle contínuo.
+          </p>
+
+          <form
+            action={createRecurringFinancialTransactionAction}
+            className="mt-4 grid gap-3"
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">
+                <span className="font-semibold text-foreground">Tipo</span>
+                <select
+                  name="type"
+                  defaultValue="expense"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                >
+                  <option value="income">Entrada</option>
+                  <option value="expense">Saída</option>
+                </select>
+              </label>
+              <label className="grid gap-1 text-sm">
+                <span className="font-semibold text-foreground">Valor</span>
+                <input
+                  name="amount"
+                  placeholder="0,00"
+                  required
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">
+                <span className="font-semibold text-foreground">Categoria</span>
+                <select
+                  name="category"
+                  defaultValue="Serviços"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                >
+                  {FINANCIAL_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-1 text-sm">
+                <span className="font-semibold text-foreground">Frequência</span>
+                <select
+                  name="frequency"
+                  defaultValue="monthly"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                >
+                  <option value="monthly">Mensal</option>
+                  <option value="weekly">Semanal</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1 text-sm">
+                <span className="font-semibold text-foreground">Próxima data</span>
+                <input
+                  type="date"
+                  name="next_occurrence_on"
+                  required
+                  defaultValue={new Date().toISOString().slice(0, 10)}
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+              </label>
+              <label className="grid gap-1 text-sm">
+                <span className="font-semibold text-foreground">Pagamento</span>
+                <input
+                  name="payment_method"
+                  placeholder="PIX, Cartão, Boleto..."
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                />
+              </label>
+            </div>
+
+            <label className="grid gap-1 text-sm">
+              <span className="font-semibold text-foreground">Descrição</span>
+              <input
+                name="description"
+                placeholder="Ex.: Aluguel da clínica"
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+
+            <div>
+              <button type="submit" className="btn-gradient">
+                Salvar recorrência
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-5 space-y-2">
+            {recurringTransactions.length === 0 ? (
+              <p className="text-sm text-muted">Nenhum lançamento recorrente cadastrado.</p>
+            ) : (
+              recurringTransactions.map((recurring) => (
+                <div
+                  key={recurring.id}
+                  className="rounded-lg border border-slate-100 bg-white px-3 py-2"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {recurring.category} · {formatCurrency(Number(recurring.amount ?? 0))}
+                      </p>
+                      <p className="text-xs text-muted">
+                        {recurring.type === "income" ? "Entrada" : "Saída"} · {recurring.frequency === "monthly" ? "Mensal" : "Semanal"} · próxima em {new Date(`${recurring.next_occurrence_on}T00:00:00`).toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                    <form action={toggleRecurringFinancialTransactionAction}>
+                      <input type="hidden" name="id" value={recurring.id} />
+                      <input
+                        type="hidden"
+                        name="active"
+                        value={recurring.active ? "false" : "true"}
+                      />
+                      <button
+                        type="submit"
+                        className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-foreground hover:bg-slate-50"
+                      >
+                        {recurring.active ? "Desativar" : "Ativar"}
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </article>
+
+        <article className="surface-card p-6">
+          <h3 className="text-lg font-semibold text-secondary">Importar CSV</h3>
+          <p className="mt-1 text-sm text-muted">
+            Formato esperado: Data, Tipo, Categoria, Descrição, Pagamento, Valor.
+          </p>
+
+          <form action={importFinancialCsvAction} className="mt-4 grid gap-3">
+            <label className="grid gap-1 text-sm">
+              <span className="font-semibold text-foreground">Arquivo CSV</span>
+              <input
+                type="file"
+                name="csv_file"
+                required
+                accept=".csv,text/csv"
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
+              />
+            </label>
+            <div>
+              <button type="submit" className="btn-gradient">
+                Importar lançamentos
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-5 space-y-2">
+            <h4 className="text-sm font-semibold text-foreground">Últimos lotes</h4>
+            {importBatches.length === 0 ? (
+              <p className="text-sm text-muted">Nenhuma importação registrada.</p>
+            ) : (
+              importBatches.map((batch) => (
+                <div
+                  key={batch.id}
+                  className="rounded-lg border border-slate-100 bg-white px-3 py-2"
+                >
+                  <p className="text-sm font-semibold text-foreground">
+                    {new Date(batch.created_at).toLocaleDateString("pt-BR")} · {batch.imported_rows} importadas / {batch.failed_rows} falhas
+                  </p>
+                  <p className="text-xs text-muted">
+                    Fonte: {batch.source.toUpperCase()} · Status: {batch.status}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </article>
+      </div>
 
       <article className="surface-card overflow-hidden">
         <div className="border-b border-slate-100 px-5 py-4">
