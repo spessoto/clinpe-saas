@@ -105,6 +105,32 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
 
   const anamnesis = (record.anamnesis_data ?? {}) as AnamnesisData;
   const photos = Array.isArray(record.photos) ? record.photos : [];
+  const resolvedPhotos = await Promise.all(
+    photos.map(async (value) => {
+      const storedValue = String(value ?? "").trim();
+
+      if (!storedValue) {
+        return null;
+      }
+
+      if (/^https?:\/\//i.test(storedValue)) {
+        return storedValue;
+      }
+
+      const { data, error } = await supabase.storage
+        .from("medical-record-images")
+        .createSignedUrl(storedValue, 60 * 60 * 24);
+
+      if (error || !data?.signedUrl) {
+        return null;
+      }
+
+      return data.signedUrl;
+    }),
+  );
+  const displayPhotos = resolvedPhotos.filter(
+    (value): value is string => typeof value === "string" && value.length > 0,
+  );
   const selectedTraceabilityMaterials = Array.isArray(
     anamnesis.sterilization_materials_used,
   )
@@ -401,11 +427,11 @@ export default async function MedicalRecordDetailsPage({ params }: Props) {
 
       <article className="surface-card p-6">
         <h3 className="text-lg font-semibold text-secondary">Imagens</h3>
-        {photos.length === 0 ? (
+        {displayPhotos.length === 0 ? (
           <p className="mt-2 text-sm text-muted">Nenhuma imagem anexada.</p>
         ) : (
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {photos.map((url) => (
+            {displayPhotos.map((url) => (
               <a
                 key={url}
                 href={url}

@@ -302,12 +302,21 @@ export async function createPatientAction(formData: FormData) {
     redirect(`/patients/new?error=${encodeURIComponent(error.message)}`);
   }
 
+  const { count: committedCount, error: committedCountError } = await supabase
+    .from("patients")
+    .select("*", { count: "exact", head: true })
+    .eq("tenant_id", appUser.tenant_id);
+
+  const nextCount = committedCountError
+    ? limitStatus.current + 1
+    : (committedCount ?? limitStatus.current + 1);
+
   await syncMonthlyPatientUsage({
     supabase,
     tenantId: appUser.tenant_id,
     billingTier: tenant.billing_tier,
     maxPatientsAllowed: tenant.max_patients_allowed,
-    nextCount: limitStatus.current + 1,
+    nextCount,
   });
 
   revalidatePath("/patients");

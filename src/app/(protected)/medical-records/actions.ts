@@ -319,7 +319,7 @@ export async function createMedicalRecordAction(formData: FormData) {
     );
   }
 
-  const uploadedUrls: string[] = [];
+  const uploadedPaths: string[] = [];
 
   for (const file of files) {
     const optimizedImage = await optimizeImageUpload(file, {
@@ -330,7 +330,7 @@ export async function createMedicalRecordAction(formData: FormData) {
     const path = `${appUser.tenant_id}/${patientId}/${Date.now()}-${randomUUID()}-${optimizedImage.fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("medical-images")
+      .from("medical-record-images")
       .upload(path, optimizedImage.bytes, {
         contentType: optimizedImage.contentType,
         upsert: false,
@@ -342,11 +342,7 @@ export async function createMedicalRecordAction(formData: FormData) {
       );
     }
 
-    const { data: publicData } = supabase.storage
-      .from("medical-images")
-      .getPublicUrl(path);
-
-    uploadedUrls.push(publicData.publicUrl);
+    uploadedPaths.push(path);
   }
 
   const { data: created, error } = await supabase
@@ -405,7 +401,7 @@ export async function createMedicalRecordAction(formData: FormData) {
             "[]",
         ),
       },
-      photos: uploadedUrls,
+      photos: uploadedPaths,
     })
     .select("id")
     .single();

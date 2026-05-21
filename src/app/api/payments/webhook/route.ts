@@ -35,6 +35,57 @@ type OverageRecord = {
   asaas_reset_at: string | null;
 };
 
+async function claimAsaasWebhookPayment(
+  supabase: ReturnType<typeof createAdminClient>,
+  paymentId: string,
+  eventType: string,
+) {
+  const { data, error } = await supabase.rpc("claim_asaas_webhook_payment", {
+    p_payment_id: paymentId,
+    p_event_type: eventType,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return Boolean(data);
+}
+
+async function markAsaasWebhookPaymentProcessed(
+  supabase: ReturnType<typeof createAdminClient>,
+  paymentId: string,
+) {
+  const { error } = await supabase.rpc("mark_asaas_webhook_payment_processed", {
+    p_payment_id: paymentId,
+  });
+
+  if (error) {
+    console.error(
+      "[WEBHOOK][ASAAS] Falha ao marcar webhook como processado:",
+      error,
+    );
+  }
+}
+
+async function markAsaasWebhookPaymentFailed(
+  supabase: ReturnType<typeof createAdminClient>,
+  paymentId: string,
+  errorMessage: string,
+) {
+  const { error } = await supabase.rpc("mark_asaas_webhook_payment_failed", {
+    p_payment_id: paymentId,
+    p_error_message: errorMessage,
+  });
+
+  if (error) {
+    console.error(
+      "[WEBHOOK][ASAAS] Falha ao marcar webhook como falho:",
+      error,
+    );
+  }
+}
+
 const EVENTS_TO_PROCESS = new Set([
   "SUBSCRIPTION_CREATED",
   "SUBSCRIPTION_UPDATED",
@@ -168,11 +219,9 @@ async function processOverageBilling(input: {
     .maybeSingle();
 
   if (resetFetchError) {
-    console.error(
-      "[WEBHOOK][OVERAGE] Falha ao buscar registro para reset:",
-      resetFetchError,
+    throw new Error(
+      `[WEBHOOK][OVERAGE] Falha ao buscar registro para reset: ${resetFetchError.message}`,
     );
-    // Non-fatal: log and continue — tenant status was already updated.
   } else if (toReset && toReset.asaas_base_amount !== null) {
     const rec = toReset as OverageRecord;
     const baseAmount = Number(rec.asaas_base_amount);
@@ -200,8 +249,9 @@ async function processOverageBilling(input: {
           "[WEBHOOK][OVERAGE] Falha ao resetar assinatura Asaas:",
           err,
         );
-        // Do NOT mark reset_at — let the next webhook retry.
-        return;
+        throw err instanceof Error
+          ? err
+          : new Error("Falha ao resetar assinatura Asaas");
       }
     } else {
       // Already at base value (recovery case) — sync currentValue.
@@ -214,9 +264,8 @@ async function processOverageBilling(input: {
       .eq("id", rec.id);
 
     if (resetMarkError) {
-      console.error(
-        "[WEBHOOK][OVERAGE] Falha ao gravar asaas_reset_at (será retentada no próximo webhook):",
-        resetMarkError,
+      throw new Error(
+        `[WEBHOOK][OVERAGE] Falha ao gravar asaas_reset_at: ${resetMarkError.message}`,
       );
     }
   }
@@ -240,11 +289,9 @@ async function processOverageBilling(input: {
     .maybeSingle();
 
   if (applyFetchError) {
-    console.error(
-      "[WEBHOOK][OVERAGE] Falha ao buscar registro para apply:",
-      applyFetchError,
+    throw new Error(
+      `[WEBHOOK][OVERAGE] Falha ao buscar registro para apply: ${applyFetchError.message}`,
     );
-    return;
   }
 
   if (!toApply || !toApply.overage_slot_amount) {
@@ -263,10 +310,16 @@ async function processOverageBilling(input: {
 
     if (Math.abs(currentValue - expectedBumped) < AMOUNT_TOLERANCE) {
       // Already bumped — just record applied_at and exit.
-      await supabase
+      const { error: appliedAtError } = await supabase
         .from("patient_overage_usage_monthly")
         .update({ asaas_applied_at: now.toISOString() })
         .eq("id", applyRec.id);
+
+      if (appliedAtError) {
+        throw new Error(
+          `[WEBHOOK][OVERAGE] Falha ao gravar asaas_applied_at: ${appliedAtError.message}`,
+        );
+      }
       return;
     }
     // Asaas call failed on previous attempt — fall through to retry with currentValue as new base.
@@ -281,11 +334,9 @@ async function processOverageBilling(input: {
     .eq("id", applyRec.id);
 
   if (baseWriteError) {
-    console.error(
-      "[WEBHOOK][OVERAGE] Falha ao gravar asaas_base_amount — Asaas NÃO será chamado:",
-      baseWriteError,
+    throw new Error(
+      `[WEBHOOK][OVERAGE] Falha ao gravar asaas_base_amount: ${baseWriteError.message}`,
     );
-    return; // Safe: Asaas not called, nothing corrupted.
   }
 
   // Step B: bump the Asaas subscription value.
@@ -301,9 +352,9 @@ async function processOverageBilling(input: {
       "[WEBHOOK][OVERAGE] Falha ao aplicar bump de excedente no Asaas:",
       err,
     );
-    // asaas_base_amount is already set; applied_at remains NULL.
-    // Next PAYMENT_RECEIVED will retry and detect the partial state via recovery check.
-    return;
+    throw err instanceof Error
+      ? err
+      : new Error("Falha ao aplicar bump de excedente no Asaas");
   }
 
   // Step C: confirm in DB that the bump is live.
@@ -313,9 +364,8 @@ async function processOverageBilling(input: {
     .eq("id", applyRec.id);
 
   if (applyMarkError) {
-    console.error(
-      "[WEBHOOK][OVERAGE] Falha ao gravar asaas_applied_at (será recuperado no próximo webhook via recovery check):",
-      applyMarkError,
+    throw new Error(
+      `[WEBHOOK][OVERAGE] Falha ao gravar asaas_applied_at: ${applyMarkError.message}`,
     );
   }
 }
@@ -356,14 +406,31 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const paymentId = body.payment?.id ?? null;
+  const supabase = createAdminClient();
+
   try {
+    if (
+      paymentId &&
+      (body.event === "PAYMENT_RECEIVED" || body.event === "PAYMENT_CONFIRMED")
+    ) {
+      const claimed = await claimAsaasWebhookPayment(
+        supabase,
+        paymentId,
+        body.event,
+      );
+
+      if (!claimed) {
+        return NextResponse.json({ received: true }, { status: 200 });
+      }
+    }
+
     const subscription = await fetchAsaasSubscription(
       subscriptionId,
       env.ASAAS_API_BASE,
       env.ASAAS_API_KEY,
     );
     const parsedRef = parseExternalReference(subscription.externalReference);
-    const supabase = createAdminClient();
 
     let tenantId = parsedRef?.tenantId;
     if (!tenantId) {
@@ -374,21 +441,14 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
 
       if (tenantBySubError) {
-        console.error(
-          "[WEBHOOK][ASAAS] Falha ao buscar tenant por assinatura:",
-          tenantBySubError,
-        );
-        return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+        throw tenantBySubError;
       }
 
       tenantId = tenantBySub?.id;
     }
 
     if (!tenantId) {
-      return NextResponse.json(
-        { error: "Tenant não encontrado" },
-        { status: 400 },
-      );
+      throw new Error("Tenant não encontrado");
     }
 
     const mappedStatus = mapAsaasStatus(subscription.status);
@@ -427,11 +487,9 @@ export async function POST(request: NextRequest) {
       .eq("id", tenantId);
 
     if (error) {
-      console.error("[WEBHOOK][ASAAS] Falha ao atualizar tenant:", error);
-      return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+      throw error;
     }
 
-    const paymentId = body.payment?.id ?? null;
     if (
       paymentId &&
       (body.event === "PAYMENT_RECEIVED" || body.event === "PAYMENT_CONFIRMED")
@@ -459,11 +517,7 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
 
       if (redemptionError) {
-        console.error(
-          "[WEBHOOK][ASAAS] Falha ao buscar resgate de cupom:",
-          redemptionError,
-        );
-        return NextResponse.json({ error: "Erro interno" }, { status: 500 });
+        throw redemptionError;
       }
 
       if (redemptionData) {
@@ -496,19 +550,24 @@ export async function POST(request: NextRequest) {
             .eq("id", redemption.id);
 
           if (redemptionUpdateError) {
-            console.error(
-              "[WEBHOOK][ASAAS] Falha ao atualizar resgate de cupom:",
-              redemptionUpdateError,
-            );
-            return NextResponse.json(
-              { error: "Erro interno" },
-              { status: 500 },
-            );
+            throw redemptionUpdateError;
           }
         }
       }
     }
+
+    if (paymentId) {
+      await markAsaasWebhookPaymentProcessed(supabase, paymentId);
+    }
   } catch (error) {
+    if (paymentId) {
+      await markAsaasWebhookPaymentFailed(
+        supabase,
+        paymentId,
+        error instanceof Error ? error.message : "Erro ao processar webhook",
+      );
+    }
+
     console.error("[WEBHOOK][ASAAS] Erro ao processar evento:", error);
     return NextResponse.json(
       { error: "Erro ao processar webhook" },
