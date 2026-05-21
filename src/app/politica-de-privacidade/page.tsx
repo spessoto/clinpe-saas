@@ -97,11 +97,12 @@ export default function PrivacyPolicyPage() {
             <p>
               <strong>Dados Inseridos pelo Usuário (Dados de Saúde):</strong>
               Armazenamos as informações que você insere no sistema sobre seus
-              pacientes: prontuários, anamneses, <strong>fotografias de evolução
-              clínica</strong> (que constituem dados sensíveis de saúde),
-              agendamentos, registros de esterilização e controle de autoclave.
-              O PodoDesk garante que o acesso a esses dados é estritamente
-              isolado (Multi-Tenant) e exclusivo do profissional que os inseriu.
+              pacientes: prontuários, anamneses,{" "}
+              <strong>fotografias de evolução clínica</strong> (que constituem
+              dados sensíveis de saúde), agendamentos, registros de
+              esterilização e controle de autoclave. O PodoDesk garante que o
+              acesso a esses dados é estritamente isolado (Multi-Tenant) e
+              exclusivo do profissional que os inseriu.
             </p>
             <p>
               <strong>Dados Financeiros e de Gestão:</strong> Movimentações
@@ -220,9 +221,8 @@ export default function PrivacyPolicyPage() {
               </li>
               <li>
                 <strong>Evolution API</strong> — transmissão de mensagens via
-                WhatsApp, quando essa integração for ativada pelo Usuário
-                (dados limitados: nome e telefone do paciente + texto da
-                mensagem);
+                WhatsApp, quando essa integração for ativada pelo Usuário (dados
+                limitados: nome e telefone do paciente + texto da mensagem);
               </li>
               <li>
                 <strong>Provedores de e-mail transacional</strong> — envio de

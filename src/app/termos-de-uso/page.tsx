@@ -177,15 +177,17 @@ export default function TermsOfUsePage() {
               indisponibilidades nesses serviços externos.
             </p>
             <p>
-              6.3. <strong>Integração com WhatsApp via Evolution API (não
-              oficial).</strong> A funcionalidade de envio de mensagens via
-              WhatsApp é viabilizada pela <strong>Evolution API</strong>, uma
-              solução de automação de terceiros que não possui qualquer vínculo
-              ou aprovação oficial da Meta Platforms, Inc. (detentora do
-              WhatsApp). O PodoDesk atua exclusivamente como facilitador da
-              configuração desta integração, não sendo responsável pela
-              operação, estabilidade ou conformidade da Evolution API com os
-              Termos de Serviço do WhatsApp.
+              6.3.{" "}
+              <strong>
+                Integração com WhatsApp via Evolution API (não oficial).
+              </strong>{" "}
+              A funcionalidade de envio de mensagens via WhatsApp é viabilizada
+              pela <strong>Evolution API</strong>, uma solução de automação de
+              terceiros que não possui qualquer vínculo ou aprovação oficial da
+              Meta Platforms, Inc. (detentora do WhatsApp). O PodoDesk atua
+              exclusivamente como facilitador da configuração desta integração,
+              não sendo responsável pela operação, estabilidade ou conformidade
+              da Evolution API com os Termos de Serviço do WhatsApp.
             </p>
             <p>
               O Usuário reconhece e aceita expressamente que a utilização desta
@@ -214,12 +216,13 @@ export default function TermsOfUsePage() {
               vigente disponível na Plataforma.
             </p>
             <p>
-              7.2. Cada plano inclui uma <strong>cota de pacientes
-              cadastrados</strong>. Ao ultrapassar essa cota, o sistema
-              continuará funcionando normalmente, sem interrupção de acesso.
-              Porém, cada paciente adicional além do limite do plano gerará
-              uma cobrança proporcional na próxima fatura mensal, conforme o
-              valor de excedente vigente para o plano contratado:
+              7.2. Cada plano inclui uma{" "}
+              <strong>cota de pacientes cadastrados</strong>. Ao ultrapassar
+              essa cota, o sistema continuará funcionando normalmente, sem
+              interrupção de acesso. Porém, cada paciente adicional além do
+              limite do plano gerará uma cobrança proporcional na próxima fatura
+              mensal, conforme o valor de excedente vigente para o plano
+              contratado:
             </p>
             <ul className="list-inside list-disc space-y-1 pl-2">
               <li>Plano Essencial: R$ 2,00 por paciente excedente/mês;</li>
