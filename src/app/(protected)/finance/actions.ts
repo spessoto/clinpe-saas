@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireOwnerPlanCapability } from "@/lib/auth";
+import { isValidFinancialCategory } from "@/lib/finance-categories";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
@@ -51,11 +52,15 @@ export async function createFinancialTransactionAction(formData: FormData) {
     redirect("/finance?error=Informe a data da transacao");
   }
 
+  if (!isValidFinancialCategory(category)) {
+    redirect("/finance?error=Selecione uma categoria valida");
+  }
+
   const { error } = await supabase.from("financial_transactions").insert({
     tenant_id: appUser.tenant_id,
     type,
     amount,
-    category: category || null,
+    category,
     description: description || null,
     payment_method: paymentMethod || null,
     occurred_on: occurredOn,

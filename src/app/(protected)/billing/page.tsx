@@ -84,7 +84,7 @@ export default async function BillingPage({
   const { data: tenant } = await supabase
     .from("tenants")
     .select(
-      "trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, billing_tier, cpf_cnpj",
+      "trial_ends_at, trial_extension_days, is_permanent_free_plan, subscription_status, subscription_expires_at, subscription_billing_method, billing_tier, cpf_cnpj",
     )
     .eq("id", appUser.tenant_id)
     .single();
@@ -197,11 +197,39 @@ export default async function BillingPage({
   const trialStatus = tenant
     ? getTrialStatus(tenant)
     : { type: "expired" as const, daysLeft: 0 };
+
+  const currentPlan =
+    tenant?.billing_tier && tenant.billing_tier !== "free_trial"
+      ? BILLING_PLANS[tenant.billing_tier as BillingTier]
+      : null;
+
+  const billingMethodLabel: Record<string, string> = {
+    CREDIT_CARD: "Cartão de crédito",
+    BOLETO: "Boleto",
+    PIX: "PIX",
+    UNDEFINED: "Não informado",
+  };
+
+  const paymentStatusLabel: Record<string, string> = {
+    trialing: "Em trial",
+    active: "Ativo",
+    past_due: "Em atraso",
+  };
+
+  const paymentToneClass =
+    tenant?.subscription_status === "past_due"
+      ? "bg-destructive/10 text-destructive"
+      : tenant?.subscription_status === "active"
+        ? "bg-success/10 text-success"
+        : "bg-primary/10 text-primary";
+
   const resolvedTenant = tenant ?? {
     trial_ends_at: new Date(0).toISOString(),
     trial_extension_days: 0,
     is_permanent_free_plan: false,
     subscription_status: "past_due" as const,
+    subscription_expires_at: null,
+    subscription_billing_method: null,
     billing_tier: null,
     cpf_cnpj: null,
   };
@@ -306,6 +334,57 @@ export default async function BillingPage({
           <Suspense>
             <PeriodToggle period={period} />
           </Suspense>
+        </div>
+
+        <div className="mb-8 rounded-xl border border-slate-200 bg-white p-5">
+          <h2 className="text-lg font-semibold text-foreground">
+            Painel de cobrança
+          </h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border border-slate-100 p-3">
+              <p className="text-xs uppercase tracking-wide text-muted">Status</p>
+              <p className={`mt-2 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${paymentToneClass}`}>
+                {paymentStatusLabel[tenant?.subscription_status ?? "trialing"]}
+              </p>
+            </div>
+            <div className="rounded-lg border border-slate-100 p-3">
+              <p className="text-xs uppercase tracking-wide text-muted">Próximo vencimento</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">
+                {tenant?.subscription_expires_at
+                  ? new Date(tenant.subscription_expires_at).toLocaleDateString("pt-BR")
+                  : "Não disponível"}
+              </p>
+            </div>
+            <div className="rounded-lg border border-slate-100 p-3">
+              <p className="text-xs uppercase tracking-wide text-muted">Forma de cobrança</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">
+                {billingMethodLabel[tenant?.subscription_billing_method ?? "UNDEFINED"]}
+              </p>
+            </div>
+            <div className="rounded-lg border border-slate-100 p-3">
+              <p className="text-xs uppercase tracking-wide text-muted">Plano atual</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">
+                {currentPlan ? currentPlan.label : "Trial / Free"}
+              </p>
+              {currentPlan ? (
+                <p className="mt-1 text-xs text-muted">
+                  {currentPlan.monthly.amount.toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                  /mês
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          {tenant?.subscription_status === "past_due" ? (
+            <div className="mt-4 flex justify-end">
+              <Link href="/payment-regularization" className="btn-gradient">
+                Regularizar pagamento
+              </Link>
+            </div>
+          ) : null}
         </div>
 
         {/* Overage summary */}

@@ -1,5 +1,6 @@
 import { createFinancialTransactionAction } from "@/app/(protected)/finance/actions";
 import { requireOwnerPlanCapability } from "@/lib/auth";
+import { FINANCIAL_CATEGORIES } from "@/lib/finance-categories";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = {
@@ -15,6 +16,80 @@ function monthDateBounds() {
     .toISOString()
     .slice(0, 10);
   return { start, end };
+}
+
+function toDateInput(value: Date) {
+  return value.toISOString().slice(0, 10);
+}
+
+function parseDateInput(value: string | null | undefined) {
+  if (!value) return null;
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+function resolveRange(params: Record<string, string | string[] | undefined>) {
+  const range = typeof params.range === "string" ? params.range : "month";
+  const now = new Date();
+
+  if (range === "last-month") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 1);
+    return {
+      range,
+      start: toDateInput(start),
+      end: toDateInput(end),
+      label: "Último mês",
+    };
+  }
+
+  if (range === "year") {
+    const start = new Date(now.getFullYear(), 0, 1);
+    const end = new Date(now.getFullYear() + 1, 0, 1);
+    return {
+      range,
+      start: toDateInput(start),
+      end: toDateInput(end),
+      label: "Ano atual",
+    };
+  }
+
+  if (range === "custom") {
+    const from = typeof params.from === "string" ? params.from : null;
+    const to = typeof params.to === "string" ? params.to : null;
+    const startDate = parseDateInput(from);
+    const endDate = parseDateInput(to);
+    if (startDate && endDate && startDate < endDate) {
+      return {
+        range,
+        start: toDateInput(startDate),
+        end: toDateInput(endDate),
+        label: `${startDate.toLocaleDateString("pt-BR")} a ${endDate.toLocaleDateString("pt-BR")}`,
+      };
+    }
+  }
+
+  const { start, end } = monthDateBounds();
+  return {
+    range: "month",
+    start,
+    end,
+    label: "Mês atual",
+  };
+}
+
+function periodDiffLabel(current: number, previous: number) {
+  if (previous === 0) {
+    if (current === 0) return "Sem variação";
+    return "Novo movimento no período";
+  }
+
+  const diff = ((current - previous) / Math.abs(previous)) * 100;
+  const prefix = diff >= 0 ? "+" : "";
+  return `${prefix}${diff.toFixed(1)}% vs. período anterior`;
 }
 
 function formatCurrency(value: number) {
@@ -34,29 +109,56 @@ export default async function FinancePage({ searchParams }: Props) {
   const error = typeof params.error === "string" ? params.error : null;
   const success = typeof params.success === "string" ? params.success : null;
 
-  const { start, end } = monthDateBounds();
+  const { start, end, range, label } = resolveRange(params);
+  const startDate = new Date(`${start}T00:00:00`);
+  const endDate = new Date(`${end}T00:00:00`);
+  const periodMs = Math.max(24 * 60 * 60 * 1000, endDate.getTime() - startDate.getTime());
+  const previousStart = toDateInput(new Date(startDate.getTime() - periodMs));
+  const previousEnd = start;
 
-  const [transactionsResult, monthlyResult] = await Promise.all([
+  const [transactionsResult, currentPeriodResult, previousPeriodResult] = await Promise.all([
     supabase
       .from("financial_transactions")
       .select(
         "id, type, amount, category, description, payment_method, occurred_on, created_at",
       )
       .eq("tenant_id", appUser.tenant_id)
+      .gte("occurred_on", start)
+      .lt("occurred_on", end)
       .order("occurred_on", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(50),
+      .limit(100),
+    supabase
+      .from("financial_transactions")
+      .select("type, amount, category")
+      .eq("tenant_id", appUser.tenant_id)
+      .gte("occurred_on", start)
+      .lt("occurred_on", end),
     supabase
       .from("financial_transactions")
       .select("type, amount")
       .eq("tenant_id", appUser.tenant_id)
-      .gte("occurred_on", start)
-      .lt("occurred_on", end),
+      .gte("occurred_on", previousStart)
+      .lt("occurred_on", previousEnd),
   ]);
 
   const transactions = transactionsResult.data ?? [];
 
-  const totals = (monthlyResult.data ?? []).reduce(
+  const totals = (currentPeriodResult.data ?? []).reduce(
+    (acc, transaction) => {
+      const amount = Number(transaction.amount ?? 0);
+      if (transaction.type === "income") {
+        acc.income += amount;
+      }
+      if (transaction.type === "expense") {
+        acc.expense += amount;
+      }
+      return acc;
+    },
+    { income: 0, expense: 0 },
+  );
+
+  const previousTotals = (previousPeriodResult.data ?? []).reduce(
     (acc, transaction) => {
       const amount = Number(transaction.amount ?? 0);
       if (transaction.type === "income") {
@@ -71,32 +173,101 @@ export default async function FinancePage({ searchParams }: Props) {
   );
 
   const balance = totals.income - totals.expense;
+  const previousBalance = previousTotals.income - previousTotals.expense;
+
+  const categoryExpenses = (currentPeriodResult.data ?? [])
+    .filter((transaction) => transaction.type === "expense")
+    .reduce<Record<string, number>>((acc, transaction) => {
+      const key = transaction.category?.trim() || "Sem categoria";
+      acc[key] = (acc[key] ?? 0) + Number(transaction.amount ?? 0);
+      return acc;
+    }, {});
+
+  const topCategories = Object.entries(categoryExpenses)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+
+  const exportParams = new URLSearchParams({ from: start, to: end });
 
   return (
     <section className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold">Financeiro</h2>
         <p className="mt-1 text-muted">
-          Registre entradas e saídas para acompanhar o saldo operacional da
-          clínica.
+          Registre entradas e saídas para acompanhar o resultado operacional da
+          clínica em tempo real.
         </p>
       </div>
 
+      <article className="surface-card p-5">
+        <form className="grid gap-4 md:grid-cols-[1fr_1fr_1fr_auto]">
+          <label className="grid gap-1 text-sm">
+            <span className="font-semibold text-foreground">Período</span>
+            <select
+              name="range"
+              defaultValue={range}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            >
+              <option value="month">Mês atual</option>
+              <option value="last-month">Último mês</option>
+              <option value="year">Ano atual</option>
+              <option value="custom">Intervalo personalizado</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm">
+            <span className="font-semibold text-foreground">Data inicial</span>
+            <input
+              type="date"
+              name="from"
+              defaultValue={start}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+          <label className="grid gap-1 text-sm">
+            <span className="font-semibold text-foreground">Data final</span>
+            <input
+              type="date"
+              name="to"
+              defaultValue={end}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+          <div className="flex items-end gap-2">
+            <button type="submit" className="btn-gradient w-full md:w-auto">
+              Aplicar
+            </button>
+            <a
+              href={`/api/finance/export?${exportParams.toString()}`}
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-foreground transition hover:bg-slate-50"
+            >
+              Exportar CSV
+            </a>
+          </div>
+        </form>
+        <p className="mt-3 text-sm text-muted">Período selecionado: {label}</p>
+      </article>
+
       <div className="grid gap-4 md:grid-cols-3">
         <article className="soft-panel p-5">
-          <p className="text-sm text-muted">Entradas do mês</p>
+          <p className="text-sm text-muted">Entradas</p>
           <p className="mt-3 inline-flex rounded-md bg-success/10 px-3 py-1 text-2xl font-bold text-success">
             {formatCurrency(totals.income)}
           </p>
-        </article>
-        <article className="soft-panel p-5">
-          <p className="text-sm text-muted">Saídas do mês</p>
-          <p className="mt-3 inline-flex rounded-md bg-destructive/10 px-3 py-1 text-2xl font-bold text-destructive">
-            {formatCurrency(totals.expense)}
+          <p className="mt-2 text-xs text-muted">
+            {periodDiffLabel(totals.income, previousTotals.income)}
           </p>
         </article>
         <article className="soft-panel p-5">
-          <p className="text-sm text-muted">Saldo do mês</p>
+          <p className="text-sm text-muted">Saídas</p>
+          <p className="mt-3 inline-flex rounded-md bg-destructive/10 px-3 py-1 text-2xl font-bold text-destructive">
+            {formatCurrency(totals.expense)}
+          </p>
+          <p className="mt-2 text-xs text-muted">
+            {periodDiffLabel(totals.expense, previousTotals.expense)}
+          </p>
+        </article>
+        <article className="soft-panel p-5">
+          <p className="text-sm text-muted">Saldo</p>
           <p
             className={`mt-3 inline-flex rounded-md px-3 py-1 text-2xl font-bold ${
               balance >= 0
@@ -106,8 +277,30 @@ export default async function FinancePage({ searchParams }: Props) {
           >
             {formatCurrency(balance)}
           </p>
+          <p className="mt-2 text-xs text-muted">
+            {periodDiffLabel(balance, previousBalance)}
+          </p>
         </article>
       </div>
+
+      {topCategories.length > 0 ? (
+        <article className="surface-card p-5">
+          <h3 className="text-lg font-semibold text-secondary">
+            Principais categorias de despesa
+          </h3>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {topCategories.map(([category, amount]) => (
+              <div
+                key={category}
+                className="rounded-lg border border-slate-100 bg-white px-4 py-3"
+              >
+                <p className="text-sm font-semibold text-foreground">{category}</p>
+                <p className="mt-1 text-sm text-muted">{formatCurrency(amount)}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+      ) : null}
 
       <article className="surface-card p-6">
         <h3 className="text-lg font-semibold text-secondary">Nova transação</h3>
@@ -155,11 +348,18 @@ export default async function FinancePage({ searchParams }: Props) {
           <div className="grid gap-4 md:grid-cols-3">
             <label className="grid gap-1 text-sm">
               <span className="font-semibold text-foreground">Categoria</span>
-              <input
+              <select
                 name="category"
-                placeholder="Ex.: Procedimento, aluguel, material"
+                required
+                defaultValue="Procedimentos"
                 className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
-              />
+              >
+                {FINANCIAL_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label className="grid gap-1 text-sm">
@@ -206,7 +406,7 @@ export default async function FinancePage({ searchParams }: Props) {
       <article className="surface-card overflow-hidden">
         <div className="border-b border-slate-100 px-5 py-4">
           <h3 className="text-lg font-semibold text-secondary">
-            Últimas transações
+            Transações do período
           </h3>
         </div>
 

@@ -11,6 +11,17 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+function toDateInput(value: Date) {
+  return value.toISOString().slice(0, 10);
+}
+
+function parseDateInput(value: string | undefined) {
+  if (!value) return null;
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -28,15 +39,21 @@ export default async function CommissionsPage({ searchParams }: Props) {
 
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : null;
-
-  // Current month bounds
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .slice(0, 10);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-    .toISOString()
-    .slice(0, 10);
+  const defaultStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const defaultEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const fromParam =
+    typeof params.from === "string" ? parseDateInput(params.from) : null;
+  const toParam =
+    typeof params.to === "string" ? parseDateInput(params.to) : null;
+  const startDate = fromParam ?? defaultStart;
+  const endDate = toParam && toParam > startDate ? toParam : defaultEnd;
+
+  const monthStart = toDateInput(startDate);
+  const monthEnd = toDateInput(endDate);
+
+  const periodLabel = `${startDate.toLocaleDateString("pt-BR")} a ${endDate.toLocaleDateString("pt-BR")}`;
 
   const { data: commissions } = await supabase
     .from("commissions")
@@ -57,6 +74,7 @@ export default async function CommissionsPage({ searchParams }: Props) {
     .filter((r) => r.paid_at)
     .reduce((acc, r) => acc + Number(r.commission_amount), 0);
   const pendingCommissions = totalCommissions - paidCommissions;
+  const exportHref = `/api/commissions/export?from=${monthStart}&to=${monthEnd}`;
 
   return (
     <section className="space-y-6">
@@ -64,17 +82,49 @@ export default async function CommissionsPage({ searchParams }: Props) {
         <div>
           <h2 className="text-3xl font-bold">Comissões</h2>
           <p className="mt-1 text-sm text-muted">
-            Controle de comissões por profissional —{" "}
-            {now.toLocaleDateString("pt-BR", {
-              month: "long",
-              year: "numeric",
-            })}
+            Controle de comissões por profissional — {periodLabel}
           </p>
         </div>
-        <Link href="/commissions/new" className="btn-gradient">
-          Registrar comissão
-        </Link>
+        <div className="flex gap-2">
+          <a
+            href={exportHref}
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm font-semibold text-foreground transition hover:bg-slate-50"
+          >
+            Exportar CSV
+          </a>
+          <Link href="/commissions/new" className="btn-gradient">
+            Registrar comissão
+          </Link>
+        </div>
       </div>
+
+      <article className="surface-card p-4">
+        <form className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+          <label className="grid gap-1 text-sm">
+            <span className="font-semibold text-foreground">Data inicial</span>
+            <input
+              type="date"
+              name="from"
+              defaultValue={monthStart}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+          <label className="grid gap-1 text-sm">
+            <span className="font-semibold text-foreground">Data final</span>
+            <input
+              type="date"
+              name="to"
+              defaultValue={monthEnd}
+              className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            />
+          </label>
+          <div className="flex items-end">
+            <button type="submit" className="btn-gradient w-full md:w-auto">
+              Aplicar período
+            </button>
+          </div>
+        </form>
+      </article>
 
       {error ? (
         <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
