@@ -1,10 +1,10 @@
 # ClinPe App
 
-SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuários, autoagendamento, notificações por e-mail, push web e lembretes de consulta via WhatsApp.
+SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, dashboard, prontuários, autoagendamento, notificações por e-mail, push web, compactação de imagens no upload e lembretes de consulta via WhatsApp.
 
 ## Status do projeto
 
-- Versão publicada: `v2.5.0`
+- Versão publicada: `v2.7.1`
 - Rebranding aplicado: `PodoDesk` -> `ClinPe`
 - Repo: `https://github.com/spessoto/clinpe-saas`
 
@@ -20,6 +20,7 @@ SaaS de podologia multi-tenant com Next.js + Supabase, incluindo onboarding, das
 - Épico 1: auth e onboarding com criação automática de tenant e trial
 - Épico 2: dashboard com KPIs e CRUD de pacientes
 - Épico 3: prontuários com upload de imagens no Storage
+- Uploads de imagens de prontuário, avatar e logo passam por compactação server-side antes do Supabase Storage, reduzindo peso sem comprometer a visualização.
 - Épico 4: autoagendamento público por profissional em `/{professional_slug}`
 - Épico 5: POPs com templates e substituição dinâmica de placeholders
 - Agenda: calendário mensal de consultas lido do banco de dados, com pop-up de dados do paciente e ações de confirmação/cancelamento

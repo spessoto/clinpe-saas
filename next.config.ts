@@ -15,7 +15,8 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   experimental: {
     serverActions: {
-      bodySizeLimit: "5mb",
+      // Prontuário envia até 4 imagens de até 10MB cada no mesmo POST.
+      bodySizeLimit: "50mb",
     },
   },
   images: {

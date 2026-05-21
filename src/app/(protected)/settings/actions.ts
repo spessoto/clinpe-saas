@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 import { updateAccountBillingProfile } from "@/lib/account-billing-profile";
 import { requireActiveTenant } from "@/lib/auth";
+import { optimizeImageUpload } from "@/lib/image-optimizer";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
@@ -30,14 +31,6 @@ function parseWorkingDays(formData: FormData) {
     .filter((value) => Number.isInteger(value) && value >= 0 && value <= 6)
     .filter((value, index, list) => list.indexOf(value) === index)
     .sort((a, b) => a - b);
-}
-
-function sanitizeFileName(name: string) {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "-")
-    .toLowerCase();
 }
 
 function isUploadedFile(value: FormDataEntryValue | null): value is File {
@@ -137,16 +130,19 @@ export async function saveSettingsAction(formData: FormData) {
         "/settings?error=Foto de perfil muito grande. O tamanho máximo é 5MB.",
       );
     }
-    const safeName = sanitizeFileName(profilePhoto.name || "profile.jpg");
-    const path = `${appUser.tenant_id}/profiles/${appUser.id}/${Date.now()}-${randomUUID()}-${safeName}`;
-    const fileBytes = new Uint8Array(await profilePhoto.arrayBuffer());
+    const optimizedImage = await optimizeImageUpload(profilePhoto, {
+      maxWidth: 1600,
+      maxHeight: 1600,
+      quality: 88,
+    });
+    const path = `${appUser.tenant_id}/profiles/${appUser.id}/${Date.now()}-${randomUUID()}-${optimizedImage.fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("medical-images")
-      .upload(path, fileBytes, {
+      .upload(path, optimizedImage.bytes, {
         cacheControl: "3600",
         upsert: false,
-        contentType: profilePhoto.type || "application/octet-stream",
+        contentType: optimizedImage.contentType,
       });
 
     if (uploadError) {
@@ -165,16 +161,19 @@ export async function saveSettingsAction(formData: FormData) {
     if (logoFile.size > 5 * 1024 * 1024) {
       redirect("/settings?error=Logo muito grande. O tamanho máximo é 5MB.");
     }
-    const safeName = sanitizeFileName(logoFile.name || "logo.jpg");
-    const path = `${tenant.id}/logos/${appUser.id}/${Date.now()}-${randomUUID()}-${safeName}`;
-    const fileBytes = new Uint8Array(await logoFile.arrayBuffer());
+    const optimizedImage = await optimizeImageUpload(logoFile, {
+      maxWidth: 1800,
+      maxHeight: 1800,
+      quality: 88,
+    });
+    const path = `${tenant.id}/logos/${appUser.id}/${Date.now()}-${randomUUID()}-${optimizedImage.fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("medical-images")
-      .upload(path, fileBytes, {
+      .upload(path, optimizedImage.bytes, {
         cacheControl: "3600",
         upsert: false,
-        contentType: logoFile.type || "application/octet-stream",
+        contentType: optimizedImage.contentType,
       });
 
     if (uploadError) {
@@ -275,24 +274,27 @@ export async function uploadProfileImageAction(formData: FormData) {
   }
 
   try {
-    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "png";
     const preferredBucket = type === "avatar" ? "avatars" : "clinic-logos";
     const fallbackBucket = "medical-images";
-    const preferredPath = `${tenant.id}/${appUser.id}/${Date.now()}.${fileExtension}`;
-    const fallbackPath = `${tenant.id}/${type}/${appUser.id}/${Date.now()}.${fileExtension}`;
-
-    // Converter file para Uint8Array
-    const fileBytes = new Uint8Array(await file.arrayBuffer());
+    const optimizedImage = await optimizeImageUpload(file, {
+      maxWidth: type === "avatar" ? 1200 : 1600,
+      maxHeight: type === "avatar" ? 1200 : 1600,
+      quality: 88,
+    });
+    const preferredPath = `${tenant.id}/${appUser.id}/${Date.now()}-${optimizedImage.fileName}`;
+    const fallbackPath = `${tenant.id}/${type}/${appUser.id}/${Date.now()}-${optimizedImage.fileName}`;
 
     let uploadedPath: string | null = null;
     let uploadedBucket = preferredBucket;
 
     const tryUpload = async (bucketName: string, path: string) => {
-      return supabase.storage.from(bucketName).upload(path, fileBytes, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type || "application/octet-stream",
-      });
+      return supabase.storage
+        .from(bucketName)
+        .upload(path, optimizedImage.bytes, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: optimizedImage.contentType,
+        });
     };
 
     const preferredUpload = await tryUpload(preferredBucket, preferredPath);

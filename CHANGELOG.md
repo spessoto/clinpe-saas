@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Pipeline de imagens centralizado**: uploads de prontuário, avatar e logo agora passam por compactação server-side para WebP antes do envio ao Supabase Storage, reduzindo peso sem comprometer a visualização.
+
 ## [2.7.1] - 2026-05-05
 
 ### Changed

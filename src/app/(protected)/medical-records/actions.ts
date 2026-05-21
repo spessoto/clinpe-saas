@@ -6,19 +6,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requireActiveTenant } from "@/lib/auth";
+import { optimizeImageUpload } from "@/lib/image-optimizer";
 import { createClient } from "@/lib/supabase/server";
 
 function getField(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
-}
-
-function toSafeFileName(fileName: string) {
-  return fileName
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "-")
-    .replace(/-+/g, "-")
-    .toLowerCase();
 }
 
 function splitCycleMaterials(materialName: string) {
@@ -330,13 +322,17 @@ export async function createMedicalRecordAction(formData: FormData) {
   const uploadedUrls: string[] = [];
 
   for (const file of files) {
-    const safeName = toSafeFileName(file.name || "image");
-    const path = `${appUser.tenant_id}/${patientId}/${Date.now()}-${randomUUID()}-${safeName}`;
+    const optimizedImage = await optimizeImageUpload(file, {
+      maxWidth: 2400,
+      maxHeight: 2400,
+      quality: 86,
+    });
+    const path = `${appUser.tenant_id}/${patientId}/${Date.now()}-${randomUUID()}-${optimizedImage.fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("medical-images")
-      .upload(path, file, {
-        contentType: file.type || "application/octet-stream",
+      .upload(path, optimizedImage.bytes, {
+        contentType: optimizedImage.contentType,
         upsert: false,
       });
 
