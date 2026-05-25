@@ -469,12 +469,7 @@ export function AnalyticsCharts({
                   outerRadius={95}
                   dataKey="value"
                   labelLine={false}
-                  label={(props) => (
-                    <PieLabel
-                      {...(props as PieLabelProps)}
-                      name={props.name ?? ""}
-                    />
-                  )}
+                  label={(props) => <PieLabel {...(props as PieLabelProps)} />}
                 >
                   {planDistribution.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />
@@ -523,12 +518,7 @@ export function AnalyticsCharts({
                   outerRadius={95}
                   dataKey="value"
                   labelLine={false}
-                  label={(props) => (
-                    <PieLabel
-                      {...(props as PieLabelProps)}
-                      name={props.name ?? ""}
-                    />
-                  )}
+                  label={(props) => <PieLabel {...(props as PieLabelProps)} />}
                 >
                   {periodDistribution.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />
