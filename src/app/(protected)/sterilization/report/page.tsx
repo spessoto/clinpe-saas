@@ -172,6 +172,7 @@ export default async function SterilizationReportPage({ searchParams }: Props) {
             </h1>
           </div>
           {clinicLogoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- relatório de impressão: next/image usa lazy load que não funciona com @media print
             <img
               src={clinicLogoUrl}
               alt={`Logotipo da clínica ${clinicName}`}

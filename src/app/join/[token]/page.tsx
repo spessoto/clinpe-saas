@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { acceptInviteAction } from "@/app/join/[token]/actions";
@@ -46,12 +47,12 @@ export default async function JoinPage({ params, searchParams }: Props) {
           <p className="text-sm text-muted">
             Este convite já foi aceito. Se você já tem uma conta, faça login.
           </p>
-          <a
+          <Link
             href="/sign-in"
             className="inline-block rounded-xl bg-primary px-6 py-2 text-sm font-semibold text-white hover:brightness-110"
           >
             Ir para o login
-          </a>
+          </Link>
         </section>
       </main>
     );

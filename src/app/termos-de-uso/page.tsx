@@ -48,17 +48,18 @@ export default function TermsOfUsePage() {
         <div className="space-y-6 text-sm leading-7 text-foreground md:text-base">
           <p>
             Este Termo de Uso regula o acesso e a utilização da plataforma
-            PodoDesk ("Plataforma" ou "Sistema"), desenvolvida e operada por
-            26.730.764 CAIO CEZARES DE SOUZA SPESSOTO, inscrita no CNPJ sob o nº
-            26,730,764/0001-26, com sede na R ROSA SGREVA PIGNATARI, 366, bairro
-            JARDIM SAO LOURENCO, na cidade de BRAGANCA PAULISTA - SP, CEP
-            12.908-540.
+            PodoDesk (&ldquo;Plataforma&rdquo; ou &ldquo;Sistema&rdquo;),
+            desenvolvida e operada por 26.730.764 CAIO CEZARES DE SOUZA
+            SPESSOTO, inscrita no CNPJ sob o nº 26,730,764/0001-26, com sede na
+            R ROSA SGREVA PIGNATARI, 366, bairro JARDIM SAO LOURENCO, na cidade
+            de BRAGANCA PAULISTA - SP, CEP 12.908-540.
           </p>
 
           <p>
-            Ao utilizar o sistema, você ("Usuário", "Profissional" ou "Clínica")
-            declara ter lido, compreendido e concordado com estes Termos, bem
-            como com a Política de Privacidade da Plataforma.
+            Ao utilizar o sistema, você (&ldquo;Usuário&rdquo;,
+            &ldquo;Profissional&rdquo; ou &ldquo;Clínica&rdquo;) declara ter
+            lido, compreendido e concordado com estes Termos, bem como com a
+            Política de Privacidade da Plataforma.
           </p>
 
           <section className="space-y-3">
@@ -261,11 +262,11 @@ export default function TermsOfUsePage() {
               9. Limitação de Responsabilidade
             </h2>
             <p>
-              9.1. A Plataforma é fornecida "no estado em que se encontra" (as
-              is), com esforço contínuo para garantir alta disponibilidade e
-              segurança. Contudo, podem ocorrer indisponibilidades temporárias
-              devido a manutenções programadas ou falhas de infraestrutura de
-              terceiros (hospedagem).
+              9.1. A Plataforma é fornecida &ldquo;no estado em que se
+              encontra&rdquo; (as is), com esforço contínuo para garantir alta
+              disponibilidade e segurança. Contudo, podem ocorrer
+              indisponibilidades temporárias devido a manutenções programadas ou
+              falhas de infraestrutura de terceiros (hospedagem).
             </p>
             <p>
               9.2. O PodoDesk não se responsabiliza por danos indiretos, lucros
@@ -351,24 +352,24 @@ export default function TermsOfUsePage() {
 
               <div className="space-y-3">
                 <h4 className="mb-4 font-bold text-white">Produto</h4>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#funcionalidades"
                 >
                   Funcionalidades
-                </a>
-                <a
+                </Link>
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="#"
                 >
                   Segurança de Dados
-                </a>
-                <a
+                </Link>
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#precos"
                 >
                   Preços
-                </a>
+                </Link>
               </div>
 
               <div className="space-y-3">

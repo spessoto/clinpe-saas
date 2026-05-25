@@ -4,19 +4,25 @@ import { useEffect, useRef, useState } from "react";
 
 const MAX_PHOTOS = 4;
 
+type FileEntry = { file: File; preview: string };
+
 export function PhotoPicker() {
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [entries, setEntries] = useState<FileEntry[]>([]);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-
-  // Mantém previews sincronizados e revoga object URLs antigas para evitar leak
+  // Ref para garantir que o cleanup no unmount sempre acessa as entries atuais
+  const entriesRef = useRef(entries);
+  // Mantém a ref sincronizada fora do render para uso no cleanup de unmount
   useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f));
-    setPreviews(urls);
-    return () => urls.forEach(URL.revokeObjectURL);
-  }, [files]);
+    entriesRef.current = entries;
+  }, [entries]);
+
+  // Revoga todos os object URLs ao desmontar o componente
+  useEffect(() => {
+    return () =>
+      entriesRef.current.forEach(({ preview }) => URL.revokeObjectURL(preview));
+  }, []);
 
   // Injeta os arquivos no FormData via evento nativo 'formdata' do form pai.
   // Funciona em todos os browsers modernos incluindo iOS Safari 15+, ao
@@ -26,26 +32,39 @@ export function PhotoPicker() {
     if (!form) return;
 
     const handleFormData = (e: FormDataEvent) => {
-      for (const file of files) {
+      for (const { file } of entries) {
         e.formData.append("photos", file);
       }
     };
 
     form.addEventListener("formdata", handleFormData);
     return () => form.removeEventListener("formdata", handleFormData);
-  }, [files]);
+  }, [entries]);
 
   function addFiles(incoming: FileList | null) {
     if (!incoming) return;
-    const arr = Array.from(incoming).filter((f) => f.size > 0);
-    setFiles((prev) => [...prev, ...arr].slice(0, MAX_PHOTOS));
+    const added: FileEntry[] = Array.from(incoming)
+      .filter((f) => f.size > 0)
+      .map((file) => ({ file, preview: URL.createObjectURL(file) }));
+    setEntries((prev) => {
+      const combined = [...prev, ...added];
+      // Revoga previews que excedem o limite
+      combined
+        .slice(MAX_PHOTOS)
+        .forEach(({ preview }) => URL.revokeObjectURL(preview));
+      return combined.slice(0, MAX_PHOTOS);
+    });
   }
 
   function removeFile(index: number) {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setEntries((prev) => {
+      const entry = prev[index];
+      if (entry) URL.revokeObjectURL(entry.preview);
+      return prev.filter((_, i) => i !== index);
+    });
   }
 
-  const canAdd = files.length < MAX_PHOTOS;
+  const canAdd = entries.length < MAX_PHOTOS;
 
   return (
     <div ref={wrapperRef} className="mt-3 space-y-3">
@@ -80,13 +99,13 @@ export function PhotoPicker() {
       />
 
       {/* Thumbnails das fotos selecionadas */}
-      {previews.length > 0 && (
+      {entries.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {previews.map((url, i) => (
+          {entries.map(({ preview }, i) => (
             <div key={i} className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={url}
+                src={preview}
                 alt={`Foto ${i + 1}`}
                 className="h-24 w-24 rounded-xl border border-slate-200 object-cover shadow-sm"
               />
@@ -157,8 +176,8 @@ export function PhotoPicker() {
       )}
 
       <p className="text-xs text-muted">
-        {files.length}/{MAX_PHOTOS} foto{files.length !== 1 ? "s" : ""}
-        {files.length >= MAX_PHOTOS && (
+        {entries.length}/{MAX_PHOTOS} foto{entries.length !== 1 ? "s" : ""}
+        {entries.length >= MAX_PHOTOS && (
           <span className="ml-1 font-semibold text-warning">
             — limite atingido
           </span>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { saveSettingsAction } from "@/app/(protected)/settings/actions";
 import { ImageUpload } from "@/components/image-upload";
 import { WhatsAppSettings } from "@/components/whatsapp-settings";
@@ -380,12 +381,12 @@ export default async function SettingsPage({ searchParams }: Props) {
           <p className="mt-1 text-sm text-muted">
             Convide profissionais para atender na sua clínica.
           </p>
-          <a
+          <Link
             href="/settings/team"
             className="mt-4 inline-block rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:brightness-110"
           >
             Gerenciar equipe
-          </a>
+          </Link>
         </article>
       ) : null}
     </section>

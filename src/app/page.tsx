@@ -244,6 +244,7 @@ export default async function Home() {
             </div>
 
             <div className="flex items-center gap-4 pt-2">
+              {/* eslint-disable @next/next/no-img-element -- URLs externas de CDN do Google (demo) sem dimensões fixas */}
               <div className="flex -space-x-2">
                 <img
                   alt="Profissional"
@@ -261,6 +262,7 @@ export default async function Home() {
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUejtpyxA569suvrOeXCY8f2IefyihmiZe_pTQEM9embkW6E_uF_UGKgIJElUDgV74LofqIlK2fR8NmT12_TrA50uAJ4dMxGPY62M1ZnQRGmQDWSJMD1wCxxpsEWbZrpzrAUMNPHo1wsZDFrip3hqOoCZj2DEOECmPe4ulsFTWhZHbKtDcalqiYXrnd51_D71W1i-auKeD4eTjk46LMj4DfwT1VphfP_2QLf8vbB9tSKpixynVHZ4ksVOHbk5goNDBY6vdhLTh"
                 />
               </div>
+              {/* eslint-enable @next/next/no-img-element */}
               <span className="text-sm font-medium text-slate-700">
                 {t("socialProof")}
               </span>
@@ -270,10 +272,13 @@ export default async function Home() {
           <div className="relative">
             <div className="pointer-events-none absolute -right-10 -top-12 h-64 w-64 rounded-full bg-primary/20 blur-3xl" />
             <div>
-              <img
+              <Image
                 alt="Dashboard do sistema"
                 className="h-auto w-full"
                 src="/sys_pododesk.png"
+                width={1080}
+                height={1080}
+                priority
               />
             </div>
           </div>

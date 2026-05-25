@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] - 2026-05-25
+
+### Added
+
+- **LGPD — Controles de proteção de dados** (`migration 058`):
+  - Tabela `lgpd_requests`: registra pedidos de titulares (exclusão, portabilidade, restrição, retificação) com prazo de resposta de 15 dias úteis (Art. 18, §3º LGPD).
+  - Tabela `patient_access_log`: trilha de auditoria imutável (append-only via RLS) de acesso a dados de pacientes — Art. 37 LGPD.
+  - Função `anonymize_patient(patient_id, tenant_id)`: apaga todos os campos PII (nome, CPF, RG, e-mail, telefone, endereço) preservando prontuários e registros financeiros para conformidade regulatória.
+  - Função `export_patient_data(patient_id, tenant_id)`: exporta todos os dados do paciente como JSON — direito de portabilidade (Art. 18, V).
+  - View `patients_eligible_for_anonymization`: identifica pacientes sem atendimento além do prazo de retenção configurado.
+  - Coluna `data_retention_months` em `tenants` (padrão 240 = 20 anos, mínimo 60) seguindo prazo da resolução CFM/CFFa para prontuários.
+  - Colunas `is_anonymized` e `anonymized_at` em `patients`.
+
+### Security
+
+- **Hardening de banco de dados** (`migration 059`):
+  - RLS habilitado em `asaas_webhook_payment_events` (estava sem proteção direta).
+  - `REVOKE ALL ... FROM anon` em todas as tabelas sensíveis: `patients`, `medical_records`, `appointments`, `financial_transactions`, `sterilization_logs`, `whatsapp_messages`, `whatsapp_contacts`, `push_subscriptions`, `notifications`, `lgpd_requests`, `patient_access_log`, `commissions`, `email_queue`, `asaas_webhook_payment_events`.
+  - `SET search_path = public` confirmado e aplicado em todas as funções adicionadas após o hardening anterior (claim/mark asaas webhook, enforce patient limit, anonymize_patient, export_patient_data).
+  - Comentários de conformidade LGPD nas tabelas sensíveis.
+
+### Performance
+
+- **Imagens otimizadas com `next/image`**: substituídas todas as tags `<img>` pelas diretrizes do Next.js Image nas páginas de landing, blog (lista e detalhe); `priority` aplicado ao hero screenshot para reduzir LCP.
+- **Sanity CDN configurado**: domínio `cdn.sanity.io` adicionado aos `remotePatterns` do `next.config.ts`, habilitando otimização automática (AVIF/WebP) das imagens dos artigos do blog.
+- QR Code WhatsApp e logotipo de relatório de impressão mantidos como `<img>` com justificativa documentada (data URI e contexto CSS `@media print`, respectivamente).
+
+### Fixed
+
+- **Lint zerado** (75 problemas → 0): corrigidos todos os erros `react-hooks` (setState em effect, impureza de render com `Date.now()`, acesso a refs durante render), `@next/next/no-html-link-for-pages` (settings, join, blog, contato, helpdesk, política, termos), `react/no-unescaped-entities` (aspas em páginas legais), e todas as variáveis/imports não utilizados.
+- **ESLint config**: adicionada regra `@typescript-eslint/no-unused-vars` com `argsIgnorePattern`/`varsIgnorePattern`/`caughtErrorsIgnorePattern` para ignorar variáveis prefixadas com `_` (convenção padrão).
+- **`cookie-consent.tsx`**: inicialização de estado migrada de `useEffect` para lazy `useState` initializer, evitando flash de conteúdo.
+- **`photo-picker.tsx`**: refatorado para combinar `File` e `preview` em `FileEntry[]`; ref de cleanup movida para `useEffect` evitando acesso durante render.
+
 ### Changed
 
 - **Pipeline de imagens centralizado**: uploads de prontuário, avatar e logo agora passam por compactação server-side para WebP antes do envio ao Supabase Storage, reduzindo peso sem comprometer a visualização.

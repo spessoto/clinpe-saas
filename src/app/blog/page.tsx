@@ -118,12 +118,14 @@ export default async function BlogPage() {
             {posts.map((post) => (
               <Card key={post._id} className="overflow-hidden">
                 {post.imageUrl ? (
-                  <img
-                    src={post.imageUrl}
-                    alt={post.title}
-                    className="h-48 w-full object-cover"
-                    loading="lazy"
-                  />
+                  <div className="relative h-48 w-full overflow-hidden">
+                    <Image
+                      src={post.imageUrl}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="h-48 w-full bg-gradient-to-br from-slate-200 to-slate-100" />
                 )}
@@ -179,18 +181,18 @@ export default async function BlogPage() {
 
               <div className="space-y-3">
                 <h4 className="mb-4 font-bold text-white">Produto</h4>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#funcionalidades"
                 >
                   Funcionalidades
-                </a>
-                <a
+                </Link>
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#precos"
                 >
                   Preços
-                </a>
+                </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/blog"

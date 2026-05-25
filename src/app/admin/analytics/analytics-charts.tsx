@@ -58,7 +58,6 @@ const COLOR_SUCCESS = "#10B981";
 const COLOR_WARNING = "#F97316";
 const COLOR_DESTRUCTIVE = "#E11D48";
 const COLOR_MUTED = "#94A3B8";
-const COLOR_PURPLE = "#7C3AED";
 const GRID_COLOR = "#E2E8F0";
 const TICK_COLOR = "#64748B";
 
@@ -160,7 +159,6 @@ type PieLabelProps = {
   innerRadius: number;
   outerRadius: number;
   percent: number;
-  name: string;
 };
 
 function PieLabel({
@@ -170,7 +168,6 @@ function PieLabel({
   innerRadius,
   outerRadius,
   percent,
-  name,
 }: PieLabelProps) {
   if (percent < 0.05) return null;
   const RADIAN = Math.PI / 180;

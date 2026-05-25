@@ -145,6 +145,14 @@ export default async function PatientDetailsPage({ params }: Props) {
     ? `https://wa.me/${whatsappPhone}?text=${whatsappMessage}`
     : null;
 
+  const patientAgeYears = patient.birth_date
+    ? Math.floor(
+        // eslint-disable-next-line react-hooks/purity
+        (Date.now() - new Date(patient.birth_date + "T12:00:00").getTime()) /
+          (365.25 * 24 * 60 * 60 * 1000),
+      )
+    : null;
+
   return (
     <section className="grid gap-6 lg:grid-cols-[2fr_1fr]">
       <article className="surface-card p-6">
@@ -170,12 +178,7 @@ export default async function PatientDetailsPage({ params }: Props) {
                   "pt-BR",
                 )}
                 {" — "}
-                {Math.floor(
-                  (Date.now() -
-                    new Date(patient.birth_date + "T12:00:00").getTime()) /
-                    (365.25 * 24 * 60 * 60 * 1000),
-                )}{" "}
-                anos
+                {patientAgeYears} anos
               </span>
             </p>
           ) : null}

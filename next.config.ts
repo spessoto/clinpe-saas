@@ -26,6 +26,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.supabase.co",
       },
+      {
+        // Sanity CDN — imagens dos artigos do blog
+        protocol: "https",
+        hostname: "cdn.sanity.io",
+      },
     ],
   },
   async headers() {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 import {
@@ -10,21 +10,14 @@ import {
 } from "@/lib/cookie-consent";
 
 export function CookieConsentBanner() {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => !getCookieConsent());
   const [showSettings, setShowSettings] = useState(false);
-  const [functional, setFunctional] = useState(false);
-  const [analytics, setAnalytics] = useState(false);
-
-  useEffect(() => {
-    const existing = getCookieConsent();
-    if (!existing) {
-      setVisible(true);
-      return;
-    }
-
-    setFunctional(existing.functional);
-    setAnalytics(existing.analytics);
-  }, []);
+  const [functional, setFunctional] = useState(
+    () => getCookieConsent()?.functional ?? false,
+  );
+  const [analytics, setAnalytics] = useState(
+    () => getCookieConsent()?.analytics ?? false,
+  );
 
   function persist(consent: CookieConsent) {
     saveCookieConsent(consent);

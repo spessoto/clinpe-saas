@@ -287,18 +287,18 @@ export default async function ContatoPage({ searchParams }: PageProps) {
 
               <div className="space-y-3">
                 <h4 className="mb-4 font-bold text-white">Produto</h4>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#funcionalidades"
                 >
                   Funcionalidades
-                </a>
-                <a
+                </Link>
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#precos"
                 >
                   Preços
-                </a>
+                </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/blog"

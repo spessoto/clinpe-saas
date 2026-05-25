@@ -80,6 +80,10 @@ export function UserDetailsDialog({
   const [trialOpen, setTrialOpen] = useState(false);
   const [grantPlanOpen, setGrantPlanOpen] = useState(false);
   const [isPermanent, setIsPermanent] = useState(false);
+  // Calculado com lazy initializer para evitar Date.now() no corpo do render
+  const [tomorrowIso] = useState(() =>
+    new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+  );
 
   return (
     <>
@@ -357,9 +361,7 @@ export function UserDetailsDialog({
                         type="date"
                         name="expires_at"
                         required
-                        min={new Date(Date.now() + 86400000)
-                          .toISOString()
-                          .slice(0, 10)}
+                        min={tomorrowIso}
                         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none ring-primary/40 focus:ring-2"
                       />
                     </label>

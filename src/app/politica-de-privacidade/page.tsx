@@ -48,13 +48,14 @@ export default function PrivacyPolicyPage() {
         <div className="space-y-6 text-sm leading-7 text-foreground md:text-base">
           <p>
             A presente Política de Privacidade descreve como o software PodoDesk
-            ("nós", "nosso" ou "Plataforma"), desenvolvido e operado pela
-            empresa 26.730.764 CAIO CEZARES DE SOUZA SPESSOTO, inscrita no CNPJ
-            sob o nº 26.730.764/0001-26, com sede na R ROSA SGREVA PIGNATARI,
-            366, JARDIM SAO LOURENCO, BRAGANCA PAULISTA - SP, CEP 12.908-540,
-            coleta, utiliza, armazena e protege as informações pessoais dos
-            usuários ("você", "Profissional" ou "Clínica") e de seus respectivos
-            pacientes.
+            (&ldquo;nós&rdquo;, &ldquo;nosso&rdquo; ou
+            &ldquo;Plataforma&rdquo;), desenvolvido e operado pela empresa
+            26.730.764 CAIO CEZARES DE SOUZA SPESSOTO, inscrita no CNPJ sob o nº
+            26.730.764/0001-26, com sede na R ROSA SGREVA PIGNATARI, 366, JARDIM
+            SAO LOURENCO, BRAGANCA PAULISTA - SP, CEP 12.908-540, coleta,
+            utiliza, armazena e protege as informações pessoais dos usuários
+            (&ldquo;você&rdquo;, &ldquo;Profissional&rdquo; ou
+            &ldquo;Clínica&rdquo;) e de seus respectivos pacientes.
           </p>
 
           <p>
@@ -322,8 +323,8 @@ export default function PrivacyPolicyPage() {
               acesso, um banner permite aceitar apenas o necessário ou
               personalizar separadamente categorias funcionais e analíticas. A
               preferência fica armazenada localmente no navegador (localStorage)
-              e pode ser revisada a qualquer momento pelo botão "Cookies" no
-              site.
+              e pode ser revisada a qualquer momento pelo botão
+              &ldquo;Cookies&rdquo; no site.
             </p>
           </section>
 
@@ -380,24 +381,24 @@ export default function PrivacyPolicyPage() {
 
               <div className="space-y-3">
                 <h4 className="mb-4 font-bold text-white">Produto</h4>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#funcionalidades"
                 >
                   Funcionalidades
-                </a>
-                <a
+                </Link>
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="#"
                 >
                   Segurança de Dados
-                </a>
-                <a
+                </Link>
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#precos"
                 >
                   Preços
-                </a>
+                </Link>
               </div>
 
               <div className="space-y-3">

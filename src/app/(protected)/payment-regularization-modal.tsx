@@ -10,9 +10,11 @@ interface PaymentRegularizationModalProps {
 export async function PaymentRegularizationModal({
   tenant,
 }: PaymentRegularizationModalProps) {
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
   const daysOverdue = tenant.subscription_expires_at
     ? Math.floor(
-        (Date.now() - new Date(tenant.subscription_expires_at).getTime()) /
+        (now - new Date(tenant.subscription_expires_at).getTime()) /
           (1000 * 60 * 60 * 24),
       )
     : 0;

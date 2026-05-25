@@ -8,7 +8,7 @@ import {
 } from "@/app/(protected)/billing/plans";
 import { getPanelAdminEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
-import { checkTenantPaymentStatus, hasTenantAccess } from "@/lib/tenant-access";
+import { checkTenantPaymentStatus } from "@/lib/tenant-access";
 
 export type AppUser = {
   id: string;

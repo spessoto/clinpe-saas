@@ -27,6 +27,7 @@ export function LocaleSwitcher() {
     }
 
     // Set the NEXT_LOCALE cookie and refresh so next-intl picks it up
+    // eslint-disable-next-line react-hooks/immutability
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
     startTransition(() => {
       router.refresh();

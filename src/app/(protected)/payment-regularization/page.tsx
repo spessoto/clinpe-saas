@@ -1,7 +1,7 @@
 import { AlertTriangle, CreditCard, Clock, CheckCircle } from "lucide-react";
 import Link from "next/link";
 
-import { requireActiveTenant, type Tenant } from "@/lib/auth";
+import { requireActiveTenant } from "@/lib/auth";
 import { checkTenantPaymentStatus } from "@/lib/tenant-access";
 
 export const metadata = {
@@ -9,9 +9,7 @@ export const metadata = {
   description: "Regularize o pagamento de sua assinatura",
 };
 
-function PaymentStatusBadge({ status }: { status: string }) {
-  const daysOverdue = 5; // This would be calculated from subscription_expires_at in a real scenario
-
+function PaymentStatusBadge() {
   return (
     <div className="rounded-lg bg-red-50 p-6 border border-red-200">
       <div className="flex items-start gap-4">
@@ -59,7 +57,7 @@ function InfoCard({
 }
 
 export default async function PaymentRegularizationPage() {
-  const { appUser, tenant } = await requireActiveTenant();
+  const { tenant } = await requireActiveTenant();
 
   // Verify that user is indeed in past_due status
   const paymentStatus = checkTenantPaymentStatus(tenant);
@@ -119,7 +117,7 @@ export default async function PaymentRegularizationPage() {
       {/* Main Content */}
       <div className="mx-auto max-w-2xl px-6 py-12">
         {/* Status Alert */}
-        <PaymentStatusBadge status="past_due" />
+        <PaymentStatusBadge />
 
         {/* Info Cards Grid */}
         <div className="mt-8 grid gap-4 sm:grid-cols-2">

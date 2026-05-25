@@ -171,11 +171,15 @@ export default async function BlogPostPage({ params }: PageProps) {
       <section className="mx-auto mt-24 max-w-3xl px-6 py-10 md:mt-28 md:px-8 md:py-12">
         <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-10">
           {post.mainImageUrl ? (
-            <img
-              src={post.mainImageUrl}
-              alt={post.title}
-              className="mb-8 h-64 w-full rounded-xl object-cover md:h-80"
-            />
+            <div className="relative mb-8 h-64 w-full overflow-hidden rounded-xl md:h-80">
+              <Image
+                src={post.mainImageUrl}
+                alt={post.title}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
           ) : null}
 
           <header className="mb-8 space-y-3">
@@ -230,18 +234,18 @@ export default async function BlogPostPage({ params }: PageProps) {
 
               <div className="space-y-3">
                 <h4 className="mb-4 font-bold text-white">Produto</h4>
-                <a
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#funcionalidades"
                 >
                   Funcionalidades
-                </a>
-                <a
+                </Link>
+                <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/#precos"
                 >
                   Preços
-                </a>
+                </Link>
                 <Link
                   className="block text-slate-400 transition hover:text-white"
                   href="/blog"

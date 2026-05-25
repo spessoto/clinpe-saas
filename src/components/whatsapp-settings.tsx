@@ -318,6 +318,7 @@ export function WhatsAppSettings({
               {qrBase64 ? (
                 <div className="flex flex-col items-center gap-3">
                   <div className="rounded-xl border border-slate-200 bg-white p-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- QR code é data URI base64; next/image não suporta data URIs */}
                     <img
                       src={
                         qrBase64.startsWith("data:")
