@@ -1,11 +1,4 @@
-import {
-  addDays,
-  addMinutes,
-  format,
-  isBefore,
-  setHours,
-  setMinutes,
-} from "date-fns";
+import { addDays, addMinutes, format, isBefore } from "date-fns";
 
 import { notifyNewPublicAppointment } from "@/lib/appointment-notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -128,7 +121,14 @@ function createDaySlots(date: Date, schedule: ProfessionalSchedule) {
 
     const hour = Math.floor(minute / 60);
     const minutePart = minute % 60;
-    const slot = setMinutes(setHours(date, hour), minutePart);
+    // Interpreta os horários de trabalho no fuso horário do Brasil (BRT = UTC-3)
+    // para que "09:00" seja armazenado corretamente como 12:00Z no banco.
+    const yyyy = String(date.getFullYear()).padStart(4, "0");
+    const mo = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const hh = String(hour).padStart(2, "0");
+    const min = String(minutePart).padStart(2, "0");
+    const slot = new Date(`${yyyy}-${mo}-${dd}T${hh}:${min}:00-03:00`);
 
     if (isBefore(slot, new Date())) {
       continue;
