@@ -5,6 +5,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import { CookieConsentBanner } from "@/components/cookie-consent";
 import { HeadScriptsLoader } from "@/components/head-scripts";
 import { getActiveHeadScripts } from "@/app/admin/settings/actions";
+import { getAppUrl } from "@/lib/env";
 import "./globals.css";
 
 const inter = Inter({
@@ -15,6 +16,43 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "PodoDesk | Gestão Integrada de Dados e Pacientes",
   description: "Plataforma SaaS para gestão de podologia",
+  metadataBase: new URL(getAppUrl()),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: "/",
+    siteName: "PodoDesk",
+    title: "PodoDesk | Gestão Integrada de Dados e Pacientes",
+    description: "Plataforma SaaS para gestão de podologia",
+    images: [
+      {
+        url: "/sys_pododesk.png",
+        width: 1200,
+        height: 630,
+        alt: "PodoDesk",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PodoDesk | Gestão Integrada de Dados e Pacientes",
+    description: "Plataforma SaaS para gestão de podologia",
+    images: ["/sys_pododesk.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
 };
 
 export default async function RootLayout({

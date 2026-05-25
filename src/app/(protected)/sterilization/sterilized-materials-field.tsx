@@ -49,7 +49,7 @@ export function SterilizedMaterialsField({ options }: Props) {
   }
 
   return (
-    <div ref={wrapperRef} className="grid w-full min-w-0 gap-1 text-sm">
+    <div ref={wrapperRef} className="grid w-full min-w-0 gap-1.5 text-sm">
       <span className="font-semibold text-foreground">
         Material esterilizado
       </span>
@@ -57,7 +57,7 @@ export function SterilizedMaterialsField({ options }: Props) {
       <input type="hidden" name="material_name" value={items.join(" | ")} />
 
       <div className="relative">
-        <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row">
+        <div className="flex min-w-0 flex-col items-stretch gap-2 lg:flex-row">
           <input
             value={draft}
             onChange={(event) => {
@@ -78,13 +78,13 @@ export function SterilizedMaterialsField({ options }: Props) {
               }
             }}
             placeholder="Ex.: Kit de alicates"
-            className="w-full min-w-0 rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+            className="w-full min-w-0 rounded-md border border-slate-300 bg-white px-3 py-2 text-foreground outline-none ring-primary/40 transition focus:ring-2"
           />
           <button
             type="button"
             onClick={() => addItem()}
             aria-label="Adicionar material"
-            className="inline-flex min-h-[42px] w-full shrink-0 items-center justify-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-3 text-xs font-semibold text-primary transition hover:bg-primary/15 sm:w-auto"
+            className="inline-flex min-h-[42px] w-full shrink-0 items-center justify-center gap-1 rounded-md border border-primary/40 bg-primary/10 px-3 text-xs font-semibold text-primary transition hover:bg-primary/15 lg:w-auto lg:px-4"
           >
             <svg
               className="h-4 w-4"
@@ -131,9 +131,11 @@ export function SterilizedMaterialsField({ options }: Props) {
           {items.map((item, index) => (
             <li
               key={`${item}-${index}`}
-              className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+              className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
             >
-              <span className="text-sm text-foreground">{item}</span>
+              <span className="min-w-0 truncate text-sm text-foreground">
+                {item}
+              </span>
               <button
                 type="button"
                 onClick={() => removeItem(index)}

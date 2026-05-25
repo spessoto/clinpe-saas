@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { signOutAction } from "@/app/auth-actions";
@@ -12,6 +13,14 @@ import { MobileSidebar } from "./mobile-sidebar";
 import { RenewalBanner } from "./renewal-banner";
 
 const RENEWAL_WARNING_DAYS = 5;
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
+};
 
 function computeRenewalBanner(tenant: Tenant) {
   if (

@@ -258,21 +258,23 @@ export default async function SterilizationPage({ searchParams }: Props) {
       ) : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <article className="surface-card p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-secondary">Novo ciclo</h3>
-          <p className="mt-1 text-sm text-muted">
+        <article className="surface-card p-5 sm:p-7">
+          <h3 className="text-xl font-bold tracking-tight text-slate-900">
+            Novo ciclo
+          </h3>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted">
             Fase 1: registre cada ciclo diário da autoclave com lote,
             temperatura, pressão e indicador químico.
           </p>
 
           <form
             action={createSterilizationCycleAction}
-            className="mt-4 grid gap-4"
+            className="mt-5 grid gap-5"
           >
             <input type="hidden" name="month" value={monthKey} />
 
-            <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-              <label className="grid gap-1 text-sm md:col-span-1 2xl:col-span-1">
+            <div className="grid gap-4 lg:grid-cols-12">
+              <label className="grid gap-1.5 text-sm lg:col-span-4">
                 <span className="font-semibold text-foreground">
                   Data e hora
                 </span>
@@ -281,11 +283,11 @@ export default async function SterilizationPage({ searchParams }: Props) {
                   name="sterilized_at"
                   required
                   defaultValue={localDateTimeInputValue()}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-foreground outline-none ring-primary/40 transition focus:ring-2"
                 />
               </label>
 
-              <label className="grid gap-1 text-sm md:col-span-1 2xl:col-span-2">
+              <label className="grid gap-1.5 text-sm lg:col-span-8">
                 <span className="font-semibold text-foreground">
                   Número do ciclo/lote
                 </span>
@@ -293,17 +295,17 @@ export default async function SterilizationPage({ searchParams }: Props) {
                   name="batch_number"
                   required
                   placeholder="Ex.: Lote 1042"
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-foreground outline-none ring-primary/40 transition focus:ring-2"
                 />
               </label>
 
-              <div className="md:col-span-2 2xl:col-span-1 2xl:self-end">
+              <div className="lg:col-span-12">
                 <SterilizedMaterialsField options={materialNames} />
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
-              <label className="grid gap-1 text-sm">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <label className="grid gap-1.5 text-sm">
                 <span className="font-semibold text-foreground">
                   Temperatura (°C)
                 </span>
@@ -312,11 +314,11 @@ export default async function SterilizationPage({ searchParams }: Props) {
                   required
                   inputMode="decimal"
                   placeholder="134"
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-foreground outline-none ring-primary/40 transition focus:ring-2"
                 />
               </label>
 
-              <label className="grid gap-1 text-sm">
+              <label className="grid gap-1.5 text-sm">
                 <span className="font-semibold text-foreground">
                   Pressão (bar)
                 </span>
@@ -325,11 +327,11 @@ export default async function SterilizationPage({ searchParams }: Props) {
                   required
                   inputMode="decimal"
                   placeholder="1.2"
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-foreground outline-none ring-primary/40 transition focus:ring-2"
                 />
               </label>
 
-              <label className="grid gap-1 text-sm sm:col-span-2 2xl:col-span-1">
+              <label className="grid gap-1.5 text-sm sm:col-span-2 xl:col-span-1">
                 <span className="font-semibold text-foreground">
                   Indicador químico
                 </span>
@@ -337,7 +339,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
                   name="chemical_indicator_status"
                   required
                   defaultValue="approved"
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-foreground outline-none ring-primary/40 transition focus:ring-2"
                 >
                   <option value="approved">Aprovado</option>
                   <option value="rejected">Reprovado</option>
@@ -346,44 +348,44 @@ export default async function SterilizationPage({ searchParams }: Props) {
               </label>
             </div>
 
-            <label className="grid gap-1 text-sm">
+            <label className="grid gap-1.5 text-sm">
               <span className="font-semibold text-foreground">Observações</span>
               <textarea
                 name="observations"
-                rows={2}
+                rows={3}
                 placeholder="Observações opcionais sobre o ciclo"
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-foreground outline-none ring-primary/40 transition focus:ring-2"
               />
             </label>
 
-            <div>
-              <button type="submit" className="btn-gradient">
+            <div className="flex justify-start border-t border-slate-200/80 pt-2">
+              <button type="submit" className="btn-gradient w-full sm:w-auto">
                 Salvar ciclo
               </button>
             </div>
           </form>
         </article>
 
-        <article className="surface-card p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-secondary">
+        <article className="surface-card p-5 sm:p-7">
+          <h3 className="text-xl font-bold tracking-tight text-slate-900">
             Registrar teste biológico
           </h3>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted">
             Fase 2: selecione o lote testado, informe a ampola e inicie a
             incubação.
           </p>
 
-          <form action={createBiologicalTestAction} className="mt-4 grid gap-4">
+          <form action={createBiologicalTestAction} className="mt-5 grid gap-5">
             <input type="hidden" name="month" value={monthKey} />
 
-            <label className="grid gap-1 text-sm">
+            <label className="grid gap-1.5 text-sm">
               <span className="font-semibold text-foreground">
                 Lote/Ciclo testado
               </span>
               <select
                 name="sterilization_log_id"
                 required
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-foreground outline-none ring-primary/40 transition focus:ring-2"
               >
                 <option value="">Selecione...</option>
                 {cycleOptions.map((cycle) => (
@@ -394,7 +396,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
               </select>
             </label>
 
-            <label className="grid gap-1 text-sm">
+            <label className="grid gap-1.5 text-sm">
               <span className="font-semibold text-foreground">
                 Lote da ampola
               </span>
@@ -402,18 +404,18 @@ export default async function SterilizationPage({ searchParams }: Props) {
                 name="ampoule_lot"
                 required
                 placeholder="Ex.: AMP-22901"
-                className="rounded-md border border-slate-300 bg-white px-3 py-2 outline-none ring-primary/40 focus:ring-2"
+                className="rounded-md border border-slate-300 bg-white px-3 py-2 text-foreground outline-none ring-primary/40 transition focus:ring-2"
               />
             </label>
 
-            <div>
-              <button type="submit" className="btn-gradient">
+            <div className="flex justify-start border-t border-slate-200/80 pt-2">
+              <button type="submit" className="btn-gradient w-full sm:w-auto">
                 Iniciar incubação
               </button>
             </div>
           </form>
 
-          <div className="mt-6 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <div className="mt-6 space-y-2 rounded-xl border border-slate-200/80 bg-slate-50/80 p-4">
             <h4 className="text-sm font-semibold text-foreground">
               Leituras pendentes
             </h4>
@@ -428,7 +430,7 @@ export default async function SterilizationPage({ searchParams }: Props) {
                   <form
                     key={test.id}
                     action={updateBiologicalTestResultAction}
-                    className="rounded-lg border border-slate-200 bg-white p-3"
+                    className="rounded-lg border border-slate-200 bg-white p-3.5"
                   >
                     <input type="hidden" name="month" value={monthKey} />
                     <input type="hidden" name="test_id" value={test.id} />
