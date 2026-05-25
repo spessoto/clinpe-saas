@@ -64,21 +64,29 @@ alter function public.export_patient_data(uuid, uuid)
 -- de saúde. O PostgREST usa a role anon para rotas públicas — garantir que
 -- ela não consiga ler dados clínicos mesmo que RLS seja mal configurada.
 -- ---------------------------------------------------------------------------
-revoke all on public.patients                    from anon;
-revoke all on public.medical_records             from anon;
-revoke all on public.appointments                from anon;
-revoke all on public.financial_transactions      from anon;
-revoke all on public.sterilization_logs          from anon;
-revoke all on public.sterilization_biological_tests from anon;
-revoke all on public.whatsapp_messages           from anon;
-revoke all on public.whatsapp_contacts           from anon;
-revoke all on public.push_subscriptions          from anon;
-revoke all on public.notifications               from anon;
-revoke all on public.lgpd_requests               from anon;
-revoke all on public.patient_access_log          from anon;
-revoke all on public.commissions                 from anon;
-revoke all on public.email_queue                 from anon;
-revoke all on public.asaas_webhook_payment_events from anon;
+-- Usa bloco DO para revogar apenas tabelas que existem (evita erro se alguma
+-- feature ainda não foi deployada no ambiente alvo).
+do $$
+declare
+  t text;
+  tables text[] := array[
+    'patients', 'medical_records', 'appointments', 'financial_transactions',
+    'sterilization_logs', 'sterilization_biological_tests',
+    'whatsapp_messages', 'whatsapp_contacts',
+    'push_subscriptions', 'notifications',
+    'lgpd_requests', 'patient_access_log',
+    'commissions', 'email_queue', 'asaas_webhook_payment_events'
+  ];
+begin
+  foreach t in array tables loop
+    if exists (
+      select 1 from information_schema.tables
+      where table_schema = 'public' and table_name = t
+    ) then
+      execute format('revoke all on public.%I from anon', t);
+    end if;
+  end loop;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- 5. Comentários de conformidade nas tabelas de dados sensíveis
