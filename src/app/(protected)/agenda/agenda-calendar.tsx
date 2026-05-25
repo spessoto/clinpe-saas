@@ -185,6 +185,20 @@ function formatBlockTime(iso: string) {
   });
 }
 
+function ConfirmAppointmentButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={disabled || pending}
+      className="btn-gradient w-full disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {pending ? "Confirmando..." : "Confirmar agendamento"}
+    </button>
+  );
+}
+
 function CancelAppointmentButton({
   disabled,
   onClick,
@@ -654,18 +668,14 @@ export function AgendaCalendar({ monthKey, events, blocks }: Props) {
                     value={selectedEvent.id}
                   />
                   <input type="hidden" name="month" value={monthKey} />
-                  <button
-                    type="submit"
+                  <ConfirmAppointmentButton
                     disabled={
                       selectedEvent.status === "canceled" ||
                       selectedEvent.status === "completed" ||
                       selectedEvent.confirmationStatus === "confirmed" ||
                       selectedEvent.patientEmail === "Não informado"
                     }
-                    className="btn-gradient w-full disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Confirmar agendamento
-                  </button>
+                  />
                 </form>
 
                 <form action={cancelAppointmentAction}>
