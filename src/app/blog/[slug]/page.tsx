@@ -189,7 +189,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             ) : null}
           </header>
 
-          <section className="space-y-4 text-slate-700">
+          <section className="space-y-4 text-slate-700 [&_a]:font-semibold [&_a]:text-primary [&_a]:underline [&_a]:decoration-primary [&_a]:underline-offset-2 [&_a:hover]:text-primary-hover">
             <PortableText
               value={post.body ?? []}
               components={blogPortableTextComponents}

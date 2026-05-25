@@ -227,7 +227,8 @@ export async function importFinancialCsvAction(formData: FormData) {
   }
 
   const rows = lines.slice(1);
-  const delimiter = lines[0].includes(";") && !lines[0].includes(",") ? ";" : ",";
+  const delimiter =
+    lines[0].includes(";") && !lines[0].includes(",") ? ";" : ",";
   const entries: Array<{
     tenant_id: string;
     type: "income" | "expense";
@@ -241,8 +242,14 @@ export async function importFinancialCsvAction(formData: FormData) {
   let failedRows = 0;
 
   for (const row of rows) {
-    const [occurredOn, typeRaw, categoryRaw, descriptionRaw, paymentRaw, amountRaw] =
-      parseCsvLine(row, delimiter);
+    const [
+      occurredOn,
+      typeRaw,
+      categoryRaw,
+      descriptionRaw,
+      paymentRaw,
+      amountRaw,
+    ] = parseCsvLine(row, delimiter);
 
     const type =
       typeRaw === "income" || typeRaw === "Entrada"

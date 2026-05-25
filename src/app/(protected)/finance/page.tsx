@@ -131,44 +131,44 @@ export default async function FinancePage({ searchParams }: Props) {
     recurringResult,
     importBatchesResult,
   ] = await Promise.all([
-      supabase
-        .from("financial_transactions")
-        .select(
-          "id, type, amount, category, description, payment_method, occurred_on, created_at",
-        )
-        .eq("tenant_id", appUser.tenant_id)
-        .gte("occurred_on", start)
-        .lt("occurred_on", end)
-        .order("occurred_on", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(100),
-      supabase
-        .from("financial_transactions")
-        .select("type, amount, category")
-        .eq("tenant_id", appUser.tenant_id)
-        .gte("occurred_on", start)
-        .lt("occurred_on", end),
-      supabase
-        .from("financial_transactions")
-        .select("type, amount")
-        .eq("tenant_id", appUser.tenant_id)
-        .gte("occurred_on", previousStart)
-        .lt("occurred_on", previousEnd),
-      supabase
-        .from("recurring_financial_transactions")
-        .select(
-          "id, type, amount, category, frequency, next_occurrence_on, active",
-        )
-        .eq("tenant_id", appUser.tenant_id)
-        .order("next_occurrence_on", { ascending: true })
-        .limit(20),
-      supabase
-        .from("financial_import_batches")
-        .select("id, source, status, imported_rows, failed_rows, created_at")
-        .eq("tenant_id", appUser.tenant_id)
-        .order("created_at", { ascending: false })
-        .limit(10),
-    ]);
+    supabase
+      .from("financial_transactions")
+      .select(
+        "id, type, amount, category, description, payment_method, occurred_on, created_at",
+      )
+      .eq("tenant_id", appUser.tenant_id)
+      .gte("occurred_on", start)
+      .lt("occurred_on", end)
+      .order("occurred_on", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("financial_transactions")
+      .select("type, amount, category")
+      .eq("tenant_id", appUser.tenant_id)
+      .gte("occurred_on", start)
+      .lt("occurred_on", end),
+    supabase
+      .from("financial_transactions")
+      .select("type, amount")
+      .eq("tenant_id", appUser.tenant_id)
+      .gte("occurred_on", previousStart)
+      .lt("occurred_on", previousEnd),
+    supabase
+      .from("recurring_financial_transactions")
+      .select(
+        "id, type, amount, category, frequency, next_occurrence_on, active",
+      )
+      .eq("tenant_id", appUser.tenant_id)
+      .order("next_occurrence_on", { ascending: true })
+      .limit(20),
+    supabase
+      .from("financial_import_batches")
+      .select("id, source, status, imported_rows, failed_rows, created_at")
+      .eq("tenant_id", appUser.tenant_id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
   const transactions = transactionsResult.data ?? [];
   const recurringTransactions = recurringResult.data ?? [];
@@ -489,7 +489,9 @@ export default async function FinancePage({ searchParams }: Props) {
                 </select>
               </label>
               <label className="grid gap-1 text-sm">
-                <span className="font-semibold text-foreground">Frequência</span>
+                <span className="font-semibold text-foreground">
+                  Frequência
+                </span>
                 <select
                   name="frequency"
                   defaultValue="monthly"
@@ -503,7 +505,9 @@ export default async function FinancePage({ searchParams }: Props) {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="grid gap-1 text-sm">
-                <span className="font-semibold text-foreground">Próxima data</span>
+                <span className="font-semibold text-foreground">
+                  Próxima data
+                </span>
                 <input
                   type="date"
                   name="next_occurrence_on"
@@ -540,7 +544,9 @@ export default async function FinancePage({ searchParams }: Props) {
 
           <div className="mt-5 space-y-2">
             {recurringTransactions.length === 0 ? (
-              <p className="text-sm text-muted">Nenhum lançamento recorrente cadastrado.</p>
+              <p className="text-sm text-muted">
+                Nenhum lançamento recorrente cadastrado.
+              </p>
             ) : (
               recurringTransactions.map((recurring) => (
                 <div
@@ -550,10 +556,18 @@ export default async function FinancePage({ searchParams }: Props) {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-foreground">
-                        {recurring.category} · {formatCurrency(Number(recurring.amount ?? 0))}
+                        {recurring.category} ·{" "}
+                        {formatCurrency(Number(recurring.amount ?? 0))}
                       </p>
                       <p className="text-xs text-muted">
-                        {recurring.type === "income" ? "Entrada" : "Saída"} · {recurring.frequency === "monthly" ? "Mensal" : "Semanal"} · próxima em {new Date(`${recurring.next_occurrence_on}T00:00:00`).toLocaleDateString("pt-BR")}
+                        {recurring.type === "income" ? "Entrada" : "Saída"} ·{" "}
+                        {recurring.frequency === "monthly"
+                          ? "Mensal"
+                          : "Semanal"}{" "}
+                        · próxima em{" "}
+                        {new Date(
+                          `${recurring.next_occurrence_on}T00:00:00`,
+                        ).toLocaleDateString("pt-BR")}
                       </p>
                     </div>
                     <form action={toggleRecurringFinancialTransactionAction}>
@@ -580,7 +594,8 @@ export default async function FinancePage({ searchParams }: Props) {
         <article className="surface-card p-6">
           <h3 className="text-lg font-semibold text-secondary">Importar CSV</h3>
           <p className="mt-1 text-sm text-muted">
-            Formato esperado: Data, Tipo, Categoria, Descrição, Pagamento, Valor.
+            Formato esperado: Data, Tipo, Categoria, Descrição, Pagamento,
+            Valor.
           </p>
 
           <form action={importFinancialCsvAction} className="mt-4 grid gap-3">
@@ -602,9 +617,13 @@ export default async function FinancePage({ searchParams }: Props) {
           </form>
 
           <div className="mt-5 space-y-2">
-            <h4 className="text-sm font-semibold text-foreground">Últimos lotes</h4>
+            <h4 className="text-sm font-semibold text-foreground">
+              Últimos lotes
+            </h4>
             {importBatches.length === 0 ? (
-              <p className="text-sm text-muted">Nenhuma importação registrada.</p>
+              <p className="text-sm text-muted">
+                Nenhuma importação registrada.
+              </p>
             ) : (
               importBatches.map((batch) => (
                 <div
@@ -612,7 +631,9 @@ export default async function FinancePage({ searchParams }: Props) {
                   className="rounded-lg border border-slate-100 bg-white px-3 py-2"
                 >
                   <p className="text-sm font-semibold text-foreground">
-                    {new Date(batch.created_at).toLocaleDateString("pt-BR")} · {batch.imported_rows} importadas / {batch.failed_rows} falhas
+                    {new Date(batch.created_at).toLocaleDateString("pt-BR")} ·{" "}
+                    {batch.imported_rows} importadas / {batch.failed_rows}{" "}
+                    falhas
                   </p>
                   <p className="text-xs text-muted">
                     Fonte: {batch.source.toUpperCase()} · Status: {batch.status}
