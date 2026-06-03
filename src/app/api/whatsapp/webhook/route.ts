@@ -34,7 +34,9 @@ export async function POST(request: NextRequest) {
 
     // Evolution API v2 uses uppercase event names ("CONNECTION_UPDATE").
     // Normalise to lowercase for safety.
-    const event = String(body.event ?? "").toLowerCase().replace(".", "_");
+    const event = String(body.event ?? "")
+      .toLowerCase()
+      .replace(".", "_");
 
     if (event !== "connection_update") {
       // We only care about connection state changes.
@@ -43,11 +45,9 @@ export async function POST(request: NextRequest) {
 
     const instanceName = body.instance as string | undefined;
     // State can sit at different nesting levels across Evolution API versions.
-    const state = (
-      body.data?.state ??
+    const state = (body.data?.state ??
       body.data?.instance?.state ??
-      body.state
-    ) as string | undefined;
+      body.state) as string | undefined;
 
     if (!instanceName || !state) {
       return NextResponse.json({ ok: true });
@@ -72,9 +72,7 @@ export async function POST(request: NextRequest) {
         error,
       );
     } else {
-      console.log(
-        `[EvolutionWebhook] "${instanceName}" → ${status}`,
-      );
+      console.log(`[EvolutionWebhook] "${instanceName}" → ${status}`);
     }
 
     return NextResponse.json({ ok: true });

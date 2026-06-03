@@ -26,12 +26,19 @@ export async function POST() {
     const token = crypto.randomUUID();
     const webhookUrl = `${getAppUrl()}/api/whatsapp/webhook`;
 
-    const result = await createEvolutionInstance(instanceName, token, webhookUrl);
+    const result = await createEvolutionInstance(
+      instanceName,
+      token,
+      webhookUrl,
+    );
 
     // Fallback: also call the dedicated webhook endpoint in case the instance
     // creation payload ignored the webhook field (older Evolution API versions).
     await setInstanceWebhook(instanceName, webhookUrl).catch((err) => {
-      console.warn("[WhatsApp] Webhook registration via /webhook/set failed:", err);
+      console.warn(
+        "[WhatsApp] Webhook registration via /webhook/set failed:",
+        err,
+      );
     });
 
     // Save instance info to tenant

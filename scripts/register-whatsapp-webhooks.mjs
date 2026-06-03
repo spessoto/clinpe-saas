@@ -34,7 +34,10 @@ function loadEnvLocal() {
       const eqIdx = trimmed.indexOf("=");
       if (eqIdx === -1) continue;
       const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
+      const val = trimmed
+        .slice(eqIdx + 1)
+        .trim()
+        .replace(/^["']|["']$/g, "");
       if (!(key in process.env)) process.env[key] = val;
     }
   } catch {
@@ -60,9 +63,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 if (!EVOLUTION_API_URL || !EVOLUTION_API_KEY) {
-  console.error(
-    "❌  EVOLUTION_API_URL and EVOLUTION_API_KEY are required.",
-  );
+  console.error("❌  EVOLUTION_API_URL and EVOLUTION_API_KEY are required.");
   process.exit(1);
 }
 

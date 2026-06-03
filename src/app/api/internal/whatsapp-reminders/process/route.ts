@@ -64,9 +64,7 @@ export async function POST(request: NextRequest) {
 
       // Use a wider backward window to tolerate cron delays without missing reminders.
       const windowStart = new Date(
-        now.getTime() +
-          offsetMs -
-          REMINDER_WINDOW_LOOKBACK_MINUTES * 60 * 1000,
+        now.getTime() + offsetMs - REMINDER_WINDOW_LOOKBACK_MINUTES * 60 * 1000,
       );
       const windowEnd = new Date(
         now.getTime() +

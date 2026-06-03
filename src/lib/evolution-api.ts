@@ -107,18 +107,15 @@ export async function setInstanceWebhook(
   instanceName: string,
   webhookUrl: string,
 ): Promise<void> {
-  await evolutionFetch(
-    `/webhook/set/${encodeURIComponent(instanceName)}`,
-    {
-      method: "POST",
-      body: {
-        url: webhookUrl,
-        byEvents: true,
-        base64: false,
-        events: ["CONNECTION_UPDATE"],
-      },
+  await evolutionFetch(`/webhook/set/${encodeURIComponent(instanceName)}`, {
+    method: "POST",
+    body: {
+      url: webhookUrl,
+      byEvents: true,
+      base64: false,
+      events: ["CONNECTION_UPDATE"],
     },
-  );
+  });
 }
 
 export async function getInstanceConnectionState(
