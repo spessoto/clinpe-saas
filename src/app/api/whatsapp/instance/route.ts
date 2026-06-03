@@ -4,7 +4,9 @@ import { requireActiveTenant } from "@/lib/auth";
 import {
   createEvolutionInstance,
   deleteEvolutionInstance,
+  setInstanceWebhook,
 } from "@/lib/evolution-api";
+import { getAppUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST() {
@@ -22,8 +24,15 @@ export async function POST() {
 
     const instanceName = `pododesk_${tenant.id.replace(/-/g, "").slice(0, 12)}`;
     const token = crypto.randomUUID();
+    const webhookUrl = `${getAppUrl()}/api/whatsapp/webhook`;
 
-    const result = await createEvolutionInstance(instanceName, token);
+    const result = await createEvolutionInstance(instanceName, token, webhookUrl);
+
+    // Fallback: also call the dedicated webhook endpoint in case the instance
+    // creation payload ignored the webhook field (older Evolution API versions).
+    await setInstanceWebhook(instanceName, webhookUrl).catch((err) => {
+      console.warn("[WhatsApp] Webhook registration via /webhook/set failed:", err);
+    });
 
     // Save instance info to tenant
     const { error: updateError } = await supabase

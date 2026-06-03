@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "email-queue:process": "node scripts/process-email-queue.mjs",
+    "whatsapp:register-webhooks": "node scripts/register-whatsapp-webhooks.mjs",
     "push:vapid": "node scripts/generate-vapid-keys.mjs",
     "ops:booking-flow": "node scripts/verify-booking-flow.mjs",
     "db:login": "npx supabase login",

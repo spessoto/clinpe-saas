@@ -1,4 +1,7 @@
-import { sendTextMessage } from "@/lib/evolution-api";
+import {
+  getInstanceConnectionState,
+  sendTextMessage,
+} from "@/lib/evolution-api";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type EventType = "booking" | "confirmation" | "cancellation";
@@ -55,12 +58,50 @@ export async function sendWhatsAppEventNotification(input: {
       .eq("id", input.tenantId)
       .single();
 
-    if (
-      !tenant?.evolution_instance_name ||
-      tenant.whatsapp_status !== "connected"
-    ) {
+    if (!tenant?.evolution_instance_name) {
       console.log(
-        `[WhatsApp:${input.eventType}] Pulado — tenant não conectado (status=${tenant?.whatsapp_status ?? "null"}, instance=${tenant?.evolution_instance_name ?? "null"})`,
+        `[WhatsApp:${input.eventType}] Pulado — tenant sem instância configurada`,
+      );
+      return;
+    }
+
+    // The DB status may be stale (e.g. "qrcode" right after scanning).
+    // Do a live check with the Evolution API whenever the cached status is not
+    // already "connected" so we never miss a send due to a stale cache.
+    let effectiveStatus: string = tenant.whatsapp_status ?? "disconnected";
+
+    if (effectiveStatus !== "connected") {
+      try {
+        const liveState = await getInstanceConnectionState(
+          tenant.evolution_instance_name,
+        );
+        const liveStatus =
+          liveState === "open"
+            ? "connected"
+            : liveState === "connecting"
+              ? "qrcode"
+              : "disconnected";
+
+        if (liveStatus !== effectiveStatus) {
+          // Update DB so subsequent checks are cheap
+          await supabase
+            .from("tenants")
+            .update({ whatsapp_status: liveStatus })
+            .eq("id", input.tenantId);
+        }
+        effectiveStatus = liveStatus;
+      } catch (liveErr) {
+        console.warn(
+          `[WhatsApp:${input.eventType}] Verificação live de status falhou — usando cache (${effectiveStatus}):`,
+          liveErr,
+        );
+        // Fall through: if live check fails we rely on cached status
+      }
+    }
+
+    if (effectiveStatus !== "connected") {
+      console.log(
+        `[WhatsApp:${input.eventType}] Pulado — tenant não conectado (status=${effectiveStatus}, instance=${tenant.evolution_instance_name})`,
       );
       return;
     }

@@ -67,15 +67,27 @@ async function evolutionFetch<T>(
 export async function createEvolutionInstance(
   instanceName: string,
   token: string,
+  webhookUrl?: string,
 ): Promise<EvolutionInstanceResponse> {
+  const body: Record<string, unknown> = {
+    instanceName,
+    token,
+    qrcode: true,
+    integration: "WHATSAPP-BAILEYS",
+  };
+
+  if (webhookUrl) {
+    body.webhook = {
+      url: webhookUrl,
+      byEvents: true,
+      base64: false,
+      events: ["CONNECTION_UPDATE"],
+    };
+  }
+
   return evolutionFetch<EvolutionInstanceResponse>("/instance/create", {
     method: "POST",
-    body: {
-      instanceName,
-      token,
-      qrcode: true,
-      integration: "WHATSAPP-BAILEYS",
-    },
+    body,
   });
 }
 
@@ -85,6 +97,28 @@ export async function deleteEvolutionInstance(
   await evolutionFetch(`/instance/delete/${encodeURIComponent(instanceName)}`, {
     method: "DELETE",
   });
+}
+
+/**
+ * Register (or update) a webhook URL on an existing Evolution API instance.
+ * Useful when an instance was created before webhook support was added.
+ */
+export async function setInstanceWebhook(
+  instanceName: string,
+  webhookUrl: string,
+): Promise<void> {
+  await evolutionFetch(
+    `/webhook/set/${encodeURIComponent(instanceName)}`,
+    {
+      method: "POST",
+      body: {
+        url: webhookUrl,
+        byEvents: true,
+        base64: false,
+        events: ["CONNECTION_UPDATE"],
+      },
+    },
+  );
 }
 
 export async function getInstanceConnectionState(
