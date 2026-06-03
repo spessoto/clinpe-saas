@@ -13,6 +13,9 @@ type ReminderTemplate = {
   trigger_value: number;
 };
 
+const REMINDER_WINDOW_LOOKBACK_MINUTES = 75;
+const REMINDER_WINDOW_LOOKAHEAD_MINUTES = 15;
+
 function substituteVars(
   template: string,
   vars: Record<string, string>,
@@ -59,9 +62,17 @@ export async function POST(request: NextRequest) {
           ? tpl.trigger_value * 60 * 60 * 1000
           : tpl.trigger_value * 24 * 60 * 60 * 1000;
 
-      // We look for appointments in a 30-minute window around the trigger point
-      const windowStart = new Date(now.getTime() + offsetMs - 15 * 60 * 1000);
-      const windowEnd = new Date(now.getTime() + offsetMs + 15 * 60 * 1000);
+      // Use a wider backward window to tolerate cron delays without missing reminders.
+      const windowStart = new Date(
+        now.getTime() +
+          offsetMs -
+          REMINDER_WINDOW_LOOKBACK_MINUTES * 60 * 1000,
+      );
+      const windowEnd = new Date(
+        now.getTime() +
+          offsetMs +
+          REMINDER_WINDOW_LOOKAHEAD_MINUTES * 60 * 1000,
+      );
 
       const { data: appointments } = await supabase
         .from("appointments")
@@ -71,7 +82,7 @@ export async function POST(request: NextRequest) {
         .eq("tenant_id", tpl.tenant_id)
         .gte("scheduled_at", windowStart.toISOString())
         .lte("scheduled_at", windowEnd.toISOString())
-        .eq("status", "confirmed");
+        .eq("status", "scheduled");
 
       if (!appointments || appointments.length === 0) continue;
 
